@@ -1,10 +1,61 @@
+using Microsoft.AspNetCore.Mvc;
+using PaperPulse.Application;
+using PaperPulse.Application.Common.Models;
+using PaperPulse.Persistence;
+using PaperPuls.API.Middleware;
+
+// Load environment variables from .env file
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
+if (!File.Exists(envPath))
+{
+    envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+}
+if (File.Exists(envPath))
+{
+    DotNetEnv.Env.Load(envPath);
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Add Clean Architecture Layers
+builder.Services.AddApplication();
+builder.Services.AddPersistence(builder.Configuration);
+
+// Add Controllers with Custom Validation Error Formatting
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var validationErrors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+
+            var errorResponse = new ApiErrorResponse(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid Request Parameters",
+                message: "One or more validation errors occurred.",
+                validationErrors: validationErrors,
+                traceId: context.HttpContext.TraceIdentifier
+            );
+
+            return new BadRequestObjectResult(errorResponse);
+        };
+    });
+
+// Add OpenAPI / Swagger Documentation
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Enable Global Exception Handling Middleware
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
+// Execute Database Migration & Idempotent Seeding on Application Startup
+await app.Services.MigrateAndSeedDatabaseAsync(app.Environment.IsDevelopment());
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -13,29 +64,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
