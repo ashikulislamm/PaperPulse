@@ -1,12 +1,13 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Domain.Common;
 using PaperPulse.Domain.Entities;
 using PaperPulse.Persistence.Seed;
 
 namespace PaperPulse.Persistence.Context;
 
-public class PaperPulseDbContext : DbContext
+public class PaperPulseDbContext : DbContext, IApplicationDbContext
 {
     public PaperPulseDbContext(DbContextOptions<PaperPulseDbContext> options)
         : base(options)

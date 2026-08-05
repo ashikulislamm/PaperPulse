@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Persistence.Context;
 using PaperPulse.Persistence.Seed;
 
@@ -34,6 +35,8 @@ public static class DependencyInjection
                     errorCodesToAdd: null);
             });
         });
+
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<PaperPulseDbContext>());
 
         // Register Database Seeder Service
         services.AddScoped<IDatabaseSeeder, DatabaseSeederService>();
