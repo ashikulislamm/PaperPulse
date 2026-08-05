@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="PaperPuls.API/PaperPuls.API.csproj" />
+  <Project Path="PaperPulse.Application/PaperPulse.Application.csproj" />
+  <Project Path="PaperPulse.Domain/PaperPulse.Domain.csproj" />
+  <Project Path="PaperPulse.Infrastructure/PaperPulse.Infrastructure.csproj" />
+  <Project Path="PaperPulse.Persistence/PaperPulse.Persistence.csproj" />
+</Solution>
