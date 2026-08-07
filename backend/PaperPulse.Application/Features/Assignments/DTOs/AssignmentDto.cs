@@ -1,0 +1,17 @@
+namespace PaperPulse.Application.Features.Assignments.DTOs;
+
+public record AssignmentDto(
+    Guid Id,
+    Guid TeacherAssignmentId,
+    string ClassName,
+    string SubjectName,
+    string Title,
+    string Description,
+    decimal MaxMarks,
+    decimal PassMarks,
+    DateTimeOffset DueDate,
+    string Status,
+    bool AllowLateSubmission,
+    decimal LatePenaltyPercentage,
+    DateTimeOffset CreatedAt
+);

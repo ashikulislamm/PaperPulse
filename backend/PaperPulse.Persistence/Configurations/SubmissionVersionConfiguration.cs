@@ -33,6 +33,11 @@ public class SubmissionVersionConfiguration : IEntityTypeConfiguration<Submissio
             .HasDefaultValueSql("now()")
             .IsRequired();
 
+        builder.Property(sv => sv.IsLate)
+            .HasColumnName("is_late")
+            .HasDefaultValue(false)
+            .IsRequired();
+
         // Audit Columns
         builder.Property(sv => sv.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()").IsRequired();
         builder.Property(sv => sv.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("now()").IsRequired();

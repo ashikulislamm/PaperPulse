@@ -5,6 +5,7 @@ using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Infrastructure.Authentication;
 using PaperPulse.Infrastructure.Authorization;
 using PaperPulse.Infrastructure.Identity;
+using PaperPulse.Infrastructure.Services;
 
 namespace PaperPulse.Infrastructure;
 
@@ -18,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         // Register Dynamic Permission-Based Authorization Handlers
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();

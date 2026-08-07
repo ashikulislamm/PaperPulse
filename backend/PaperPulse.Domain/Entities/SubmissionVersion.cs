@@ -8,6 +8,7 @@ public class SubmissionVersion : BaseEntity
     public int VersionNumber { get; set; } = 1;
     public string? SubmissionText { get; set; }
     public DateTimeOffset SubmittedAt { get; set; } = DateTimeOffset.UtcNow;
+    public bool IsLate { get; set; } = false;
 
     // Navigation properties
     public StudentSubmission Submission { get; set; } = null!;
