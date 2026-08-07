@@ -55,6 +55,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasDefaultValue(UserStatus.Active)
             .IsRequired();
 
+        builder.Property(u => u.MustChangePassword)
+            .HasColumnName("must_change_password")
+            .HasDefaultValue(false)
+            .IsRequired();
+
         builder.Property(u => u.LastLoginAt)
             .HasColumnName("last_login_at");
 

@@ -8,6 +8,7 @@ public record UserDto(
     string? AvatarUrl,
     string? PhoneNumber,
     string Status,
+    bool MustChangePassword,
     Guid? TenantId,
     List<string> Roles
 );

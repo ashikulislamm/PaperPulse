@@ -4,14 +4,14 @@ using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Features.Auth.DTOs;
 using PaperPulse.Domain.Exceptions;
 
-namespace PaperPulse.Application.Features.Auth.Queries.GetCurrentUser;
+namespace PaperPulse.Application.Features.Profile.Commands.UpdateProfile;
 
-public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, UserDto>
+public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, UserDto>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
 
-    public GetCurrentUserQueryHandler(
+    public UpdateProfileCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUserService)
     {
@@ -19,7 +19,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, U
         _currentUserService = currentUserService;
     }
 
-    public async Task<UserDto> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    public async Task<UserDto> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
     {
         var userId = _currentUserService.UserId;
         if (!userId.HasValue)
@@ -32,12 +32,18 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, U
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken);
 
-        if (user == null || user.IsDeleted)
+        if (user == null)
         {
-            throw new NotFoundException("User account not found.");
+            throw new NotFoundException("User profile not found.");
         }
 
-        var rolesList = user.UserRoles.Select(ur => ur.Role.Name.ToString()).ToList();
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
+        user.PhoneNumber = request.PhoneNumber?.Trim();
+        user.AvatarUrl = request.AvatarUrl?.Trim();
+
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return new UserDto(
             user.Id,
@@ -49,7 +55,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, U
             user.Status.ToString(),
             user.MustChangePassword,
             user.TenantId,
-            rolesList
+            user.UserRoles.Select(ur => ur.Role.Name.ToString()).ToList()
         );
     }
 }

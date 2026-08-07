@@ -117,6 +117,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
             user.AvatarUrl,
             user.PhoneNumber,
             user.Status.ToString(),
+            user.MustChangePassword,
             user.TenantId,
             rolesList
         );

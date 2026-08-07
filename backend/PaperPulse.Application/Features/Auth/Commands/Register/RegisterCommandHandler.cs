@@ -103,6 +103,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
             user.AvatarUrl,
             user.PhoneNumber,
             user.Status.ToString(),
+            user.MustChangePassword,
             user.TenantId,
             rolesList
         );

@@ -13,6 +13,7 @@ public class User : BaseEntity
     public string? AvatarUrl { get; set; }
     public string? PhoneNumber { get; set; }
     public UserStatus Status { get; set; } = UserStatus.Active;
+    public bool MustChangePassword { get; set; } = false;
     public DateTimeOffset? LastLoginAt { get; set; }
 
     // Navigation properties
