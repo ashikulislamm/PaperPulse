@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Events;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Features.Grading.DTOs;
 using PaperPulse.Application.Features.Submissions.DTOs;
@@ -13,13 +14,16 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPublisher _publisher;
 
     public GradeSubmissionCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IPublisher publisher)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _publisher = publisher;
     }
 
     public async Task<SubmissionGradingDetailDto> Handle(GradeSubmissionCommand request, CancellationToken cancellationToken)
@@ -106,6 +110,7 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+        await _publisher.Publish(new SubmissionGradedEvent(submission.Id), cancellationToken);
 
         var studentName = $"{submission.Student.FirstName} {submission.Student.LastName}";
         var teacherName = $"{teacher.FirstName} {teacher.LastName}";

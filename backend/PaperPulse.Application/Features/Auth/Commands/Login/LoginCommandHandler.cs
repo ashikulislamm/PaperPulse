@@ -15,15 +15,18 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
     private readonly IApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IAuditLogService _auditLogService;
 
     public LoginCommandHandler(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _auditLogService = auditLogService;
     }
 
     public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -77,6 +80,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
 
         _context.RefreshTokens.Add(refreshTokenEntity);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync("UserLogin", "User", user.Id, null, new { Email = user.Email }, cancellationToken);
 
         var userDto = new UserDto(
             user.Id,

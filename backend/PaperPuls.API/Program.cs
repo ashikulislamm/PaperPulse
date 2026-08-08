@@ -1,8 +1,10 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using PaperPulse.Application;
 using PaperPulse.Application.Common.Models;
 using PaperPulse.Infrastructure;
@@ -89,8 +91,47 @@ builder.Services.AddControllers()
         };
     });
 
-// Add OpenAPI
-builder.Services.AddOpenApi();
+// Configure Swagger / OpenAPI Generator with JWT Bearer Security Scheme
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "PaperPulse REST API",
+        Version = "v1",
+        Description = "PaperPulse — Multi-Tenant School Management & Assignment Platform REST API",
+        Contact = new OpenApiContact
+        {
+            Name = "PaperPulse Engineering Team",
+            Email = "support@paperpulse.com"
+        }
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT Access Token format: Bearer {token}"
+    });
+
+    options.AddSecurityRequirement((doc) => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer"),
+            new List<string>()
+        }
+    });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 
@@ -100,11 +141,13 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 // Execute Database Migration & Idempotent Seeding on Application Startup
 await app.Services.MigrateAndSeedDatabaseAsync(app.Environment.IsDevelopment());
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger UI middleware in all environments
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.MapOpenApi();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PaperPulse API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Events;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Domain.Enums;
 using PaperPulse.Domain.Exceptions;
@@ -10,13 +11,16 @@ public class ReturnSubmissionCommandHandler : IRequestHandler<ReturnSubmissionCo
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPublisher _publisher;
 
     public ReturnSubmissionCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IPublisher publisher)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _publisher = publisher;
     }
 
     public async Task<Unit> Handle(ReturnSubmissionCommand request, CancellationToken cancellationToken)
@@ -43,6 +47,8 @@ public class ReturnSubmissionCommandHandler : IRequestHandler<ReturnSubmissionCo
         _context.StudentSubmissions.Update(submission);
 
         await _context.SaveChangesAsync(cancellationToken);
+        await _publisher.Publish(new SubmissionGradedEvent(submission.Id), cancellationToken);
+
         return Unit.Value;
     }
 }

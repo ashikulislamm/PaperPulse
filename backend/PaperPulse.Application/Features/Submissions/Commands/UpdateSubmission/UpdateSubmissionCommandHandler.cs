@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Events;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Features.Submissions.DTOs;
 using PaperPulse.Domain.Entities;
@@ -12,13 +13,16 @@ public class UpdateSubmissionCommandHandler : IRequestHandler<UpdateSubmissionCo
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPublisher _publisher;
 
     public UpdateSubmissionCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IPublisher publisher)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _publisher = publisher;
     }
 
     public async Task<SubmissionDto> Handle(UpdateSubmissionCommand request, CancellationToken cancellationToken)
@@ -79,6 +83,7 @@ public class UpdateSubmissionCommandHandler : IRequestHandler<UpdateSubmissionCo
         _context.StudentSubmissions.Update(submission);
 
         await _context.SaveChangesAsync(cancellationToken);
+        await _publisher.Publish(new SubmissionReceivedEvent(submission.Id), cancellationToken);
 
         var studentName = $"{submission.Student.FirstName} {submission.Student.LastName}";
 

@@ -50,7 +50,7 @@ public class UsersController : ApiControllerBase
     }
 
     /// <summary>
-    /// Create a new system user with password & mandatory first-login password change
+    /// Create a new system user with password &amp; mandatory first-login password change
     /// </summary>
     [HttpPost]
     [HasPermission(Permissions.Users.Create)]

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Events;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Domain.Enums;
 using PaperPulse.Domain.Exceptions;
@@ -10,13 +11,16 @@ public class PublishAssignmentCommandHandler : IRequestHandler<PublishAssignment
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPublisher _publisher;
 
     public PublishAssignmentCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IPublisher publisher)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _publisher = publisher;
     }
 
     public async Task<Unit> Handle(PublishAssignmentCommand request, CancellationToken cancellationToken)
@@ -42,6 +46,8 @@ public class PublishAssignmentCommandHandler : IRequestHandler<PublishAssignment
         _context.Assignments.Update(assignment);
 
         await _context.SaveChangesAsync(cancellationToken);
+        await _publisher.Publish(new AssignmentPublishedEvent(assignment.Id), cancellationToken);
+
         return Unit.Value;
     }
 }

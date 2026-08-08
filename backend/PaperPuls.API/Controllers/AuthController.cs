@@ -29,7 +29,7 @@ public class AuthController : ApiControllerBase
     }
 
     /// <summary>
-    /// Authenticate user credentials and issue JWT & Refresh token
+    /// Authenticate user credentials and issue JWT &amp; Refresh token
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
