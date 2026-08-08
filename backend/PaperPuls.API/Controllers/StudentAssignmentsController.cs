@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PaperPulse.Application.Common.Models;
 using PaperPulse.Application.Features.StudentExperience.DTOs;
 using PaperPulse.Application.Features.StudentExperience.Queries.GetStudentAssignments;
+using PaperPulse.Application.Features.StudentExperience.Queries.GetStudentGrades;
 using PaperPulse.Application.Features.StudentExperience.Queries.GetUpcomingDeadlines;
 using PaperPulse.Domain.Constants;
 using PaperPulse.Infrastructure.Authorization;
@@ -37,5 +38,19 @@ public class StudentAssignmentsController : ApiControllerBase
     {
         var result = await Mediator.Send(new GetUpcomingDeadlinesQuery(), cancellationToken);
         return OkResponse(result, "Upcoming deadlines retrieved successfully.");
+    }
+
+    /// <summary>
+    /// Get student grades, scores, pass/fail status, and public teacher feedback
+    /// </summary>
+    [HttpGet("grades")]
+    [HasPermission(Permissions.Grades.View)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<StudentGradeSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResult<StudentGradeSummaryDto>>>> GetStudentGrades(
+        [FromQuery] GetStudentGradesQuery query,
+        CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(query, cancellationToken);
+        return PagedResponse(result, "Student grades and feedback retrieved successfully.");
     }
 }
