@@ -30,6 +30,17 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPersistence(builder.Configuration);
 
+// Configure CORS for Frontend Client Access
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Configure JWT Authentication
 var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
                    ?? builder.Configuration["JwtSettings:SecretKey"] 
@@ -150,6 +161,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
