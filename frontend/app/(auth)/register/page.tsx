@@ -69,8 +69,9 @@ export default function RegisterPage() {
       });
 
       if (response.data?.success && response.data?.data) {
-        const { token, refreshToken, user } = response.data.data;
-        setAuth(user, token, refreshToken);
+        const { accessToken, token, refreshToken, user } = response.data.data;
+        const jwtToken = accessToken || token;
+        setAuth(user, jwtToken, refreshToken);
 
         toast.success("Account registered successfully!");
         router.push("/dashboard");
@@ -174,7 +175,7 @@ export default function RegisterPage() {
           <div className="text-center text-xs text-[var(--text-secondary)] pt-4 border-t border-[var(--border-subtle)]">
             Already have an account?{" "}
             <Link
-              href="/auth/login"
+              href="/login"
               className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
             >
               Sign In

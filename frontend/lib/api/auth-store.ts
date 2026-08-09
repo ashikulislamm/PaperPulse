@@ -43,28 +43,33 @@ export const useAuthStore = create<AuthState>()(
       isSidebarOpen: true,
       activeTenantId: null,
 
-      setAuth: (user, token, refreshToken) =>
+      setAuth: (user, token, refreshToken) => {
+        console.log("[AuthStore] setAuth called for user:", user.email, "Token length:", token?.length);
         set({
           user,
           token,
           refreshToken,
           isAuthenticated: true,
           activeTenantId: user.tenantId || null,
-        }),
+        });
+      },
 
       updateUser: (updatedFields) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...updatedFields } : null,
         })),
 
-      logout: () =>
+      logout: () => {
+        console.warn("[AuthStore] LOGOUT CALLED! Stack Trace:");
+        console.trace();
         set({
           user: null,
           token: null,
           refreshToken: null,
           isAuthenticated: false,
           activeTenantId: null,
-        }),
+        });
+      },
 
       toggleSidebar: () =>
         set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),

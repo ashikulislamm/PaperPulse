@@ -16,7 +16,7 @@ export function Navbar() {
 
   const handleLogout = () => {
     logout();
-    router.push("/auth/login");
+    router.push("/login");
   };
 
   const userDisplayName = user ? `${user.firstName} ${user.lastName}` : "User Profile";

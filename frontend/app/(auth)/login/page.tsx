@@ -52,10 +52,11 @@ export default function LoginPage() {
       });
 
       if (response.data?.success && response.data?.data) {
-        const { token, refreshToken, user } = response.data.data;
+        const { accessToken, token, refreshToken, user } = response.data.data;
+        const jwtToken = accessToken || token;
         
         // Save state in Zustand persistent store
-        setAuth(user, token, refreshToken);
+        setAuth(user, jwtToken, refreshToken);
 
         toast.success(`Welcome back, ${user.firstName}!`);
 
@@ -121,7 +122,7 @@ export default function LoginPage() {
                 Password
               </label>
               <Link
-                href="/auth/forgot-password"
+                href="/forgot-password"
                 className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
               >
                 Forgot password?
@@ -150,7 +151,7 @@ export default function LoginPage() {
           <div className="text-center text-xs text-[var(--text-secondary)] pt-4 border-t border-[var(--border-subtle)]">
             Don&apos;t have an account?{" "}
             <Link
-              href="/auth/register"
+              href="/register"
               className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
             >
               Register Account

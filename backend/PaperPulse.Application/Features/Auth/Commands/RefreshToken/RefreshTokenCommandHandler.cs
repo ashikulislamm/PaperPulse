@@ -62,11 +62,45 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
             throw new UnauthorizedException("Invalid refresh token.");
         }
 
-        // 4. Token Reuse Detection Guard: If token is already revoked or replaced, revoke ALL user sessions!
+        // 4. Token Reuse Detection Guard: If token is already revoked or replaced, check grace window for concurrent requests
         if (tokenRecord.IsRevoked || tokenRecord.ReplacedByTokenHash != null)
         {
+            // Allow 30-second grace window for concurrent client requests during page navigation
+            var windowStart = DateTimeOffset.UtcNow.AddSeconds(-30);
+            if (tokenRecord.UpdatedAt >= windowStart)
+            {
+                var rolesListGrace = user.UserRoles.Select(ur => ur.Role.Name.ToString()).ToList();
+                var roleIdsGrace = user.UserRoles.Select(ur => ur.RoleId).ToList();
+                var permissionsGrace = await _context.RolePermissions
+                    .Where(rp => roleIdsGrace.Contains(rp.RoleId))
+                    .Select(rp => rp.Permission.Code)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+
+                var userDtoGrace = new UserDto(
+                    user.Id,
+                    user.Email,
+                    user.FirstName,
+                    user.LastName,
+                    user.AvatarUrl,
+                    user.PhoneNumber,
+                    user.Status.ToString(),
+                    user.MustChangePassword,
+                    user.TenantId,
+                    rolesListGrace
+                );
+
+                var activeTokenResult = _jwtTokenGenerator.GenerateAccessToken(user, rolesListGrace, permissionsGrace);
+                return new AuthResponse(
+                    activeTokenResult.Token,
+                    request.RefreshToken,
+                    activeTokenResult.ExpiresAt,
+                    userDtoGrace
+                );
+            }
+
             await RevokeAllUserTokensAsync(userId, cancellationToken);
-            throw new UnauthorizedException("Refresh token reuse detected. All active sessions have been terminated for security.");
+            throw new UnauthorizedException("Refresh token reuse detected outside grace window. Session terminated.");
         }
 
         // 5. Expiration Guard

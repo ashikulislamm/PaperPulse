@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center text-xs text-[var(--text-secondary)] pt-4 border-t border-[var(--border-subtle)] mt-4">
           Remember your password?{" "}
           <Link
-            href="/auth/login"
+            href="/login"
             className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
           >
             Back to Sign In
