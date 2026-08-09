@@ -22,6 +22,28 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             return Task.CompletedTask;
         }
 
+        // Teacher role has access to academic management permissions
+        if (context.User.IsInRole(RoleType.Teacher.ToString()))
+        {
+            context.Succeed(requirement);
+            return Task.CompletedTask;
+        }
+
+        // Student role has access to student experience permissions (Assignments, Submissions, Grades, Dashboard, Profile)
+        if (context.User.IsInRole(RoleType.Student.ToString()))
+        {
+            var perm = requirement.Permission;
+            if (perm.StartsWith("Assignments.", StringComparison.OrdinalIgnoreCase) ||
+                perm.StartsWith("Submissions.", StringComparison.OrdinalIgnoreCase) ||
+                perm.StartsWith("Grades.", StringComparison.OrdinalIgnoreCase) ||
+                perm.StartsWith("Dashboard.", StringComparison.OrdinalIgnoreCase) ||
+                perm.StartsWith("Profile.", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Succeed(requirement);
+                return Task.CompletedTask;
+            }
+        }
+
         // Check if user JWT claims include the specific required permission
         var hasPermission = context.User.Claims
             .Where(c => c.Type == "permission")

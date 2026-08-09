@@ -86,7 +86,9 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
         var dtos = assignments.Select(a =>
         {
             var submission = a.Submissions.FirstOrDefault();
-            var submissionStatus = submission != null ? submission.Status.ToString() : "NotSubmitted";
+            var submissionStatus = submission != null
+                ? submission.Status.ToString()
+                : (a.DueDate < now ? "Overdue" : "Pending");
             var isOverdue = submission == null && a.DueDate < now;
             var teacherName = $"{a.TeacherAssignment.Teacher.FirstName} {a.TeacherAssignment.Teacher.LastName}";
 

@@ -21,6 +21,8 @@ public class GetAssignmentsQueryHandler : IRequestHandler<GetAssignmentsQuery, P
         var query = _context.Assignments
             .AsNoTracking()
             .Include(a => a.TeacherAssignment)
+                .ThenInclude(ta => ta.Teacher)
+            .Include(a => a.TeacherAssignment)
                 .ThenInclude(ta => ta.ClassSubject)
                     .ThenInclude(cs => cs.Class)
             .Include(a => a.TeacherAssignment)
@@ -74,8 +76,9 @@ public class GetAssignmentsQueryHandler : IRequestHandler<GetAssignmentsQuery, P
         var dtos = assignments.Select(a => new AssignmentDto(
             a.Id,
             a.TeacherAssignmentId,
-            a.TeacherAssignment.ClassSubject.Class.Name,
-            a.TeacherAssignment.ClassSubject.Subject.Name,
+            a.TeacherAssignment?.ClassSubject?.Class?.Name ?? "N/A",
+            a.TeacherAssignment?.ClassSubject?.Subject?.Name ?? "N/A",
+            a.TeacherAssignment?.Teacher != null ? $"{a.TeacherAssignment.Teacher.FirstName} {a.TeacherAssignment.Teacher.LastName}" : "System Teacher",
             a.Title,
             a.Description,
             a.MaxMarks,

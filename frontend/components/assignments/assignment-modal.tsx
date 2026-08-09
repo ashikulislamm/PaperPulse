@@ -45,6 +45,7 @@ export interface AssignmentItem {
   teacherAssignmentId: string;
   className?: string;
   subjectName?: string;
+  teacherName?: string;
   attachments?: AttachmentItem[];
 }
 

@@ -5,6 +5,7 @@ public record AssignmentDto(
     Guid TeacherAssignmentId,
     string ClassName,
     string SubjectName,
+    string TeacherName,
     string Title,
     string Description,
     decimal MaxMarks,

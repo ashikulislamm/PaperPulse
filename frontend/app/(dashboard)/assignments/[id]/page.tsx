@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/api/auth-store";
 import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CountdownWidget } from "@/components/ui/countdown";
@@ -15,7 +16,6 @@ import { AssignmentModal, AssignmentItem } from "@/components/assignments/assign
 import { AssignmentActionDialog, ActionType } from "@/components/assignments/assignment-actions";
 import {
   ArrowLeft,
-  BookOpen,
   Pencil,
   CheckCircle2,
   ArrowLeftRight,
@@ -23,16 +23,19 @@ import {
   Download,
   FileText,
   FileArchive,
-  FileSpreadsheet,
   Clock,
   Award,
   AlertTriangle,
+  UserCheck,
 } from "lucide-react";
 
 export default function AssignmentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const assignmentId = params.id as string;
+  const { user } = useAuthStore();
+  const userRoles = user?.roles || [];
+  const canManage = userRoles.includes("Teacher") || userRoles.includes("Admin");
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [actionType, setActionType] = React.useState<ActionType | null>(null);
@@ -47,7 +50,7 @@ export default function AssignmentDetailPage() {
     },
   });
 
-  // Mock Fallback for Demo preview if dynamic query ID is sample
+  // Mock Fallback
   const mockDetail: AssignmentItem = {
     id: assignmentId,
     title: "Calculus Problem Set #4 — Derivatives & Optimization",
@@ -62,19 +65,13 @@ export default function AssignmentDetailPage() {
     teacherAssignmentId: "018f4a2b-8910-7400-8000-000000000001",
     className: "Grade 10-A",
     subjectName: "Mathematics",
+    teacherName: "Sarah Conner",
     attachments: [
       {
         id: "att-1",
         fileName: "Calculus_Problem_Set_4_Specifications.pdf",
         fileUrl: "#",
         fileSize: 2450000,
-        contentType: "application/pdf",
-      },
-      {
-        id: "att-2",
-        fileName: "Derivatives_Reference_Formula_Sheet.pdf",
-        fileUrl: "#",
-        fileSize: 1120000,
         contentType: "application/pdf",
       },
     ],
@@ -128,51 +125,53 @@ export default function AssignmentDetailPage() {
           href="/assignments"
           className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-indigo-600 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Assignment Workspace
+          <ArrowLeft className="h-4 w-4" /> Back to Assignment Studio
         </Link>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Pencil className="h-3.5 w-3.5" /> Edit Specification
-          </Button>
-
-          {item.status === "Draft" ? (
-            <Button
-              variant="primary"
-              size="sm"
-              className="gap-1.5"
-              onClick={() => setActionType("publish")}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" /> Publish Assignment
-            </Button>
-          ) : (
+        {/* Action Controls Guarded for Teachers/Admins */}
+        {canManage && (
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 text-amber-700 border-amber-200"
-              onClick={() => setActionType("unpublish")}
-            >
-              <ArrowLeftRight className="h-3.5 w-3.5" /> Unpublish
-            </Button>
-          )}
-
-          {item.status !== "Closed" && (
-            <Button
-              variant="danger"
-              size="sm"
               className="gap-1.5"
-              onClick={() => setActionType("close")}
+              onClick={() => setIsModalOpen(true)}
             >
-              <Lock className="h-3.5 w-3.5" /> Close Submissions
+              <Pencil className="h-3.5 w-3.5" /> Edit Specification
             </Button>
-          )}
-        </div>
+
+            {item.status === "Draft" ? (
+              <Button
+                variant="primary"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setActionType("publish")}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" /> Publish Assignment
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-amber-700 border-amber-200"
+                onClick={() => setActionType("unpublish")}
+              >
+                <ArrowLeftRight className="h-3.5 w-3.5" /> Unpublish
+              </Button>
+            )}
+
+            {item.status !== "Closed" && (
+              <Button
+                variant="danger"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setActionType("close")}
+              >
+                <Lock className="h-3.5 w-3.5" /> Close Submissions
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Main Assignment Overview Card */}
@@ -182,6 +181,10 @@ export default function AssignmentDetailPage() {
             <div className="flex items-center gap-2">
               <Badge variant="primary">{item.subjectName || "Mathematics"}</Badge>
               <Badge variant="default">{item.className || "Grade 10-A"}</Badge>
+              <span className="text-xs font-semibold text-slate-600 flex items-center gap-1.5 ml-2">
+                <UserCheck className="h-3.5 w-3.5 text-indigo-600" />
+                Created by: <span className="font-bold text-slate-900">{item.teacherName || "Sarah Conner"}</span>
+              </span>
             </div>
             <Badge
               variant={
@@ -304,15 +307,17 @@ export default function AssignmentDetailPage() {
       </Card>
 
       {/* Edit Modal */}
-      <AssignmentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={() => refetch()}
-        assignmentToEdit={item}
-      />
+      {canManage && (
+        <AssignmentModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={() => refetch()}
+          assignmentToEdit={item}
+        />
+      )}
 
       {/* Action Dialog */}
-      {actionType && (
+      {canManage && actionType && (
         <AssignmentActionDialog
           isOpen={!!actionType}
           onClose={() => setActionType(null)}

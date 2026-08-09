@@ -64,14 +64,16 @@ apiClient.interceptors.response.use(
     const requestUrl = error.config?.url || "";
     const status = error.response?.status;
 
-    console.error(`❌ [ApiClient] API Error Status [${status}] for URL: ${requestUrl}`, error.response?.data);
+    // Suppress console.error for expected 404 responses (e.g. checking unsubmitted tasks)
+    if (status === 404) {
+      console.log(`ℹ️ [ApiClient] Resource 404 for URL: ${requestUrl}`);
+    } else {
+      console.error(`❌ [ApiClient] API Error Status [${status}] for URL: ${requestUrl}`, error.response?.data);
+    }
 
-    // 1. Handle 403 Forbidden without logging out
+    // 1. Handle 403 Forbidden gracefully without toast popups or logging out
     if (status === 403) {
-      console.warn("⛔ [ApiClient] 403 Forbidden detected. Showing toast, NOT logging out.");
-      if (typeof window !== "undefined") {
-        toast.error("Access Denied: You do not have permission for this resource.");
-      }
+      console.warn(`⛔ [ApiClient] 403 Forbidden for URL [${requestUrl}]. Handled silently without toast.`);
       return Promise.reject(error);
     }
 
@@ -90,14 +92,14 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 3. Global Toast Notification for non-auth server errors
+    // 3. Global Toast Notification for server errors (excluding 401, 403, and 404 missing resource queries)
     const errorMessage =
       error.response?.data?.message ||
       error.response?.data?.title ||
       error.message ||
       "An unexpected server error occurred.";
 
-    if (status !== 401 && typeof window !== "undefined") {
+    if (status !== 401 && status !== 403 && status !== 404 && typeof window !== "undefined") {
       toast.error(errorMessage);
     }
 

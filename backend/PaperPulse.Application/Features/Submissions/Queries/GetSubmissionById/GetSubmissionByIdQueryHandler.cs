@@ -22,6 +22,9 @@ public class GetSubmissionByIdQueryHandler : IRequestHandler<GetSubmissionByIdQu
 
     public async Task<SubmissionDto> Handle(GetSubmissionByIdQuery request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId;
+
+        // Support fetching submission by either SubmissionId OR AssignmentId (for current student)
         var submission = await _context.StudentSubmissions
             .AsNoTracking()
             .Include(s => s.Student)
@@ -29,11 +32,14 @@ public class GetSubmissionByIdQueryHandler : IRequestHandler<GetSubmissionByIdQu
                 .ThenInclude(a => a.TeacherAssignment)
             .Include(s => s.Versions)
                 .ThenInclude(v => v.Attachments)
-            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(s =>
+                s.Id == request.Id ||
+                (currentUserId.HasValue && s.AssignmentId == request.Id && s.StudentId == currentUserId.Value),
+                cancellationToken);
 
         if (submission == null)
         {
-            throw new NotFoundException($"Submission with ID '{request.Id}' was not found.");
+            throw new NotFoundException($"Submission for ID '{request.Id}' was not found.");
         }
 
         var isStudent = _currentUserService.Roles.Contains(RoleType.Student.ToString());
@@ -59,19 +65,23 @@ public class GetSubmissionByIdQueryHandler : IRequestHandler<GetSubmissionByIdQu
             v.SubmittedAt,
             v.IsLate,
             v.Attachments.Select(att => new SubmissionAttachmentDto(
-                att.Id, att.FileName, att.FilePath, att.MimeType, att.FileSizeBytes
+                att.Id,
+                att.FileName,
+                att.FilePath,
+                att.MimeType,
+                att.FileSizeBytes
             )).ToList()
         )).ToList();
 
         return new SubmissionDto(
             submission.Id,
             submission.AssignmentId,
-            submission.Assignment.Title,
+            submission.Assignment?.Title ?? "Assignment",
             submission.StudentId,
             studentName,
-            submission.SubmittedAt,
+            submission.CreatedAt,
             submission.Status.ToString(),
-            submission.AttemptCount,
+            versionDtos.Count,
             versionDtos
         );
     }

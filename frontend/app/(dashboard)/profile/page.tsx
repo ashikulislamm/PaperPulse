@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/api/auth-store";
 import { Card } from "@/components/ui/card";
@@ -43,6 +44,22 @@ export default function ProfilePage() {
   const [isUpdatingProfile, setIsUpdatingProfile] = React.useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
 
+  // Live DB Fetch for User Profile
+  useQuery({
+    queryKey: ["auth", "profile"],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get("/profile");
+        if (response.data?.data) {
+          updateUser(response.data.data);
+        }
+        return response.data?.data;
+      } catch (e) {
+        return null;
+      }
+    },
+  });
+
   // Profile Form Hook
   const {
     register: registerProfile,
@@ -78,12 +95,12 @@ export default function ProfilePage() {
         avatarUrl: values.avatarUrl || undefined,
       });
 
-      if (response.data?.success && response.data?.data) {
+      if (response.data?.data) {
         updateUser(response.data.data);
-        toast.success("Profile updated successfully!");
       }
-    } catch (err) {}
-    finally {
+      toast.success("Profile details updated successfully!");
+    } catch (err: any) {
+    } finally {
       setIsUpdatingProfile(false);
     }
   };
@@ -97,51 +114,73 @@ export default function ProfilePage() {
       });
       toast.success("Password changed successfully!");
       resetPasswordForm();
-    } catch (err) {}
-    finally {
+    } catch (err: any) {
+    } finally {
       setIsUpdatingPassword(false);
     }
   };
 
-  const userDisplayName = user ? `${user.firstName} ${user.lastName}` : "User Profile";
+  const userRoles = user?.roles || ["Student"];
+  const userName = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "User";
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      {/* Profile Banner */}
-      <Card className="p-6 glass-card">
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          <Avatar src={user?.avatarUrl} name={userDisplayName} size="xl" />
-          <div className="flex flex-col text-center sm:text-left space-y-1">
-            <div className="flex items-center gap-3 justify-center sm:justify-start">
-              <h1 className="text-2xl font-bold">{userDisplayName}</h1>
-              <Badge variant="primary" dot>
-                {user?.roles?.join(", ") || "User"}
-              </Badge>
-            </div>
-            <p className="text-sm font-mono text-[var(--text-secondary)]">{user?.email}</p>
-            <div className="flex items-center gap-2 pt-1 justify-center sm:justify-start text-xs text-[var(--text-muted)]">
-              <span>Account Status:</span>
-              <span className="font-bold text-emerald-600 uppercase">{user?.status || "Active"}</span>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-tight">Account Settings &amp; Profile</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
+          Manage your personal information, contact phone number, and account password.
+        </p>
+      </div>
+
+      {/* Profile Overview Card */}
+      <Card className="p-6 glass-card flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+          <Avatar
+            src={user?.avatarUrl}
+            name={userName}
+            size="xl"
+            className="border-2 border-indigo-600 shadow-md"
+          />
+          <div className="space-y-1 text-center sm:text-left">
+            <h2 className="text-xl font-extrabold text-[var(--text-primary)]">
+              {user?.firstName} {user?.lastName}
+            </h2>
+            <p className="text-xs font-mono text-[var(--text-secondary)]">{user?.email}</p>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
+              {userRoles.map((role) => (
+                <Badge key={role} variant="primary">
+                  {role}
+                </Badge>
+              ))}
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Tabs Navigation */}
-      <Card className="p-6">
-        <Tabs
-          activeTab={activeTab}
-          onChange={setActiveTab}
-          tabs={[
-            { id: "info", label: "Profile Details", icon: <User className="h-4 w-4" /> },
-            { id: "password", label: "Change Password", icon: <KeyRound className="h-4 w-4" /> },
-          ]}
-          className="mb-6"
-        />
+      {/* Profile Tabs */}
+      <Tabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          {
+            id: "info",
+            label: "Personal Details",
+            icon: <User className="h-4 w-4" />,
+          },
+          {
+            id: "security",
+            label: "Password & Security",
+            icon: <KeyRound className="h-4 w-4" />,
+          },
+        ]}
+      />
 
-        {activeTab === "info" ? (
-          <form onSubmit={handleSubmitProfile(onUpdateProfile)} className="space-y-4 max-w-xl">
-            <div className="grid grid-cols-2 gap-4">
+      {/* Tab Body */}
+      {activeTab === "info" ? (
+        <Card className="p-6 space-y-6">
+          <form onSubmit={handleSubmitProfile(onUpdateProfile)} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="First Name"
                 error={profileErrors.firstName?.message}
@@ -155,72 +194,56 @@ export default function ProfilePage() {
             </div>
 
             <Input
-              label="Email Address"
-              value={user?.email || ""}
-              disabled
-              className="bg-slate-100/70 cursor-not-allowed"
-            />
-
-            <Input
               label="Phone Number"
-              placeholder="+1 (555) 019-2834"
+              placeholder="+1 (555) 000-0000"
               error={profileErrors.phoneNumber?.message}
               {...registerProfile("phoneNumber")}
             />
 
             <Input
-              label="Avatar Image URL"
-              placeholder="https://example.com/avatar.png"
+              label="Avatar Image URL (Optional)"
+              placeholder="https://example.com/avatar.jpg"
               error={profileErrors.avatarUrl?.message}
               {...registerProfile("avatarUrl")}
             />
 
-            <Button
-              type="submit"
-              variant="primary"
-              className="gap-2"
-              isLoading={isUpdatingProfile}
-            >
-              <Save className="h-4 w-4" /> Save Profile Changes
-            </Button>
+            <div className="flex justify-end pt-2">
+              <Button type="submit" variant="primary" isLoading={isUpdatingProfile} className="gap-2">
+                <Save className="h-4 w-4" /> Save Changes
+              </Button>
+            </div>
           </form>
-        ) : (
-          <form onSubmit={handleSubmitPassword(onChangePassword)} className="space-y-4 max-w-xl">
+        </Card>
+      ) : (
+        <Card className="p-6 space-y-6">
+          <form onSubmit={handleSubmitPassword(onChangePassword)} className="space-y-4 max-w-md">
             <Input
-              label="Current Password"
               type="password"
-              placeholder="••••••••••••"
+              label="Current Password"
               error={passwordErrors.currentPassword?.message}
               {...registerPassword("currentPassword")}
             />
-
             <Input
-              label="New Password"
               type="password"
-              placeholder="••••••••••••"
+              label="New Password"
               error={passwordErrors.newPassword?.message}
               {...registerPassword("newPassword")}
             />
-
             <Input
-              label="Confirm New Password"
               type="password"
-              placeholder="••••••••••••"
+              label="Confirm New Password"
               error={passwordErrors.confirmPassword?.message}
               {...registerPassword("confirmPassword")}
             />
 
-            <Button
-              type="submit"
-              variant="primary"
-              className="gap-2"
-              isLoading={isUpdatingPassword}
-            >
-              <KeyRound className="h-4 w-4" /> Update Password
-            </Button>
+            <div className="flex justify-start pt-2">
+              <Button type="submit" variant="primary" isLoading={isUpdatingPassword} className="gap-2">
+                <KeyRound className="h-4 w-4" /> Update Password
+              </Button>
+            </div>
           </form>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }
