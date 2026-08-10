@@ -10,12 +10,13 @@ import {
   Users,
   BookOpen,
   Upload,
-  GraduationCap,
+  ClipboardList,
   Bell,
   ShieldCheck,
   Settings,
   ChevronLeft,
   ChevronRight,
+  Award,
 } from "lucide-react";
 
 interface NavItem {
@@ -40,10 +41,11 @@ export function Sidebar() {
       href: isStudent ? "/student-assignments" : "/assignments",
       icon: BookOpen,
     },
-    { label: "Grading & Evaluations", href: "/grading", icon: GraduationCap, roles: ["Teacher", "Admin"] },
+    { label: "My Grades", href: "/grades", icon: Award, roles: ["Student"] },
+    { label: "Grading & Evaluations", href: "/grading", icon: ClipboardList, roles: ["Teacher", "Admin"] },
     { label: "Notifications", href: "/notifications", icon: Bell },
     { label: "Audit Logs", href: "/audit-logs", icon: ShieldCheck, roles: ["Admin"] },
-    { label: "Settings", href: "/settings", icon: Settings },
+    { label: "Settings", href: "/settings", icon: Settings, roles: ["Admin"] },
   ];
 
   const filteredNavItems = navItems.filter((item) => {

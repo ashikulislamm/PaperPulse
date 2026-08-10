@@ -36,7 +36,7 @@ export interface AssignmentItem {
   id: string;
   title: string;
   description: string;
-  status: "Draft" | "Published" | "Closed";
+  status: "Draft" | "Published" | "Closed" | "Archived";
   maxMarks: number;
   passMarks: number;
   dueDate: string;

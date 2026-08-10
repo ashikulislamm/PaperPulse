@@ -200,6 +200,8 @@ export default function AssignmentDetailPage() {
                   ? "published"
                   : item.status === "Closed"
                   ? "closed"
+                  : item.status === "Archived"
+                  ? "default"
                   : "draft"
               }
               dot

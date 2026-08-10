@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
@@ -24,131 +24,177 @@ import {
   FileText,
   Send,
   UserCheck,
+  RefreshCw,
 } from "lucide-react";
+
+interface AssignmentDetail {
+  id: string;
+  title: string;
+  description: string;
+  subjectName: string;
+  className: string;
+  teacherName: string;
+  maxMarks: number;
+  passMarks: number;
+  dueDate: string;
+  allowLateSubmission: boolean;
+  latePenaltyPercentage: number;
+  status: string;
+  attachments?: Array<{
+    id: string;
+    fileName: string;
+    fileUrl: string;
+    filePath?: string;
+    fileSize: number;
+  }>;
+}
+
+interface SubmissionVersion {
+  id: string;
+  versionNumber: number;
+  submissionText: string;
+  submittedAt: string;
+  isLate: boolean;
+}
+
+interface SubmissionData {
+  id: string;
+  assignmentId: string;
+  studentId: string;
+  status: string;
+  attemptCount: number;
+  versions: SubmissionVersion[];
+}
 
 export default function SubmissionStudioPage() {
   const params = useParams();
   const assignmentId = params.id as string;
+  const queryClient = useQueryClient();
 
   const [selectedFile, setSelectedFile] = React.useState<SelectedFile | null>(null);
   const [comments, setComments] = React.useState("");
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [localSubmission, setLocalSubmission] = React.useState<SubmissionData | null>(null);
 
   const isValidGuid = assignmentId && assignmentId !== "undefined" && assignmentId.length > 10;
 
-  // 1. Query Assignment Specifications & Reference Materials
+  // 1. Query Assignment Specifications
   const { data: assignmentData } = useQuery({
     queryKey: queryKeys.assignments.detail(assignmentId),
     enabled: !!isValidGuid,
     queryFn: async () => {
-      try {
-        const response = await apiClient.get(`/assignments/${assignmentId}`);
-        return response.data?.data;
-      } catch (e) {
-        return null;
-      }
+      const response = await apiClient.get(`/assignments/${assignmentId}`);
+      return response.data?.data as AssignmentDetail;
     },
   });
 
-  // 2. Query Student Submission History (Graceful 404 handling if no submission exists yet)
-  const { data: submissionData, refetch } = useQuery({
-    queryKey: queryKeys.submissions.detail(assignmentId),
-    enabled: !!isValidGuid,
+  // 2. Query Student Submission — try fetching by assignmentId (backend may resolve it)
+  const {
+    data: submissionData,
+    isLoading: isSubmissionLoading,
+  } = useQuery({
+    queryKey: queryKeys.submissions.byAssignment(assignmentId),
+    enabled: !!isValidGuid && !localSubmission,
     queryFn: async () => {
       try {
         const response = await apiClient.get(`/submissions/${assignmentId}`);
-        return response.data?.data;
-      } catch (e) {
-        // 404 is expected when a student has not submitted work yet
+        return response.data?.data as SubmissionData;
+      } catch {
         return null;
       }
     },
   });
 
-  // Mock Fallback Data for rich demo experience
-  const mockAssignment = {
-    id: assignmentId,
-    title: assignmentData?.title || "Calculus Problem Set #4 — Derivatives & Optimization",
-    description:
-      assignmentData?.description ||
-      "Complete all assigned exercises in Chapter 4 covering implicit differentiation, chain rule applications, and optimization models in engineering. Ensure all mathematical steps are written clearly on standard A4 paper or typed using LaTeX.",
-    subjectName: assignmentData?.subjectName || "Mathematics",
-    className: assignmentData?.className || "Grade 10-A",
-    teacherName: assignmentData?.teacherName || "Sarah Conner",
-    maxMarks: assignmentData?.maxMarks ?? 100,
-    passMarks: assignmentData?.passMarks ?? 40,
-    dueDate: assignmentData?.dueDate || new Date(Date.now() + 86400000 * 2 + 10800000).toISOString(),
-    allowLateSubmissions: assignmentData?.allowLateSubmission ?? true,
-    latePenaltyPercentage: assignmentData?.latePenaltyPercentage ?? 10,
-    status: assignmentData?.status || "Published",
-    teacherAttachments: assignmentData?.attachments?.length
-      ? assignmentData.attachments
-      : [
-          {
-            id: "att-1",
-            fileName: "Calculus_Problem_Set_4_Specifications.pdf",
-            fileUrl: "#",
-            fileSize: 2450000,
-          },
-          {
-            id: "att-2",
-            fileName: "Derivatives_Reference_Formula_Sheet.pdf",
-            fileUrl: "#",
-            fileSize: 1120000,
-          },
-        ],
-  };
-
-  const [mockVersions, setMockVersions] = React.useState<SubmissionVersionItem[]>([
-    {
-      id: "v1",
-      versionNumber: 1,
-      fileName: "John_Doe_Calculus_PS4_v1.pdf",
-      fileUrl: "#",
-      fileSize: 1850000,
-      contentType: "application/pdf",
-      comments: "Initial draft submission. Completed questions 1 through 8.",
-      submittedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-      isLate: false,
-      status: "Submitted",
+  // 3. Create Submission Mutation (POST /submissions)
+  const createSubmissionMutation = useMutation({
+    mutationFn: async (payload: { assignmentId: string; content: string }) => {
+      const response = await apiClient.post("/submissions", payload);
+      return response.data?.data as SubmissionData;
     },
-  ]);
-
-  const activeVersions = submissionData?.versions?.length ? submissionData.versions : mockVersions;
-
-  const handleSubmitWork = async () => {
-    if (!selectedFile) {
-      toast.error("Please select a solution file to upload.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // Simulate submission API call / create new version
-      const newVersionNum = activeVersions.length + 1;
-      const newVersion: SubmissionVersionItem = {
-        id: `v${newVersionNum}`,
-        versionNumber: newVersionNum,
-        fileName: selectedFile.name,
-        fileUrl: URL.createObjectURL(selectedFile.file),
-        fileSize: selectedFile.size,
-        contentType: selectedFile.type,
-        comments: comments || undefined,
-        submittedAt: new Date().toISOString(),
-        isLate: new Date(mockAssignment.dueDate).getTime() < Date.now(),
-        latePenaltyDeduction: mockAssignment.latePenaltyPercentage,
-        status: "Submitted",
-      };
-
-      setMockVersions((prev) => [...prev, newVersion]);
-      toast.success(`Successfully submitted Version ${newVersionNum}!`);
+    onSuccess: (data) => {
+      toast.success("Submission created successfully!");
       setSelectedFile(null);
       setComments("");
-      refetch();
-    } catch (err) {
-    } finally {
-      setIsSubmitting(false);
+      if (data) {
+        setLocalSubmission(data);
+        queryClient.setQueryData(queryKeys.submissions.byAssignment(assignmentId), data);
+      }
+    },
+  });
+
+  // 4. Update/Resubmit Mutation (PUT /submissions/{id})
+  const updateSubmissionMutation = useMutation({
+    mutationFn: async (payload: { submissionId: string; content: string }) => {
+      const response = await apiClient.put(`/submissions/${payload.submissionId}`, {
+        submissionId: payload.submissionId,
+        content: payload.content,
+      });
+      return response.data?.data as SubmissionData;
+    },
+    onSuccess: (data) => {
+      toast.success("Resubmission recorded as new version!");
+      setSelectedFile(null);
+      setComments("");
+      if (data) {
+        setLocalSubmission(data);
+        queryClient.setQueryData(queryKeys.submissions.byAssignment(assignmentId), data);
+      }
+    },
+  });
+
+  // Merge server-fetched and locally-cached submission data
+  const effectiveSubmission = localSubmission || submissionData;
+  const hasSubmission = !!effectiveSubmission?.id;
+  const isSubmitting = createSubmissionMutation.isPending || updateSubmissionMutation.isPending;
+
+  // Build version timeline from API data
+  const versions: SubmissionVersionItem[] = React.useMemo(() => {
+    if (!effectiveSubmission?.versions) return [];
+    return effectiveSubmission.versions.map((v) => ({
+      id: v.id,
+      versionNumber: v.versionNumber,
+      fileName: `Submission_v${v.versionNumber}.txt`,
+      fileUrl: "#",
+      fileSize: v.submissionText?.length || 0,
+      contentType: "text/plain",
+      comments: v.submissionText,
+      submittedAt: v.submittedAt,
+      isLate: v.isLate,
+      status: effectiveSubmission.status,
+    }));
+  }, [effectiveSubmission]);
+
+  // Handle Submit / Resubmit
+  const handleSubmitWork = async () => {
+    const content = comments.trim() || `Submission for ${assignmentData?.title || "assignment"}`;
+
+    if (hasSubmission && effectiveSubmission?.id) {
+      updateSubmissionMutation.mutate({
+        submissionId: effectiveSubmission.id,
+        content,
+      });
+    } else {
+      createSubmissionMutation.mutate({
+        assignmentId,
+        content,
+      });
     }
+  };
+
+  // Mock assignment data fallback
+  const assignment = assignmentData || {
+    id: assignmentId,
+    title: "Assignment",
+    description: "Loading assignment details...",
+    subjectName: "Subject",
+    className: "Class",
+    teacherName: "Teacher",
+    maxMarks: 100,
+    passMarks: 40,
+    dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
+    allowLateSubmission: true,
+    latePenaltyPercentage: 10,
+    status: "Published",
+    attachments: [],
   };
 
   return (
@@ -161,31 +207,39 @@ export default function SubmissionStudioPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to My Assignments
         </Link>
+
+        {/* Resubmit Button (visible when submission exists) */}
+        {hasSubmission && (
+          <Badge variant="primary" className="gap-1.5">
+            <RefreshCw className="h-3 w-3" />
+            Version {versions.length} Active
+          </Badge>
+        )}
       </div>
 
-      {/* Main Studio Grid: Left Column (Instructions) & Right Column (Upload Zone) */}
+      {/* Main Studio Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column — Assignment Specification & Teacher Materials */}
+        {/* Left Column — Assignment Specification */}
         <div className="lg:col-span-7 space-y-6">
           <Card className="p-8 glass-card space-y-6">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="primary">{mockAssignment.subjectName}</Badge>
-                  <Badge variant="default">{mockAssignment.className}</Badge>
+                  <Badge variant="primary">{assignment.subjectName}</Badge>
+                  <Badge variant="default">{assignment.className}</Badge>
                 </div>
                 <span className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
                   <UserCheck className="h-3.5 w-3.5 text-indigo-600" />
-                  Teacher: <span className="font-bold text-slate-900">{mockAssignment.teacherName}</span>
+                  Teacher: <span className="font-bold text-slate-900">{assignment.teacherName}</span>
                 </span>
               </div>
 
               <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                {mockAssignment.title}
+                {assignment.title}
               </h1>
 
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
-                {mockAssignment.description}
+                {assignment.description}
               </p>
             </div>
 
@@ -200,7 +254,10 @@ export default function SubmissionStudioPage() {
                     Max Marks
                   </span>
                   <div className="text-sm font-extrabold font-mono text-slate-900">
-                    {mockAssignment.maxMarks} Points <span className="text-[10px] text-slate-500 font-normal">(Pass: {mockAssignment.passMarks})</span>
+                    {assignment.maxMarks} Points{" "}
+                    <span className="text-[10px] text-slate-500 font-normal">
+                      (Pass: {assignment.passMarks})
+                    </span>
                   </div>
                 </div>
               </div>
@@ -214,92 +271,114 @@ export default function SubmissionStudioPage() {
                     Late Policy
                   </span>
                   <div className="text-xs font-extrabold font-mono text-slate-900">
-                    {mockAssignment.allowLateSubmissions
-                      ? `Allowed (-${mockAssignment.latePenaltyPercentage}%)`
+                    {assignment.allowLateSubmission
+                      ? `Allowed (-${assignment.latePenaltyPercentage}%)`
                       : "Strictly Disallowed"}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Real-time Countdown Timer */}
+            {/* Countdown Timer */}
             <div className="pt-2">
               <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2 block">
                 Time Remaining:
               </label>
-              <CountdownWidget dueDate={mockAssignment.dueDate} />
+              <CountdownWidget dueDate={assignment.dueDate} />
             </div>
           </Card>
 
-          {/* Teacher Material Attachments */}
-          <Card className="p-6 space-y-4">
-            <h3 className="text-sm font-bold text-slate-900">Teacher Materials &amp; Reference Files</h3>
-            <div className="space-y-3">
-              {mockAssignment.teacherAttachments.map((att: any) => (
-                <div
-                  key={att.id}
-                  className="flex items-center justify-between p-3 rounded-xl border border-[var(--border-subtle)] bg-slate-50/50 hover:bg-slate-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <FileText className="h-5 w-5 text-indigo-500 shrink-0" />
-                    <span className="text-xs font-bold text-slate-900 truncate">{att.fileName}</span>
-                  </div>
-                  <a
-                    href={att.fileUrl || att.filePath || "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 transition-colors shadow-2xs shrink-0"
-                    title="Download Material"
+          {/* Teacher Attachments */}
+          {assignment.attachments && assignment.attachments.length > 0 && (
+            <Card className="p-6 space-y-4">
+              <h3 className="text-sm font-bold text-slate-900">Teacher Materials &amp; Reference Files</h3>
+              <div className="space-y-3">
+                {assignment.attachments.map((att) => (
+                  <div
+                    key={att.id}
+                    className="flex items-center justify-between p-3 rounded-xl border border-[var(--border-subtle)] bg-slate-50/50 hover:bg-slate-100 transition-colors"
                   >
-                    <Download className="h-4 w-4" />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </Card>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileText className="h-5 w-5 text-indigo-500 shrink-0" />
+                      <span className="text-xs font-bold text-slate-900 truncate">{att.fileName}</span>
+                    </div>
+                    <a
+                      href={att.fileUrl || att.filePath || "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 transition-colors shadow-2xs shrink-0"
+                      title="Download Material"
+                    >
+                      <Download className="h-4 w-4" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
 
-        {/* Right Column — Student File Upload & Submission Studio */}
+        {/* Right Column — Submission Studio */}
         <div className="lg:col-span-5 space-y-6">
           <Card className="p-6 glass-card space-y-5 border-indigo-200/80 shadow-md">
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900">Submission Studio</h2>
+              <h2 className="text-lg font-extrabold text-slate-900">
+                {hasSubmission ? "Resubmit Work" : "Submit Solution"}
+              </h2>
               <p className="text-xs text-[var(--text-secondary)] mt-1">
-                Upload your completed solution and submit a new revision.
+                {hasSubmission
+                  ? "Submit a new revision. Your previous version will be archived in the timeline."
+                  : "Upload your completed solution and submit your work."}
               </p>
             </div>
 
-            {/* File Drag & Drop Upload Zone */}
+            {/* File Upload Zone */}
             <StudentFileUploader
               selectedFile={selectedFile}
               onSelectFile={setSelectedFile}
             />
 
-            {/* Submission Notes Input */}
+            {/* Submission Notes */}
             <Textarea
-              label="Submission Notes / Comments (Optional)"
-              placeholder="Add any clarification, assumptions, or questions for your teacher..."
-              rows={3}
+              label="Submission Notes / Comments"
+              placeholder="Add your solution text, clarification, assumptions, or questions for your teacher..."
+              rows={4}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
             />
 
+            {/* Submit / Resubmit Button */}
             <Button
               type="button"
-              variant="primary"
+              variant={hasSubmission ? "outline" : "primary"}
               size="lg"
-              className="w-full gap-2 shadow-sm"
+              className={`w-full gap-2 shadow-sm ${hasSubmission ? "border-indigo-200 text-indigo-700" : ""}`}
               isLoading={isSubmitting}
               onClick={handleSubmitWork}
+              disabled={!comments.trim() && !selectedFile}
             >
-              <Send className="h-4 w-4" /> Submit Solution (Version {activeVersions.length + 1})
+              {hasSubmission ? (
+                <>
+                  <RefreshCw className="h-4 w-4" /> Resubmit (Version {versions.length + 1})
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" /> Submit Solution
+                </>
+              )}
             </Button>
+
+            {hasSubmission && (
+              <p className="text-[10px] text-center text-[var(--text-muted)]">
+                Your previous submission remains visible to your teacher until this new version is graded.
+              </p>
+            )}
           </Card>
         </div>
       </div>
 
-      {/* Bottom Section — Multi-Version Submission History Timeline */}
-      <SubmissionVersionTimeline versions={activeVersions} />
+      {/* Version History Timeline */}
+      <SubmissionVersionTimeline versions={versions} />
     </div>
   );
 }

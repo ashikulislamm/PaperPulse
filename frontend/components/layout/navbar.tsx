@@ -1,19 +1,18 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/api/auth-store";
 import { apiClient } from "@/lib/api/client";
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Search, Bell, User, KeyRound, Settings, LogOut } from "lucide-react";
+import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
+import { Search, User, KeyRound, Settings, LogOut } from "lucide-react";
 
 export function Navbar() {
   const router = useRouter();
   const { user, logout, refreshToken } = useAuthStore();
-  const [unreadCount] = React.useState(3);
 
   const handleLogout = async () => {
     try {
@@ -52,19 +51,8 @@ export function Navbar() {
           Primary School Tenant
         </Badge>
 
-        {/* Notification Bell */}
-        <Link
-          href="/notifications"
-          className="relative h-9 w-9 rounded-lg border border-[var(--border-subtle)] bg-white hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
-          title="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono flex items-center justify-center animate-pulse">
-              {unreadCount}
-            </span>
-          )}
-        </Link>
+        {/* Notification Dropdown */}
+        <NotificationDropdown />
 
         {/* User Profile Avatar Dropdown */}
         <DropdownMenu

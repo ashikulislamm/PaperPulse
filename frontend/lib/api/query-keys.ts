@@ -17,7 +17,10 @@ export const queryKeys = {
     grades: (filters?: Record<string, unknown>) => ["student", "grades", filters] as const,
   },
   submissions: {
-    detail: (id: string) => ["submissions", "detail", id] as const,
+    byAssignment: (assignmentId: string) =>
+      ["submissions", "assignment", assignmentId] as const,
+    detail: (submissionId: string) =>
+      ["submissions", "detail", submissionId] as const,
     forAssignment: (assignmentId: string, status?: string) =>
       ["submissions", "assignment", assignmentId, status] as const,
   },

@@ -212,6 +212,8 @@ export default function AssignmentsPage() {
               ? "published"
               : row.status === "Closed"
               ? "closed"
+              : row.status === "Archived"
+              ? "default"
               : "draft"
           }
           dot
@@ -253,17 +255,17 @@ export default function AssignmentsPage() {
                       setIsModalOpen(true);
                     },
                   },
-                  row.status === "Draft"
-                    ? {
+                  ...(row.status === "Draft"
+                    ? [{
                         label: "Publish Assignment",
                         icon: <CheckCircle2 className="h-4 w-4 text-indigo-600" />,
                         onClick: () => {
                           setActionTarget(row);
                           setActionType("publish");
                         },
-                      }
+                      }]
                     : row.status === "Published"
-                    ? {
+                    ? [{
                         label: "Close Submissions",
                         icon: <Lock className="h-4 w-4 text-rose-600" />,
                         danger: true,
@@ -271,15 +273,17 @@ export default function AssignmentsPage() {
                           setActionTarget(row);
                           setActionType("close");
                         },
-                      }
-                    : {
+                      }]
+                    : row.status === "Closed"
+                    ? [{
                         label: "Archive Assignment",
                         icon: <ArrowLeftRight className="h-4 w-4 text-amber-600" />,
                         onClick: () => {
                           setActionTarget(row);
                           setActionType("archive");
                         },
-                      },
+                      }]
+                    : []),
                   {
                     label: "Delete Assignment",
                     icon: <Trash2 className="h-4 w-4 text-rose-600" />,
@@ -334,7 +338,7 @@ export default function AssignmentsPage() {
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto">
-            {["All", "Draft", "Published", "Closed"].map((status) => (
+            {["All", "Draft", "Published", "Closed", "Archived"].map((status) => (
               <button
                 key={status}
                 onClick={() => setSelectedStatus(status)}
@@ -383,6 +387,8 @@ export default function AssignmentsPage() {
                         ? "published"
                         : item.status === "Closed"
                         ? "closed"
+                        : item.status === "Archived"
+                        ? "default"
                         : "draft"
                     }
                     dot
@@ -443,17 +449,17 @@ export default function AssignmentsPage() {
                             setIsModalOpen(true);
                           },
                         },
-                        item.status === "Draft"
-                          ? {
+                        ...(item.status === "Draft"
+                          ? [{
                               label: "Publish Assignment",
                               icon: <CheckCircle2 className="h-4 w-4 text-indigo-600" />,
                               onClick: () => {
                                 setActionTarget(item);
                                 setActionType("publish");
                               },
-                            }
+                            }]
                           : item.status === "Published"
-                          ? {
+                          ? [{
                               label: "Close Submissions",
                               icon: <Lock className="h-4 w-4 text-rose-600" />,
                               danger: true,
@@ -461,15 +467,17 @@ export default function AssignmentsPage() {
                                 setActionTarget(item);
                                 setActionType("close");
                               },
-                            }
-                          : {
+                            }]
+                          : item.status === "Closed"
+                          ? [{
                               label: "Archive Assignment",
                               icon: <ArrowLeftRight className="h-4 w-4 text-amber-600" />,
                               onClick: () => {
                                 setActionTarget(item);
                                 setActionType("archive");
                               },
-                            },
+                            }]
+                          : []),
                         {
                           label: "Delete Assignment",
                           icon: <Trash2 className="h-4 w-4 text-rose-600" />,
