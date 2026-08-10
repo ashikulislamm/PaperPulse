@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/api/auth-store";
+import { apiClient } from "@/lib/api/client";
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +12,20 @@ import { Search, Bell, User, KeyRound, Settings, LogOut } from "lucide-react";
 
 export function Navbar() {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout, refreshToken } = useAuthStore();
   const [unreadCount] = React.useState(3);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      if (refreshToken) {
+        await apiClient.post("/auth/logout", { refreshToken });
+      }
+    } catch {
+      // Proceed with local logout even if server call fails
+    } finally {
+      logout();
+      router.push("/login");
+    }
   };
 
   const userDisplayName = user ? `${user.firstName} ${user.lastName}` : "User Profile";

@@ -12,7 +12,25 @@ export const apiClient = axios.create({
   timeout: 15000,
 });
 
-// Synchronously resolve JWT Access Token from Zustand store or localStorage fallback
+// ─── Token Refresh State ──────────────────────────────────────────────────────
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// ─── Synchronous Token Resolution ─────────────────────────────────────────────
 const getValidToken = (): string | null => {
   let token = useAuthStore.getState().token;
   if (!token && typeof window !== "undefined") {
@@ -22,7 +40,6 @@ const getValidToken = (): string | null => {
         const parsed = JSON.parse(stored);
         if (parsed?.state?.token) {
           token = parsed.state.token;
-          console.log("📦 [ApiClient] Recovered token from localStorage fallback:", token?.substring(0, 20) + "...");
           if (parsed?.state?.user) {
             useAuthStore.getState().setAuth(
               parsed.state.user,
@@ -33,66 +50,131 @@ const getValidToken = (): string | null => {
         }
       }
     } catch (e) {
-      console.error("❌ [ApiClient] Failed parsing localStorage:", e);
+      console.error("[ApiClient] Failed parsing localStorage:", e);
     }
   }
   return token;
 };
 
-// Request Interceptor: Always inject Bearer Access Token into headers
+// ─── Request Interceptor ──────────────────────────────────────────────────────
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getValidToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(`🌐 [ApiClient] Request -> ${config.method?.toUpperCase()} ${config.url} (Bearer Token attached: Yes)`);
-    } else {
-      console.warn(`⚠️ [ApiClient] Request -> ${config.method?.toUpperCase()} ${config.url} (Bearer Token attached: NO)`);
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle API Responses, 403 Access Denied & Expired 7-Day Tokens
+// ─── Response Interceptor (with Token Refresh) ────────────────────────────────
 apiClient.interceptors.response.use(
-  (response) => {
-    console.log(`✅ [ApiClient] Response 200 OK -> ${response.config.method?.toUpperCase()} ${response.config.url}`);
-    return response;
-  },
-  (error: AxiosError<{ message?: string; title?: string }>) => {
-    const requestUrl = error.config?.url || "";
+  (response) => response,
+  async (error: AxiosError<{ message?: string; title?: string }>) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+    const requestUrl = originalRequest?.url || "";
     const status = error.response?.status;
 
-    // Suppress console.error for expected 404 responses (e.g. checking unsubmitted tasks)
+    // Suppress console.error for expected 404 responses
     if (status === 404) {
-      console.log(`ℹ️ [ApiClient] Resource 404 for URL: ${requestUrl}`);
-    } else {
-      console.error(`❌ [ApiClient] API Error Status [${status}] for URL: ${requestUrl}`, error.response?.data);
+      return Promise.reject(error);
     }
 
-    // 1. Handle 403 Forbidden gracefully without toast popups or logging out
+    // 403 Forbidden — handled silently
     if (status === 403) {
-      console.warn(`⛔ [ApiClient] 403 Forbidden for URL [${requestUrl}]. Handled silently without toast.`);
       return Promise.reject(error);
     }
 
-    // 2. Handle 401 Unauthorized (Only when 7-day token has expired or is invalid)
-    if (status === 401 && !requestUrl.includes("/login") && !requestUrl.includes("/register")) {
-      console.error("🚨 [ApiClient] 401 Unauthorized detected! Executing Logout & Redirecting to /login.");
-      console.trace();
+    // ── 401 Unauthorized → Attempt Token Refresh ──────────────────────────
+    if (
+      status === 401 &&
+      !requestUrl.includes("/login") &&
+      !requestUrl.includes("/register") &&
+      !requestUrl.includes("/auth/refresh") &&
+      !originalRequest._retry
+    ) {
+      const refreshToken = useAuthStore.getState().refreshToken;
 
-      useAuthStore.getState().logout();
-
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        console.warn("🔄 [ApiClient] Redirecting browser window to /login");
-        window.location.href = "/login";
-        toast.error("Session expired. Please log in again.");
+      // No refresh token available → force logout
+      if (!refreshToken) {
+        useAuthStore.getState().logout();
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+          toast.error("Session expired. Please log in again.");
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
       }
-      return Promise.reject(error);
+
+      // If already refreshing, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      // Mark as retrying and attempt refresh
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          { refreshToken },
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        const { accessToken, token: newToken, refreshToken: newRefreshToken } =
+          response.data?.data || {};
+
+        const validToken = accessToken || newToken;
+
+        if (!validToken) {
+          throw new Error("No token in refresh response");
+        }
+
+        // Update auth store with new tokens
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setAuth(
+            currentUser,
+            validToken,
+            newRefreshToken || refreshToken
+          );
+        }
+
+        // Process all queued requests with the new token
+        processQueue(null, validToken);
+
+        // Retry the original request
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${validToken}`;
+        }
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed → logout and redirect
+        processQueue(refreshError, null);
+        useAuthStore.getState().logout();
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+          toast.error("Session expired. Please log in again.");
+          window.location.href = "/login";
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
-    // 3. Global Toast Notification for server errors (excluding 401, 403, and 404 missing resource queries)
+    // ── Global Toast for other server errors ───────────────────────────────
     const errorMessage =
       error.response?.data?.message ||
       error.response?.data?.title ||

@@ -25,6 +25,7 @@ import {
   Pause,
   Trash2,
   Settings2,
+  Eye,
 } from "lucide-react";
 
 interface PagedUserResponse {
@@ -114,15 +115,18 @@ export default function UsersPage() {
     {
       header: "User Profile",
       cell: (row) => (
-        <div className="flex items-center gap-3">
+        <a
+          href={`/users/${row.id}`}
+          className="flex items-center gap-3 hover:bg-slate-50 rounded-lg p-1 -m-1 transition-colors"
+        >
           <Avatar name={`${row.firstName} ${row.lastName}`} size="md" />
           <div className="flex flex-col">
-            <span className="font-bold text-[var(--text-primary)]">
+            <span className="font-bold text-[var(--text-primary)] hover:text-indigo-600 transition-colors">
               {row.firstName} {row.lastName}
             </span>
             <span className="text-xs text-[var(--text-secondary)] font-mono">{row.email}</span>
           </div>
-        </div>
+        </a>
       ),
     },
     {
@@ -172,6 +176,11 @@ export default function UsersPage() {
             </Button>
           }
           items={[
+            {
+              label: "View Profile",
+              icon: <Eye className="h-4 w-4 text-slate-500" />,
+              onClick: () => (window.location.href = `/users/${row.id}`),
+            },
             {
               label: "Edit Profile",
               icon: <Pencil className="h-4 w-4 text-slate-500" />,
@@ -250,53 +259,81 @@ export default function UsersPage() {
       {/* Filter & Table Container */}
       <Card>
         <CardHeader className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="w-full md:w-80">
-              <Input
-                placeholder="Search name or email..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          <div className="space-y-4">
+            {/* Top Bar: Search Input & Reset Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="w-full sm:w-80">
+                <Input
+                  placeholder="Search by name or email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              {(search || selectedRole !== "All" || selectedStatus !== "All") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedRole("All");
+                    setSelectedStatus("All");
+                  }}
+                  className="text-xs font-semibold text-slate-500 hover:text-indigo-600 self-start sm:self-auto"
+                >
+                  Reset Filters
+                </Button>
+              )}
             </div>
 
-            {/* Role Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-1">
-                Role:
-              </span>
-              {["All", "Admin", "Teacher", "Student"].map((role) => (
-                <button
-                  key={role}
-                  onClick={() => setSelectedRole(role)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    selectedRole === role
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {role}
-                </button>
-              ))}
-            </div>
+            {/* Filter Pills Bar */}
+            <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-[var(--border-subtle)]">
+              {/* Role Filter Group */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Role:
+                </span>
+                <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
+                  {["All", "Admin", "Teacher", "Student"].map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => setSelectedRole(role)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        selectedRole === role
+                          ? "bg-white text-indigo-600 shadow-xs font-bold"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                      }`}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Status Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-1">
-                Status:
-              </span>
-              {["All", "Active", "Inactive", "Suspended"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setSelectedStatus(status)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    selectedStatus === status
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
+              <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+
+              {/* Status Filter Group */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Status:
+                </span>
+                <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
+                  {["All", "Active", "Inactive", "Suspended"].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setSelectedStatus(status)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        selectedStatus === status
+                          ? "bg-white text-indigo-600 shadow-xs font-bold"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </CardHeader>

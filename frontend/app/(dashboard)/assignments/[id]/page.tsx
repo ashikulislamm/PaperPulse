@@ -18,8 +18,8 @@ import {
   ArrowLeft,
   Pencil,
   CheckCircle2,
-  ArrowLeftRight,
   Lock,
+  Archive,
   Download,
   FileText,
   FileArchive,
@@ -85,14 +85,14 @@ export default function AssignmentDetailPage() {
 
     try {
       if (actionType === "publish") {
-        await apiClient.post(`/assignments/${assignmentId}/publish`);
+        await apiClient.patch(`/assignments/${assignmentId}/publish`);
         toast.success(`Published "${item.title}"`);
-      } else if (actionType === "unpublish") {
-        await apiClient.post(`/assignments/${assignmentId}/unpublish`);
-        toast.warning(`Unpublished "${item.title}" to Draft`);
       } else if (actionType === "close") {
-        await apiClient.post(`/assignments/${assignmentId}/close`);
-        toast.error(`Closed submissions for "${item.title}"`);
+        await apiClient.patch(`/assignments/${assignmentId}/close`);
+        toast.success(`Closed submissions for "${item.title}"`);
+      } else if (actionType === "archive") {
+        await apiClient.patch(`/assignments/${assignmentId}/archive`);
+        toast.success(`Archived "${item.title}"`);
       }
       refetch();
     } catch (err) {
@@ -149,27 +149,35 @@ export default function AssignmentDetailPage() {
               >
                 <CheckCircle2 className="h-3.5 w-3.5" /> Publish Assignment
               </Button>
-            ) : (
+            ) : item.status === "Published" ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-amber-700 border-amber-200"
+                  onClick={() => setActionType("archive")}
+                >
+                  <Archive className="h-3.5 w-3.5" /> Archive
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setActionType("close")}
+                >
+                  <Lock className="h-3.5 w-3.5" /> Close Submissions
+                </Button>
+              </>
+            ) : item.status === "Closed" ? (
               <Button
                 variant="outline"
                 size="sm"
                 className="gap-1.5 text-amber-700 border-amber-200"
-                onClick={() => setActionType("unpublish")}
+                onClick={() => setActionType("archive")}
               >
-                <ArrowLeftRight className="h-3.5 w-3.5" /> Unpublish
+                <Archive className="h-3.5 w-3.5" /> Archive
               </Button>
-            )}
-
-            {item.status !== "Closed" && (
-              <Button
-                variant="danger"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => setActionType("close")}
-              >
-                <Lock className="h-3.5 w-3.5" /> Close Submissions
-              </Button>
-            )}
+            ) : null}
           </div>
         )}
       </div>

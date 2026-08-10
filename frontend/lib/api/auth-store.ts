@@ -44,7 +44,6 @@ export const useAuthStore = create<AuthState>()(
       activeTenantId: null,
 
       setAuth: (user, token, refreshToken) => {
-        console.log("[AuthStore] setAuth called for user:", user.email, "Token length:", token?.length);
         set({
           user,
           token,
@@ -60,8 +59,6 @@ export const useAuthStore = create<AuthState>()(
         })),
 
       logout: () => {
-        console.warn("[AuthStore] LOGOUT CALLED! Stack Trace:");
-        console.trace();
         set({
           user: null,
           token: null,

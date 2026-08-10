@@ -141,14 +141,14 @@ export default function AssignmentsPage() {
 
     try {
       if (actionType === "publish") {
-        await apiClient.post(`/assignments/${actionTarget.id}/publish`);
+        await apiClient.patch(`/assignments/${actionTarget.id}/publish`);
         toast.success(`Published "${actionTarget.title}"`);
-      } else if (actionType === "unpublish") {
-        await apiClient.post(`/assignments/${actionTarget.id}/unpublish`);
-        toast.warning(`Unpublished "${actionTarget.title}" to Draft`);
       } else if (actionType === "close") {
-        await apiClient.post(`/assignments/${actionTarget.id}/close`);
-        toast.error(`Closed submissions for "${actionTarget.title}"`);
+        await apiClient.patch(`/assignments/${actionTarget.id}/close`);
+        toast.success(`Closed submissions for "${actionTarget.title}"`);
+      } else if (actionType === "archive") {
+        await apiClient.patch(`/assignments/${actionTarget.id}/archive`);
+        toast.success(`Archived "${actionTarget.title}"`);
       }
       refetch();
     } catch (err) {
@@ -262,23 +262,24 @@ export default function AssignmentsPage() {
                           setActionType("publish");
                         },
                       }
+                    : row.status === "Published"
+                    ? {
+                        label: "Close Submissions",
+                        icon: <Lock className="h-4 w-4 text-rose-600" />,
+                        danger: true,
+                        onClick: () => {
+                          setActionTarget(row);
+                          setActionType("close");
+                        },
+                      }
                     : {
-                        label: "Unpublish to Draft",
+                        label: "Archive Assignment",
                         icon: <ArrowLeftRight className="h-4 w-4 text-amber-600" />,
                         onClick: () => {
                           setActionTarget(row);
-                          setActionType("unpublish");
+                          setActionType("archive");
                         },
                       },
-                  {
-                    label: "Close Submissions",
-                    icon: <Lock className="h-4 w-4 text-rose-600" />,
-                    danger: true,
-                    onClick: () => {
-                      setActionTarget(row);
-                      setActionType("close");
-                    },
-                  },
                   {
                     label: "Delete Assignment",
                     icon: <Trash2 className="h-4 w-4 text-rose-600" />,
@@ -451,12 +452,22 @@ export default function AssignmentsPage() {
                                 setActionType("publish");
                               },
                             }
+                          : item.status === "Published"
+                          ? {
+                              label: "Close Submissions",
+                              icon: <Lock className="h-4 w-4 text-rose-600" />,
+                              danger: true,
+                              onClick: () => {
+                                setActionTarget(item);
+                                setActionType("close");
+                              },
+                            }
                           : {
-                              label: "Unpublish to Draft",
+                              label: "Archive Assignment",
                               icon: <ArrowLeftRight className="h-4 w-4 text-amber-600" />,
                               onClick: () => {
                                 setActionTarget(item);
-                                setActionType("unpublish");
+                                setActionType("archive");
                               },
                             },
                         {

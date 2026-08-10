@@ -3,9 +3,9 @@
 import * as React from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle2, Lock, ArrowLeftRight } from "lucide-react";
+import { AlertCircle, CheckCircle2, Lock, Archive } from "lucide-react";
 
-export type ActionType = "publish" | "unpublish" | "close";
+export type ActionType = "publish" | "close" | "archive";
 
 interface AssignmentActionDialogProps {
   isOpen: boolean;
@@ -32,19 +32,19 @@ export function AssignmentActionDialog({
       variant: "primary" as const,
       icon: <CheckCircle2 className="h-6 w-6 text-indigo-600" />,
     },
-    unpublish: {
-      title: "Unpublish Assignment",
-      description: "Reverts the assignment back to Draft mode. Students will temporarily not see this assignment.",
-      confirmText: "Unpublish to Draft",
-      variant: "outline" as const,
-      icon: <ArrowLeftRight className="h-6 w-6 text-amber-600" />,
-    },
     close: {
       title: "Close Assignment Submissions",
       description: "Locks the assignment to prevent further student submissions.",
       confirmText: "Close Submissions",
       variant: "danger" as const,
       icon: <Lock className="h-6 w-6 text-rose-600" />,
+    },
+    archive: {
+      title: "Archive Assignment",
+      description: "Archives this assignment. It will no longer appear in active lists but can still be viewed.",
+      confirmText: "Archive Assignment",
+      variant: "outline" as const,
+      icon: <Archive className="h-6 w-6 text-amber-600" />,
     },
   };
 

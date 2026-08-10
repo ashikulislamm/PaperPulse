@@ -2,50 +2,119 @@
 
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/api/auth-store";
+import { apiClient } from "@/lib/api/client";
+import { queryKeys } from "@/lib/api/query-keys";
+
+interface AuthMeResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  status: string;
+  roles: string[];
+  permissions?: string[];
+  mustChangePassword: boolean;
+  tenantId?: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isHydrated, setIsHydrated] = React.useState(false);
 
+  // Step 1: Hydrate Zustand from localStorage on client mount (fast, instant UI)
   React.useEffect(() => {
-    // Sync store with localStorage on client mount
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("paperpulse-auth-storage");
-      console.log("🛡️ [AuthGuard] Initializing client hydration. localStorage key present:", !!stored);
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           if (parsed?.state?.token && parsed?.state?.user) {
-            console.log("🛡️ [AuthGuard] Hydrating state from localStorage for user:", parsed.state.user.email);
             useAuthStore.getState().setAuth(
               parsed.state.user,
               parsed.state.token,
               parsed.state.refreshToken || ""
             );
-          } else {
-            console.warn("🛡️ [AuthGuard] Stored data in localStorage has missing token or user.");
           }
-        } catch (e) {
-          console.error("🛡️ [AuthGuard] Failed parsing localStorage JSON:", e);
+        } catch {
+          // Corrupted storage — clear it
+          localStorage.removeItem("paperpulse-auth-storage");
         }
       }
       setIsHydrated(true);
     }
   }, []);
 
+  // Step 2: Validate session by calling GET /auth/me
+  const token = useAuthStore((s) => s.token);
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const logout = useAuthStore((s) => s.logout);
+
+  const { data: meData, isError: meError } = useQuery({
+    queryKey: queryKeys.auth.me(),
+    queryFn: async () => {
+      const response = await apiClient.get("/auth/me");
+      return response.data?.data as AuthMeResponse;
+    },
+    enabled: isHydrated && !!token,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  // Step 3: If /auth/me succeeds, update store with fresh user data
+  React.useEffect(() => {
+    if (meData) {
+      const currentUser = useAuthStore.getState().user;
+      // Only update if data actually changed
+      if (
+        currentUser?.email !== meData.email ||
+        currentUser?.firstName !== meData.firstName ||
+        currentUser?.lastName !== meData.lastName ||
+        currentUser?.status !== meData.status ||
+        JSON.stringify(currentUser?.roles) !== JSON.stringify(meData.roles)
+      ) {
+        updateUser({
+          email: meData.email,
+          firstName: meData.firstName,
+          lastName: meData.lastName,
+          status: meData.status,
+          roles: meData.roles,
+          permissions: meData.permissions,
+          mustChangePassword: meData.mustChangePassword,
+          tenantId: meData.tenantId,
+          phoneNumber: meData.phoneNumber,
+          avatarUrl: meData.avatarUrl,
+        });
+      }
+    }
+  }, [meData, updateUser]);
+
+  // Step 4: If /auth/me fails (and not just hydration wait), logout and redirect
+  // Note: 401 is handled by the token refresh interceptor in client.ts.
+  // If we still get an error here, the refresh failed and the interceptor already logged us out.
+  React.useEffect(() => {
+    if (meError && isHydrated && token) {
+      // The refresh interceptor in client.ts already handled logout for 401.
+      // This catch is for other unexpected errors — don't force logout, just let the interceptor handle it.
+    }
+  }, [meError, isHydrated, token]);
+
+  // Step 5: Route protection — redirect to /login if no token on protected path
   React.useEffect(() => {
     if (isHydrated) {
       const currentToken = useAuthStore.getState().token;
-      console.log(`🛡️ [AuthGuard] Checking route protection for path: [${pathname}]. Token present:`, !!currentToken);
       if (!currentToken && !pathname.includes("/login") && !pathname.includes("/register")) {
-        console.warn(`🛡️ [AuthGuard] No valid token found for protected path [${pathname}]. Redirecting to /login`);
         router.push("/login");
       }
     }
   }, [isHydrated, router, pathname]);
 
+  // Show loading until hydration completes
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)] text-slate-500 font-medium text-xs">
