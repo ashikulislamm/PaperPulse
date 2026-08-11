@@ -130,7 +130,7 @@ export function AuditLogDetailModal({ isOpen, onClose, logId }: AuditLogDetailMo
       ) : detail ? (
         <div className="space-y-5">
           {/* Metadata Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                 Action

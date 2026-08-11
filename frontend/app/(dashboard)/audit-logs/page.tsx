@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuditLogDetailModal } from "@/components/audit-logs/audit-log-detail-modal";
+import { PageBanner } from "@/components/common/page-banner";
 import {
   Shield,
   Search,
@@ -258,28 +259,28 @@ export default function AuditLogsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Audit Logs</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Monitor system activity, track changes, and review security events.
-          </p>
-        </div>
-        {userIdFilter && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setUserIdFilter("");
-              router.replace("/audit-logs");
-            }}
-            className="gap-1.5 text-xs"
-          >
-            ✕ Clear User Filter
-          </Button>
-        )}
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Audit"
+        heading="Audit Logs"
+        description="Monitor system activity, track changes, and review security events."
+        icon={<Shield className="h-5 w-5" />}
+        actions={
+          userIdFilter ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setUserIdFilter("");
+                router.replace("/audit-logs");
+              }}
+              className="gap-1.5 bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs"
+            >
+              ✕ Clear User Filter
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -381,7 +382,7 @@ export default function AuditLogsPage() {
                           setSelectedAction(action);
                           setPageNumber(1);
                         }}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                        className={`px-2.5 py-2 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[40px] ${
                           selectedAction === action
                             ? "bg-white text-indigo-600 shadow-xs font-bold"
                             : "text-slate-600 hover:text-slate-900"
@@ -404,7 +405,7 @@ export default function AuditLogsPage() {
                       setEntityFilter(e.target.value);
                       setPageNumber(1);
                     }}
-                    className="w-36 h-8 text-xs"
+                    className="w-36 h-10 text-xs"
                   />
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-semibold text-slate-600">From:</span>
@@ -415,7 +416,7 @@ export default function AuditLogsPage() {
                         setStartDate(e.target.value);
                         setPageNumber(1);
                       }}
-                      className="h-8 px-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-white/80 text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+                      className="h-10 px-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-white/80 text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -427,7 +428,7 @@ export default function AuditLogsPage() {
                         setEndDate(e.target.value);
                         setPageNumber(1);
                       }}
-                      className="h-8 px-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-white/80 text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+                      className="h-10 px-2 text-xs rounded-lg border border-[var(--border-subtle)] bg-white/80 text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>

@@ -110,7 +110,7 @@ export function GradePanel({
         <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
           Score (0 — {maxMarks})
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <input
             type="number"
             min={0}

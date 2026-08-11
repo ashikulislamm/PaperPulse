@@ -66,7 +66,7 @@ export function StudentDashboard({ userName }: { userName: string }) {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Student Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Student Dashboard</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
             Welcome back, {userName}. Track your assignments, deadlines, and grades.
           </p>
@@ -110,7 +110,7 @@ export function StudentDashboard({ userName }: { userName: string }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8">
         {/* Upcoming Deadlines */}
         <div className="lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between">
@@ -131,7 +131,7 @@ export function StudentDashboard({ userName }: { userName: string }) {
             ) : (
               deadlines.map((dl) => (
                 <Card key={dl.assignmentId} className="p-5 glass-card">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="primary">{dl.subjectName}</Badge>

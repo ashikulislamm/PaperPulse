@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CountdownWidget } from "@/components/ui/countdown";
 import { StatCard } from "@/components/common/stat-card";
+import { PageBanner } from "@/components/common/page-banner";
 import {
   Clock,
   CheckCircle2,
   AlertTriangle,
   ChevronRight,
   Trophy,
+  BookOpen,
 } from "lucide-react";
 
 export interface StudentAssignmentFeedItem {
@@ -75,15 +77,13 @@ export default function StudentAssignmentsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Student Assignment Workspace</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Track deadlines, submit solution files, view evaluations, and manage submission revisions.
-          </p>
-        </div>
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Assignments"
+        heading="My Assignments"
+        description="Track deadlines, submit solution files, view evaluations, and manage submission revisions."
+        icon={<BookOpen className="h-5 w-5" />}
+      />
 
       {/* Analytics Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
@@ -150,7 +150,7 @@ export default function StudentAssignmentsPage() {
       {/* Cards Grid Feed */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredItems.length === 0 ? (
-          <div className="col-span-full p-8 text-center glass-card border border-dashed border-slate-200 rounded-2xl">
+          <div className="col-span-full p-6 sm:p-8 text-center glass-card border border-dashed border-slate-200 rounded-2xl">
             <p className="text-sm font-bold text-slate-700">No assignments found matching &ldquo;{selectedStatus}&rdquo; filter.</p>
           </div>
         ) : (
@@ -195,7 +195,7 @@ export default function StudentAssignmentsPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
                     <Badge variant="primary">{item.subjectName}</Badge>
                     <Badge variant="default">{item.className}</Badge>
                     {item.allowLateSubmissions && (

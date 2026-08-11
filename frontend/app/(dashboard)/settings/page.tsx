@@ -9,6 +9,7 @@ import { apiClient } from "@/lib/api/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageBanner } from "@/components/common/page-banner";
 import {
   Settings,
   Clock,
@@ -199,18 +200,13 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">System Settings</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Manage system jobs, perform maintenance tasks, and configure platform settings.
-          </p>
-        </div>
-        <Badge variant="primary" className="gap-1.5 w-fit">
-          <ShieldAlert className="h-3.5 w-3.5" /> Admin Only
-        </Badge>
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Settings"
+        heading="System Settings"
+        description="Manage system jobs, perform maintenance tasks, and configure platform settings."
+        icon={<ShieldAlert className="h-5 w-5" />}
+      />
 
       {/* System Jobs Section */}
       <div className="space-y-6">

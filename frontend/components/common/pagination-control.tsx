@@ -39,7 +39,7 @@ export function PaginationControl({
             value={String(pageSize)}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             options={pageSizeOptions.map((s) => ({ label: `${s} / page`, value: String(s) }))}
-            className="h-8 py-0 px-2 text-xs w-28"
+            className="h-10 py-0 px-2 text-xs w-28"
           />
         </div>
       </div>

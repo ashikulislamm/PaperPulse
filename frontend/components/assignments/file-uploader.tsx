@@ -109,7 +109,7 @@ export function FileUploader({
                   className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
                   title="Download File"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-4 w-4" /> <span className="hidden sm:inline">Download</span>
                 </a>
                 <button
                   type="button"

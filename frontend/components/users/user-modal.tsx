@@ -142,7 +142,7 @@ export function UserModal({ isOpen, onClose, onSuccess, userToEdit }: UserModalP
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "Edit System User" : "Create New User"}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
             label="First Name"
             placeholder="Sarah"
@@ -177,7 +177,7 @@ export function UserModal({ isOpen, onClose, onSuccess, userToEdit }: UserModalP
           <label className="text-xs font-semibold tracking-wide text-[var(--text-secondary)] uppercase">
             Assign System Roles
           </label>
-          <div className="flex items-center gap-4 p-3 rounded-lg border border-[var(--border-subtle)] bg-slate-50/50">
+          <div className="flex flex-wrap items-center gap-4 p-3 rounded-lg border border-[var(--border-subtle)] bg-slate-50/50">
             {["Admin", "Teacher", "Student"].map((role) => (
               <Checkbox
                 key={role}
@@ -228,7 +228,7 @@ export function UserModal({ isOpen, onClose, onSuccess, userToEdit }: UserModalP
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

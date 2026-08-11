@@ -132,7 +132,7 @@ export default function GradeDetailPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to Grades
         </Link>
-        <Card className="p-12 text-center">
+        <Card className="p-8 sm:p-12 text-center">
           <p className="text-sm text-[var(--text-secondary)]">Grade details not found.</p>
         </Card>
       </div>
@@ -269,7 +269,7 @@ export default function GradeDetailPage() {
                         : "border-slate-200/60 bg-slate-50/50"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold font-mono text-indigo-600">
                           v{v.versionNumber}

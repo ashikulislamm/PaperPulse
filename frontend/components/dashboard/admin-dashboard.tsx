@@ -59,7 +59,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">System Administration</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">System Administration</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
             Welcome back, {userName}. Manage users, tenants, and review platform health.
           </p>
@@ -112,7 +112,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
 
       {/* Submission Statistics */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <Card className="p-4 glass-card flex items-center gap-3">
             <div className="p-2 rounded-xl bg-slate-100 text-slate-600">
               <FileText className="h-4 w-4" />
@@ -162,7 +162,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
       )}
 
       {/* Management Shortcuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8">
         <Card className="p-6 glass-card space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-2xl bg-indigo-100/80 text-indigo-600">

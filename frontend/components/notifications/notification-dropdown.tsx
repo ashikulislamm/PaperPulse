@@ -142,7 +142,7 @@ export function NotificationDropdown({ onNavigate }: NotificationDropdownProps) 
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 max-h-[480px] rounded-xl border border-[var(--border-subtle)] bg-white shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 z-50 overflow-hidden flex flex-col">
+        <div className="fixed left-4 right-4 top-16 sm:absolute sm:right-0 sm:left-auto sm:top-auto sm:mt-2 sm:w-96 max-h-[480px] rounded-xl border border-[var(--border-subtle)] bg-white shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 z-[60] sm:z-50 overflow-hidden flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
             <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
@@ -174,12 +174,12 @@ export function NotificationDropdown({ onNavigate }: NotificationDropdownProps) 
           {/* Notification List */}
           <div className="overflow-y-auto flex-1 divide-y divide-slate-100">
             {isLoading ? (
-              <div className="p-8 text-center">
+              <div className="p-6 sm:p-8 text-center">
                 <div className="h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-xs text-slate-500 mt-2">Loading notifications...</p>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center">
+              <div className="p-6 sm:p-8 text-center">
                 <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-2">
                   <Bell className="h-5 w-5 text-slate-400" />
                 </div>

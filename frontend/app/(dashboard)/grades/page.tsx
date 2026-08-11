@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/common/stat-card";
+import { PageBanner } from "@/components/common/page-banner";
 import {
   Trophy,
   CheckCircle2,
@@ -19,6 +20,7 @@ import {
   TrendingUp,
   ArrowRight,
   Search,
+  Award,
 } from "lucide-react";
 
 interface StudentGradeSummary {
@@ -217,13 +219,13 @@ export default function GradesPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">My Grades</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
-          View your scores, pass/fail status, and teacher feedback for all graded assignments.
-        </p>
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Grades"
+        heading="My Grades"
+        description="View your scores, pass/fail status, and teacher feedback for all graded assignments."
+        icon={<Award className="h-5 w-5" />}
+      />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">

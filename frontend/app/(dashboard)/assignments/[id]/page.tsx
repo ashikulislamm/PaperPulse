@@ -121,7 +121,7 @@ export default function AssignmentDetailPage() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Top Back Navigation Bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
           href="/assignments"
           className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-indigo-600 transition-colors"
@@ -131,7 +131,7 @@ export default function AssignmentDetailPage() {
 
         {/* Action Controls Guarded for Teachers/Admins */}
         {canManage && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -184,10 +184,10 @@ export default function AssignmentDetailPage() {
       </div>
 
       {/* Main Assignment Overview Card */}
-      <Card className="p-8 glass-card space-y-6">
+      <Card className="p-4 sm:p-8 glass-card space-y-6">
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="primary">{item.subjectName || "Mathematics"}</Badge>
               <Badge variant="default">{item.className || "Grade 10-A"}</Badge>
               <span className="text-xs font-semibold text-slate-600 flex items-center gap-1.5 ml-2">
@@ -211,7 +211,7 @@ export default function AssignmentDetailPage() {
             </Badge>
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
             {item.title}
           </h1>
 

@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { UserModal, UserItem } from "@/components/users/user-modal";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { PageBanner } from "@/components/common/page-banner";
 import {
   Users as UsersIcon,
   CheckCircle2,
@@ -47,6 +49,7 @@ export default function UsersPage() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<UserItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<UserItem | null>(null);
 
   // Debounce Search Input
   React.useEffect(() => {
@@ -108,11 +111,12 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!confirm("Are you sure you want to soft delete this user?")) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await apiClient.delete(`/users/${userId}`);
+      await apiClient.delete(`/users/${deleteTarget.id}`);
       toast.success("User deleted.");
+      setDeleteTarget(null);
       refetch();
     } catch (err) {
       toast.error("Failed to delete user.");
@@ -212,7 +216,7 @@ export default function UsersPage() {
               label: "Delete User",
               icon: <Trash2 className="h-4 w-4 text-rose-600" />,
               danger: true,
-              onClick: () => handleDelete(row.id),
+              onClick: () => setDeleteTarget(row),
             },
           ]}
         />
@@ -222,25 +226,25 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-8">
-      {/* Page Title & Create User Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">System User Administration</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Manage System &amp; Tenant users, role claims, status enforcement, and account provisioning.
-          </p>
-        </div>
-        <Button
-          variant="primary"
-          className="gap-2"
-          onClick={() => {
-            setEditingUser(null);
-            setIsModalOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" /> Add New User
-        </Button>
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Users"
+        heading="System User Administration"
+        description="Manage system and tenant users, role claims, status enforcement, and account provisioning."
+        icon={<UsersIcon className="h-5 w-5" />}
+        actions={
+          <Button
+            variant="primary"
+            className="gap-2"
+            onClick={() => {
+              setEditingUser(null);
+              setIsModalOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" /> Add New User
+          </Button>
+        }
+      />
 
       {/* User Stats Quick View */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -306,7 +310,7 @@ export default function UsersPage() {
                       key={role}
                       type="button"
                       onClick={() => setSelectedRole(role)}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[40px] ${
                         selectedRole === role
                           ? "bg-white text-indigo-600 shadow-xs font-bold"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
@@ -331,7 +335,7 @@ export default function UsersPage() {
                       key={status}
                       type="button"
                       onClick={() => setSelectedStatus(status)}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[40px] ${
                         selectedStatus === status
                           ? "bg-white text-indigo-600 shadow-xs font-bold"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
@@ -371,6 +375,17 @@ export default function UsersPage() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => refetch()}
         userToEdit={editingUser}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={`Delete "${deleteTarget?.firstName} ${deleteTarget?.lastName}"?`}
+        description="This user will be soft-deleted and will no longer be able to log in. An administrator can reverse this action later."
+        confirmLabel="Delete User"
+        variant="danger"
       />
     </div>
   );

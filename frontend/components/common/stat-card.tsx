@@ -33,7 +33,7 @@ export function StatCard({
   };
 
   return (
-    <Card className={cn("p-6 relative overflow-hidden glass-card", className)}>
+    <Card className={cn("p-4 md:p-6 relative overflow-hidden glass-card", className)}>
       {/* Accent Gradient Blur */}
       <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br blur-2xl pointer-events-none -z-10", accentGradients[accentColor])} />
 
@@ -49,7 +49,7 @@ export function StatCard({
       </div>
 
       <div className="mt-4 flex items-baseline justify-between gap-2">
-        <div className="text-3xl font-extrabold tracking-tight text-[var(--text-primary)] font-mono font-mono-numeric">
+        <div className="text-2xl md:text-3xl font-extrabold tracking-tight text-[var(--text-primary)] font-mono font-mono-numeric">
           {value}
         </div>
 

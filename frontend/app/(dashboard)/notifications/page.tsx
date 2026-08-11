@@ -11,6 +11,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageBanner } from "@/components/common/page-banner";
 import {
   Bell,
   CheckCheck,
@@ -238,26 +239,26 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Notifications</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Stay updated with assignments, submissions, and grades.
-          </p>
-        </div>
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => markAllReadMutation.mutate()}
-            isLoading={markAllReadMutation.isPending}
-          >
-            <CheckCheck className="h-4 w-4" /> Mark all as read ({unreadCount})
-          </Button>
-        )}
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Notifications"
+        heading="Notifications"
+        description="Stay updated with assignments, submissions, and grade notifications."
+        icon={<Bell className="h-5 w-5" />}
+        actions={
+          unreadCount > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 bg-white/10 hover:bg-white/20 text-white border-white/20"
+              onClick={() => markAllReadMutation.mutate()}
+              isLoading={markAllReadMutation.isPending}
+            >
+              <CheckCheck className="h-4 w-4" /> Mark all as read ({unreadCount})
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Filters & Table */}
       <Card>
@@ -277,7 +278,7 @@ export default function NotificationsPage() {
                       setStatusFilter(status);
                       setPageNumber(1);
                     }}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                    className={`px-2.5 py-2 rounded-lg text-[11px] font-semibold transition-all cursor-pointer min-h-[40px] ${
                       statusFilter === status
                         ? "bg-white text-indigo-600 shadow-xs"
                         : "text-slate-600 hover:text-slate-900"

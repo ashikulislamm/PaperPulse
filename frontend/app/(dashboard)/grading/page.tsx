@@ -8,6 +8,7 @@ import { queryKeys } from "@/lib/api/query-keys";
 import { DataTable, Column } from "@/components/common/data-table";
 import { PaginationControl } from "@/components/common/pagination-control";
 import { Card, CardHeader } from "@/components/ui/card";
+import { PageBanner } from "@/components/common/page-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -194,13 +195,13 @@ export default function GradingPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Grading &amp; Evaluations</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Review student submissions, assign grades, and provide feedback.
-        </p>
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Grading"
+        heading="Grading & Evaluations"
+        description="Review student submissions, assign grades, and provide feedback."
+        icon={<GraduationCap className="h-5 w-5" />}
+      />
 
       {/* Assignment Selector & Filters */}
       <Card>
@@ -240,7 +241,7 @@ export default function GradingPage() {
                         setStatusFilter(status);
                         setPageNumber(1);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                      className={`px-2.5 py-2 rounded-lg text-[11px] font-semibold transition-all cursor-pointer min-h-[40px] ${
                         statusFilter === status
                           ? "bg-white text-indigo-600 shadow-xs"
                           : "text-slate-600 hover:text-slate-900"
@@ -294,7 +295,7 @@ export default function GradingPage() {
             )}
           </div>
         ) : (
-          <div className="p-12 text-center">
+          <div className="p-8 sm:p-12 text-center">
             <div className="h-14 w-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
               <GraduationCap className="h-7 w-7" />
             </div>

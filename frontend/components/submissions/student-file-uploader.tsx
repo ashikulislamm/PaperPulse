@@ -92,7 +92,7 @@ export function StudentFileUploader({
       {!selectedFile ? (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-[var(--border-subtle)] hover:border-indigo-500 bg-slate-50/60 hover:bg-indigo-50/20 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
+          className="border-2 border-dashed border-[var(--border-subtle)] hover:border-indigo-500 bg-slate-50/60 hover:bg-indigo-50/20 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group"
         >
           <input
             ref={fileInputRef}

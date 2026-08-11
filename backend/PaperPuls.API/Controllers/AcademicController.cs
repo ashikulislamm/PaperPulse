@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using PaperPulse.Application.Common.Models;
 using PaperPulse.Application.Features.Academic.Commands.CreateClass;
 using PaperPulse.Application.Features.Academic.Commands.CreateSubject;
+using PaperPulse.Application.Features.Academic.Commands.DeleteClass;
+using PaperPulse.Application.Features.Academic.Commands.DeleteSubject;
 using PaperPulse.Application.Features.Academic.DTOs;
 using PaperPulse.Application.Features.Academic.Queries.GetClasses;
 using PaperPulse.Application.Features.Academic.Queries.GetSubjects;
@@ -64,5 +66,35 @@ public class AcademicController : ApiControllerBase
     {
         var result = await Mediator.Send(command, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<SubjectDto>.CreatedResponse(result, "Subject created successfully."));
+    }
+
+    /// <summary>
+    /// Delete an academic class and its subject associations (Admin only)
+    /// </summary>
+    [HttpDelete("classes/{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse>> DeleteClass(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        await Mediator.Send(new DeleteClassCommand(id), cancellationToken);
+        return NoContentResponse("Class deleted successfully.");
+    }
+
+    /// <summary>
+    /// Delete a subject and its class associations (Admin only)
+    /// </summary>
+    [HttpDelete("subjects/{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse>> DeleteSubject(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        await Mediator.Send(new DeleteSubjectCommand(id), cancellationToken);
+        return NoContentResponse("Subject deleted successfully.");
     }
 }

@@ -15,6 +15,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { User, KeyRound, Save } from "lucide-react";
+import { PageBanner } from "@/components/common/page-banner";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -127,13 +128,13 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Account Settings &amp; Profile</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Manage your personal information, contact phone number, and account password.
-        </p>
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Profile"
+        heading="Account Settings & Profile"
+        description="Manage your personal information, contact details, and account password."
+        icon={<User className="h-5 w-5" />}
+      />
 
       {/* Profile Overview Card */}
       <Card className="p-6 glass-card flex flex-col sm:flex-row items-center justify-between gap-6">

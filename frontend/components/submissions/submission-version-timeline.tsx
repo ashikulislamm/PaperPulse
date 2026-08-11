@@ -36,7 +36,7 @@ export function SubmissionVersionTimeline({ versions }: SubmissionVersionTimelin
 
   if (versions.length === 0) {
     return (
-      <Card className="p-8 text-center glass-card border border-dashed border-slate-200">
+      <Card className="p-6 sm:p-8 text-center glass-card border border-dashed border-slate-200">
         <div className="h-12 w-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
           <History className="h-6 w-6" />
         </div>
@@ -50,7 +50,7 @@ export function SubmissionVersionTimeline({ versions }: SubmissionVersionTimelin
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <History className="h-5 w-5 text-indigo-600" />
           <h3 className="text-base font-extrabold text-slate-900">Submission Version History</h3>
@@ -132,7 +132,7 @@ export function SubmissionVersionTimeline({ versions }: SubmissionVersionTimelin
                     rel="noreferrer"
                     className="p-2 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 transition-colors shadow-2xs shrink-0 flex items-center gap-1.5 text-xs font-semibold"
                   >
-                    <Download className="h-3.5 w-3.5" /> Download
+                    <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Download</span>
                   </a>
                 </div>
               </Card>

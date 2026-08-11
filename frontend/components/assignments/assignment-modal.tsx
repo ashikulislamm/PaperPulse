@@ -276,7 +276,7 @@ export function AssignmentModal({
           {...register("description")}
         />
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <Input
             label="Max Marks"
             type="number"
@@ -317,7 +317,7 @@ export function AssignmentModal({
           </div>
 
           {allowLate && (
-            <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-4">
+            <div className="pt-2 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <label className="text-xs font-semibold text-slate-700">
                 Late Penalty Deduction (%):
               </label>
@@ -340,7 +340,7 @@ export function AssignmentModal({
           onRemove={handleRemoveAttachment}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

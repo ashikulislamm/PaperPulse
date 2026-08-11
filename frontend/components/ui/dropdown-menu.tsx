@@ -23,13 +23,13 @@ export function DropdownMenu({ trigger, items, align = "right", className }: Dro
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handlePointerOutside = (event: PointerEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handlePointerOutside);
+    return () => document.removeEventListener("pointerdown", handlePointerOutside);
   }, []);
 
   return (
@@ -39,7 +39,7 @@ export function DropdownMenu({ trigger, items, align = "right", className }: Dro
       {isOpen && (
         <div
           className={cn(
-            "absolute z-50 mt-2 w-56 rounded-xl border border-[var(--border-subtle)] glass-panel bg-white/95 p-1.5 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 focus:outline-none",
+            "absolute z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--border-subtle)] glass-panel bg-white/95 p-1.5 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 focus:outline-none",
             align === "right" ? "right-0" : "left-0",
             className
           )}

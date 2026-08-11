@@ -14,10 +14,8 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <div className="min-h-screen flex bg-[var(--bg-base)] text-[var(--text-primary)] relative">
-        {/* Sidebar Navigation (hidden on mobile, controlled by its own state) */}
-        <div className="hidden md:block">
-          <Sidebar />
-        </div>
+        {/* Sidebar Navigation — handles its own mobile/desktop visibility internally */}
+        <Sidebar />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">

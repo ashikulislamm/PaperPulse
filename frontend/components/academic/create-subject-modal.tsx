@@ -127,7 +127,7 @@ export function CreateSubjectModal({
           {errors.classId && <p className="text-[11px] text-rose-500 font-medium">{errors.classId.message}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
             label="Subject Name"
             placeholder="Advanced Calculus"
@@ -142,7 +142,7 @@ export function CreateSubjectModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
             label="Pass Marks"
             type="number"
@@ -182,7 +182,7 @@ export function CreateSubjectModal({
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

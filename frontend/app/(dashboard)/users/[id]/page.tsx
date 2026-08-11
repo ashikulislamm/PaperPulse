@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { RoleAssignmentModal } from "@/components/users/role-assignment-modal";
 import {
   ArrowLeft,
@@ -50,6 +51,9 @@ export default function UserDetailPage() {
   const isAdmin = currentUser?.roles?.includes("Admin");
 
   const [isRoleModalOpen, setIsRoleModalOpen] = React.useState(false);
+  const [confirmAction, setConfirmAction] = React.useState<{
+    type: "ban" | "delete";
+  } | null>(null);
 
   // Fetch user detail
   const { data: user, isLoading, refetch } = useQuery({
@@ -83,7 +87,7 @@ export default function UserDetailPage() {
   };
 
   const handleBan = async () => {
-    if (!confirm("Are you sure you want to ban this user? This will terminate their active sessions.")) return;
+    setConfirmAction(null);
     try {
       await apiClient.patch(`/users/${userId}/ban`);
       toast.error("User has been banned.");
@@ -94,7 +98,7 @@ export default function UserDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to soft delete this user? This action can be reversed by an administrator.")) return;
+    setConfirmAction(null);
     try {
       await apiClient.delete(`/users/${userId}`);
       toast.success("User deleted.");
@@ -108,7 +112,7 @@ export default function UserDetailPage() {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
         <Skeleton className="h-8 w-48" />
-        <Card className="p-8 space-y-6">
+        <Card className="p-5 sm:p-8 space-y-6">
           <div className="flex items-center gap-6">
             <Skeleton className="h-20 w-20 rounded-full" />
             <div className="space-y-2">
@@ -117,7 +121,7 @@ export default function UserDetailPage() {
             </div>
           </div>
           <Skeleton className="h-px w-full" />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-16 w-full" />
@@ -137,7 +141,7 @@ export default function UserDetailPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to Users
         </Link>
-        <Card className="p-12 text-center">
+        <Card className="p-8 sm:p-12 text-center">
           <p className="text-sm text-[var(--text-secondary)]">User not found.</p>
         </Card>
       </div>
@@ -155,7 +159,7 @@ export default function UserDetailPage() {
       </Link>
 
       {/* User Profile Header Card */}
-      <Card className="p-8 glass-card">
+      <Card className="p-5 sm:p-8 glass-card">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <Avatar
@@ -234,7 +238,7 @@ export default function UserDetailPage() {
                 variant="danger"
                 size="sm"
                 className="gap-1.5"
-                onClick={handleBan}
+                onClick={() => setConfirmAction({ type: "ban" })}
               >
                 <Ban className="h-3.5 w-3.5" /> Ban
               </Button>
@@ -349,7 +353,7 @@ export default function UserDetailPage() {
       {isAdmin && (
         <Card className="p-6 border-rose-200 bg-rose-50/30">
           <h3 className="text-sm font-bold text-rose-700 mb-3">Danger Zone</h3>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <p className="text-xs text-rose-600 font-medium">
                 Permanently soft-delete this user account. The user will no longer be able to log in.
@@ -359,7 +363,7 @@ export default function UserDetailPage() {
               variant="danger"
               size="sm"
               className="gap-1.5 shrink-0"
-              onClick={handleDelete}
+              onClick={() => setConfirmAction({ type: "delete" })}
             >
               <Trash2 className="h-3.5 w-3.5" /> Delete User
             </Button>
@@ -375,6 +379,21 @@ export default function UserDetailPage() {
         userId={userId}
         userName={`${user.firstName} ${user.lastName}`}
         currentRoles={user.roles}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={confirmAction?.type === "ban" ? handleBan : handleDelete}
+        title={confirmAction?.type === "ban" ? `Ban "${user.firstName} ${user.lastName}"?` : `Delete "${user.firstName} ${user.lastName}"?`}
+        description={
+          confirmAction?.type === "ban"
+            ? "This will terminate all their active sessions and prevent them from logging in. An administrator can reverse this later."
+            : "This user will be soft-deleted and will no longer be able to log in. An administrator can reverse this action later."
+        }
+        confirmLabel={confirmAction?.type === "ban" ? "Ban User" : "Delete User"}
+        variant={confirmAction?.type === "ban" ? "warning" : "danger"}
       />
     </div>
   );

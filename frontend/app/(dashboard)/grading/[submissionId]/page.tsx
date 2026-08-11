@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { ScoreIndicator } from "@/components/ui/score-indicator";
 import { GradePanel } from "@/components/grading/grade-panel";
 import { FeedbackForm } from "@/components/grading/feedback-form";
@@ -64,6 +65,7 @@ export default function GradingDetailPage() {
   const params = useParams();
   const submissionId = params.submissionId as string;
   const queryClient = useQueryClient();
+  const [showReturnConfirm, setShowReturnConfirm] = React.useState(false);
 
   // Fetch submission detail
   const {
@@ -94,7 +96,11 @@ export default function GradingDetailPage() {
   });
 
   const handleReturn = () => {
-    if (!confirm("Return this graded submission to the student? They will be able to view their grade and feedback.")) return;
+    setShowReturnConfirm(true);
+  };
+
+  const confirmReturn = () => {
+    setShowReturnConfirm(false);
     returnMutation.mutate(submissionId);
   };
 
@@ -125,7 +131,7 @@ export default function GradingDetailPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to Grading
         </Link>
-        <Card className="p-12 text-center">
+        <Card className="p-8 sm:p-12 text-center">
           <p className="text-sm text-[var(--text-secondary)]">Submission not found.</p>
         </Card>
       </div>
@@ -236,7 +242,7 @@ export default function GradingDetailPage() {
                 {latestVersion.submissionText}
               </div>
             ) : (
-              <div className="p-8 text-center text-xs text-[var(--text-muted)]">
+              <div className="p-6 sm:p-8 text-center text-xs text-[var(--text-muted)]">
                 No submission text content available.
               </div>
             )}
@@ -349,6 +355,18 @@ export default function GradingDetailPage() {
           />
         </div>
       </div>
+
+      {/* Return Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showReturnConfirm}
+        onClose={() => setShowReturnConfirm(false)}
+        onConfirm={confirmReturn}
+        title="Return submission to student?"
+        description="The student will be able to view their grade, score, and any feedback you've provided. You can re-grade later if needed."
+        confirmLabel="Return to Student"
+        variant="info"
+        isLoading={returnMutation.isPending}
+      />
     </div>
   );
 }

@@ -18,6 +18,8 @@ import { CountdownWidget } from "@/components/ui/countdown";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { AssignmentModal, AssignmentItem } from "@/components/assignments/assignment-modal";
 import { AssignmentActionDialog, ActionType } from "@/components/assignments/assignment-actions";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { PageBanner } from "@/components/common/page-banner";
 import {
   Plus,
   LayoutGrid,
@@ -30,6 +32,7 @@ import {
   Eye,
   Settings2,
   UserCheck,
+  BookOpen,
 } from "lucide-react";
 
 interface PagedAssignmentResponse {
@@ -70,6 +73,7 @@ export default function AssignmentsPage() {
   const [actionTarget, setActionTarget] = React.useState<AssignmentItem | null>(null);
   const [actionType, setActionType] = React.useState<ActionType | null>(null);
   const [isActionLoading, setIsActionLoading] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<AssignmentItem | null>(null);
 
   // Debounce Search
   React.useEffect(() => {
@@ -128,11 +132,12 @@ export default function AssignmentsPage() {
     }
   };
 
-  const handleDeleteAssignment = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this assignment?")) return;
+  const handleDeleteAssignment = async () => {
+    if (!deleteTarget) return;
     try {
-      await apiClient.delete(`/assignments/${id}`);
+      await apiClient.delete(`/assignments/${deleteTarget.id}`);
       toast.success("Assignment deleted.");
+      setDeleteTarget(null);
       refetch();
     } catch (err) {
       toast.error("Failed to delete assignment.");
@@ -259,7 +264,7 @@ export default function AssignmentsPage() {
                     label: "Delete Assignment",
                     icon: <Trash2 className="h-4 w-4 text-rose-600" />,
                     danger: true,
-                    onClick: () => handleDeleteAssignment(row.id),
+                    onClick: () => setDeleteTarget(row),
                   },
                 ]
               : []),
@@ -275,27 +280,27 @@ export default function AssignmentsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Assignment Authoring Studio</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Author, publish, edit specifications, and manage due dates for your assigned classes.
-          </p>
-        </div>
-        {canManage && (
-          <Button
-            variant="primary"
-            className="gap-2"
-            onClick={() => {
-              setEditingAssignment(null);
-              setIsModalOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Create Assignment
-          </Button>
-        )}
-      </div>
+      {/* Page Banner */}
+      <PageBanner
+        badge="Assignments"
+        heading="Assignment Authoring Studio"
+        description="Author, publish, edit specifications, and manage due dates for your assigned classes."
+        icon={<BookOpen className="h-5 w-5" />}
+        actions={
+          canManage ? (
+            <Button
+              variant="primary"
+              className="gap-2"
+              onClick={() => {
+                setEditingAssignment(null);
+                setIsModalOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Create Assignment
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Control Bar */}
       <Card className="p-4">
@@ -313,7 +318,7 @@ export default function AssignmentsPage() {
               <button
                 key={status}
                 onClick={() => setSelectedStatus(status)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[40px] ${
                   selectedStatus === status
                     ? "bg-indigo-600 text-white shadow-sm"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -453,7 +458,7 @@ export default function AssignmentsPage() {
                           label: "Delete Assignment",
                           icon: <Trash2 className="h-4 w-4 text-rose-600" />,
                           danger: true,
-                          onClick: () => handleDeleteAssignment(item.id),
+                          onClick: () => setDeleteTarget(item),
                         },
                       ]}
                     />
@@ -507,6 +512,17 @@ export default function AssignmentsPage() {
           isLoading={isActionLoading}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteAssignment}
+        title={`Delete "${deleteTarget?.title}"?`}
+        description="This assignment will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete Assignment"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -264,10 +264,10 @@ export default function SubmissionStudioPage() {
       </div>
 
       {/* Main Studio Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8">
         {/* Left Column — Assignment Specification */}
         <div className="lg:col-span-7 space-y-6">
-          <Card className="p-8 glass-card space-y-6">
+          <Card className="p-5 sm:p-8 glass-card space-y-6">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ export default function SubmissionStudioPage() {
             </div>
 
             {/* Evaluation & Due Date Specs */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--border-subtle)]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[var(--border-subtle)]">
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-indigo-100/70 text-indigo-600">
                   <Award className="h-4 w-4" />
