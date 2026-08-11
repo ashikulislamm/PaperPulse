@@ -20,7 +20,6 @@ public class SendDeadlineRemindersCommandHandler : IRequestHandler<SendDeadlineR
         var now = DateTimeOffset.UtcNow;
         var thresholdTime = now.AddHours(request.HoursThreshold);
 
-        // Find published assignments due within threshold
         var upcomingAssignments = await _context.Assignments
             .AsNoTracking()
             .Include(a => a.TeacherAssignment)
@@ -32,24 +31,36 @@ public class SendDeadlineRemindersCommandHandler : IRequestHandler<SendDeadlineR
 
         if (!upcomingAssignments.Any()) return 0;
 
+        var assignmentIds = upcomingAssignments.Select(a => a.Id).ToList();
+        var classIds = upcomingAssignments.Select(a => a.TeacherAssignment.ClassSubject.ClassId).Distinct().ToList();
+
+        var submittedStudentIdsByAssignment = await _context.StudentSubmissions
+            .AsNoTracking()
+            .Where(s => assignmentIds.Contains(s.AssignmentId))
+            .GroupBy(s => s.AssignmentId)
+            .Select(g => new { AssignmentId = g.Key, StudentIds = g.Select(s => s.StudentId).ToList() })
+            .ToDictionaryAsync(g => g.AssignmentId, g => g.StudentIds, cancellationToken);
+
+        var enrolledStudentIdsByClass = await _context.StudentEnrollments
+            .AsNoTracking()
+            .Where(se => classIds.Contains(se.ClassId))
+            .GroupBy(se => se.ClassId)
+            .Select(g => new { ClassId = g.Key, StudentIds = g.Select(se => se.StudentId).ToList() })
+            .ToDictionaryAsync(g => g.ClassId, g => g.StudentIds, cancellationToken);
+
         var notificationCount = 0;
 
         foreach (var assignment in upcomingAssignments)
         {
             var classId = assignment.TeacherAssignment.ClassSubject.ClassId;
 
-            // Find enrolled students who haven't submitted yet
-            var submittedStudentIds = await _context.StudentSubmissions
-                .AsNoTracking()
-                .Where(s => s.AssignmentId == assignment.Id)
-                .Select(s => s.StudentId)
-                .ToListAsync(cancellationToken);
+            if (!enrolledStudentIdsByClass.TryGetValue(classId, out var enrolledStudentIds)) continue;
+            if (!submittedStudentIdsByAssignment.TryGetValue(assignment.Id, out var submittedStudentIds))
+                submittedStudentIds = new List<Guid>();
 
-            var unsubmittedStudentIds = await _context.StudentEnrollments
-                .AsNoTracking()
-                .Where(se => se.ClassId == classId && !submittedStudentIds.Contains(se.StudentId))
-                .Select(se => se.StudentId)
-                .ToListAsync(cancellationToken);
+            var unsubmittedStudentIds = enrolledStudentIds
+                .Where(sid => !submittedStudentIds.Contains(sid))
+                .ToList();
 
             if (!unsubmittedStudentIds.Any()) continue;
 

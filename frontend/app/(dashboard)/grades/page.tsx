@@ -78,6 +78,29 @@ export default function GradesPage() {
     },
   });
 
+  // Fetch all grades once (first page, large size) to extract unique class/subject options
+  const { data: allGradesData } = useQuery({
+    queryKey: queryKeys.studentAssignments.grades({ _filterOptions: true }),
+    queryFn: async () => {
+      const response = await apiClient.get("/student/grades", {
+        params: { pageNumber: 1, pageSize: 100 },
+      });
+      return response.data?.data as PagedGradesResponse;
+    },
+  });
+
+  const classOptions = React.useMemo(() => {
+    const allItems = allGradesData?.items || [];
+    const unique = [...new Set(allItems.map((i) => i.className).filter(Boolean))];
+    return unique.sort();
+  }, [allGradesData]);
+
+  const subjectOptions = React.useMemo(() => {
+    const allItems = allGradesData?.items || [];
+    const unique = [...new Set(allItems.map((i) => i.subjectName).filter(Boolean))];
+    return unique.sort();
+  }, [allGradesData]);
+
   const items = gradesData?.items || [];
   const totalCount = gradesData?.totalCount || 0;
   const totalPages = gradesData?.totalPages || 1;
@@ -178,7 +201,12 @@ export default function GradesPage() {
     {
       header: "",
       cell: (row) => (
-        <Link href={`/grades/${row.submissionId}`}>
+        <Link
+          href={{
+            pathname: `/grades/${row.submissionId}`,
+            query: { gradeData: JSON.stringify(row) },
+          }}
+        >
           <Button size="sm" variant="ghost" className="gap-1 text-xs">
             Details <ArrowRight className="h-3 w-3" />
           </Button>
@@ -254,6 +282,9 @@ export default function GradesPage() {
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] cursor-pointer"
               >
                 <option value="All">All Classes</option>
+                {classOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-2">
@@ -267,6 +298,9 @@ export default function GradesPage() {
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] cursor-pointer"
               >
                 <option value="All">All Subjects</option>
+                {subjectOptions.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
               </select>
             </div>
           </div>

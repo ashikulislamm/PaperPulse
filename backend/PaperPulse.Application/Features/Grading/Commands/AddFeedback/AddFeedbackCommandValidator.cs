@@ -10,6 +10,7 @@ public class AddFeedbackCommandValidator : AbstractValidator<AddFeedbackCommand>
             .NotEmpty().WithMessage("Submission ID is required.");
 
         RuleFor(x => x.Comments)
-            .NotEmpty().WithMessage("Feedback comments are required.");
+            .NotEmpty().WithMessage("Feedback comments are required.")
+            .MaximumLength(5000).WithMessage("Comments must not exceed 5000 characters.");
     }
 }

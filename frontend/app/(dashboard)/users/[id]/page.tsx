@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RoleAssignmentModal } from "@/components/users/role-assignment-modal";
 import {
   ArrowLeft,
-  Pencil,
   Play,
   Pause,
   Ban,
@@ -68,7 +67,9 @@ export default function UserDetailPage() {
       await apiClient.patch(`/users/${userId}/activate`);
       toast.success("User activated successfully.");
       refetch();
-    } catch {}
+    } catch (err) {
+      toast.error("Failed to activate user.");
+    }
   };
 
   const handleDeactivate = async () => {
@@ -76,7 +77,9 @@ export default function UserDetailPage() {
       await apiClient.patch(`/users/${userId}/deactivate`);
       toast.warning("User deactivated.");
       refetch();
-    } catch {}
+    } catch (err) {
+      toast.error("Failed to deactivate user.");
+    }
   };
 
   const handleBan = async () => {
@@ -85,7 +88,9 @@ export default function UserDetailPage() {
       await apiClient.patch(`/users/${userId}/ban`);
       toast.error("User has been banned.");
       refetch();
-    } catch {}
+    } catch (err) {
+      toast.error("Failed to ban user.");
+    }
   };
 
   const handleDelete = async () => {
@@ -94,7 +99,9 @@ export default function UserDetailPage() {
       await apiClient.delete(`/users/${userId}`);
       toast.success("User deleted.");
       router.push("/users");
-    } catch {}
+    } catch (err) {
+      toast.error("Failed to delete user.");
+    }
   };
 
   if (isLoading) {

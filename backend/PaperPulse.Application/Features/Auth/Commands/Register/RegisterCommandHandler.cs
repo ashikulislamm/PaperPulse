@@ -15,15 +15,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
     private readonly IApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IAuditLogService _auditLogService;
 
     public RegisterCommandHandler(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _auditLogService = auditLogService;
     }
 
     public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -94,6 +97,13 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
 
         _context.RefreshTokens.Add(refreshTokenEntity);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "Register",
+            "User",
+            user.Id,
+            newValues: new { user.Email, user.FirstName, user.LastName, Role = request.Role.ToString() },
+            cancellationToken: cancellationToken);
 
         var userDto = new UserDto(
             user.Id,

@@ -6,6 +6,7 @@ using PaperPulse.Application.Features.Submissions.Commands.UpdateSubmission;
 using PaperPulse.Application.Features.Submissions.DTOs;
 using PaperPulse.Application.Features.Submissions.Queries.GetSubmissionById;
 using PaperPulse.Domain.Constants;
+using PaperPulse.Application.Features.Submissions.Commands.UploadSubmissionAttachment;
 using PaperPulse.Infrastructure.Authorization;
 
 namespace PaperPuls.API.Controllers;
@@ -65,5 +66,33 @@ public class SubmissionsController : ApiControllerBase
     {
         var result = await Mediator.Send(new GetSubmissionByIdQuery(id), cancellationToken);
         return OkResponse(result, "Submission details retrieved successfully.");
+    }
+
+    /// <summary>
+    /// Upload a file attachment for a submission version
+    /// </summary>
+    [HttpPost("{id:guid}/upload")]
+    [HasPermission(Permissions.Submissions.Create)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> UploadSubmissionFile(
+        [FromRoute] Guid id,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        using var stream = file.OpenReadStream();
+        var result = await Mediator.Send(
+            new UploadSubmissionAttachmentCommand(id, stream, file.FileName, file.ContentType),
+            cancellationToken);
+
+        return Ok(ApiResponse<object>.SuccessResponse(new
+        {
+            attachmentId = result.AttachmentId,
+            fileName = result.FileName,
+            filePath = result.FilePath,
+            fileSize = result.FileSize
+        }, "File uploaded successfully.", StatusCodes.Status200OK));
     }
 }

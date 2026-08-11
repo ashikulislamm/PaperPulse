@@ -18,80 +18,62 @@ import {
   BookOpen,
   Calendar,
   FileCheck,
-  AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
 
+interface UpcomingDeadlineDto {
+  assignmentId: string;
+  title: string;
+  className: string;
+  subjectName: string;
+  dueDate: string;
+  hoursRemaining: number;
+  isOverdue: boolean;
+}
+
+interface StudentGradePerformanceDto {
+  totalGraded: number;
+  passedCount: number;
+  failedCount: number;
+  averagePercentage: number;
+}
+
 interface StudentDashboardDto {
-  pendingAssignmentsCount?: number;
-  submittedAssignmentsCount?: number;
-  gradedAssignmentsCount?: number;
-  averageGradePercentage?: number;
+  pendingAssignmentsCount: number;
+  submittedAssignmentsCount: number;
+  upcomingDeadlines: UpcomingDeadlineDto[];
+  gradePerformance: StudentGradePerformanceDto;
 }
 
 export function StudentDashboard({ userName }: { userName: string }) {
-  // Fetch Student Assignments Feed from DB
-  const { data: assignmentsData } = useQuery({
-    queryKey: queryKeys.studentAssignments.feed(),
-    queryFn: async () => {
-      try {
-        const response = await apiClient.get("/student/assignments");
-        return response.data?.data?.items;
-      } catch (e) {
-        return null;
-      }
-    },
-  });
-
-  // Fetch Student Dashboard Analytics
   const { data: dashboardData } = useQuery<StudentDashboardDto | null>({
     queryKey: queryKeys.dashboard.student(),
     queryFn: async () => {
       try {
         const response = await apiClient.get("/dashboard/student");
         return response.data?.data as StudentDashboardDto;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
   });
 
-  // Fetch Student Deadlines
-  const { data: deadlinesData } = useQuery({
-    queryKey: queryKeys.studentAssignments.deadlines(),
-    queryFn: async () => {
-      try {
-        const response = await apiClient.get("/student/deadlines");
-        return response.data?.data;
-      } catch (e) {
-        return null;
-      }
-    },
-  });
-
-  // Use 100% real DB data returned by API queries
-  const itemsList = (assignmentsData as any[]) || [];
-
-  // Calculate Metrics 100% Dynamically from Real DB Assignments List & Dashboard Endpoint
-  const pendingCount = dashboardData?.pendingAssignmentsCount ?? itemsList.filter((i: any) => i.submissionStatus === "Pending").length;
-  const submittedCount = dashboardData?.submittedAssignmentsCount ?? itemsList.filter((i: any) => i.submissionStatus === "Submitted").length;
-  const gradedCount = dashboardData?.gradedAssignmentsCount ?? itemsList.filter((i: any) => i.submissionStatus === "Graded").length;
-  const overdueCount = itemsList.filter((i: any) => i.submissionStatus === "Overdue").length;
-
-  const upcomingDeadlines = deadlinesData?.length ? deadlinesData : itemsList.filter((i: any) => i.submissionStatus === "Pending" || i.submissionStatus === "Submitted");
+  const d = dashboardData;
+  const deadlines = d?.upcomingDeadlines ?? [];
+  const perf = d?.gradePerformance;
 
   return (
     <div className="space-y-8">
-      {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Welcome back, {userName}! 👋</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Student Dashboard</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Here is your academic overview, upcoming deadlines, and submission status.
+            Welcome back, {userName}. Track your assignments, deadlines, and grades.
           </p>
         </div>
         <Link href="/student-assignments">
           <Button variant="primary" className="gap-2 shadow-sm">
-            <BookOpen className="h-4 w-4" /> Go to My Assignments
+            <BookOpen className="h-4 w-4" /> My Assignments
           </Button>
         </Link>
       </div>
@@ -100,75 +82,76 @@ export function StudentDashboard({ userName }: { userName: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Pending Tasks"
-          value={pendingCount}
+          value={d?.pendingAssignmentsCount ?? 0}
           subtext="Requires submission"
           accentColor="indigo"
           icon={<Clock className="h-5 w-5" />}
         />
         <StatCard
-          title="Submitted Work"
-          value={submittedCount}
+          title="Submitted"
+          value={d?.submittedAssignmentsCount ?? 0}
           subtext="Awaiting teacher review"
           accentColor="sky"
           icon={<CheckCircle2 className="h-5 w-5" />}
         />
         <StatCard
-          title="Graded Assessments"
-          value={gradedCount}
-          subtext="Evaluated & scored"
+          title="Graded"
+          value={perf?.totalGraded ?? 0}
+          subtext={`${perf?.passedCount ?? 0} passed, ${perf?.failedCount ?? 0} failed`}
           accentColor="emerald"
           icon={<FileCheck className="h-5 w-5" />}
         />
         <StatCard
-          title="Overdue Tasks"
-          value={overdueCount}
-          subtext="Past deadline"
-          accentColor="rose"
-          icon={<AlertTriangle className="h-5 w-5" />}
+          title="Average Score"
+          value={`${(perf?.averagePercentage ?? 0).toFixed(1)}%`}
+          subtext="Across graded work"
+          accentColor="amber"
+          icon={<TrendingUp className="h-5 w-5" />}
         />
       </div>
 
-      {/* Main Grid: Deadlines & Quick Navigation */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column — Upcoming Deadlines */}
-        <div className="lg:col-span-7 space-y-4">
+        {/* Upcoming Deadlines */}
+        <div className="lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-lg font-extrabold text-slate-900">Upcoming Assignment Deadlines</h2>
-            </div>
+              Upcoming Deadlines
+            </h2>
             <Link href="/student-assignments" className="text-xs font-bold text-indigo-600 hover:underline">
-              View All ({itemsList.length})
+              View All
             </Link>
           </div>
 
-          <div className="space-y-4">
-            {upcomingDeadlines.length === 0 ? (
+          <div className="space-y-3">
+            {deadlines.length === 0 ? (
               <Card className="p-6 text-center text-xs text-slate-500">
                 No upcoming assignment deadlines.
               </Card>
             ) : (
-              upcomingDeadlines.map((dl: any) => (
-                <Card key={dl.id || dl.assignmentId} className="p-5 glass-card flex flex-col justify-between gap-3">
+              deadlines.map((dl) => (
+                <Card key={dl.assignmentId} className="p-5 glass-card">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="primary">{dl.subjectName || "Subject"}</Badge>
-                      <Badge variant="default">{dl.className || "Class"}</Badge>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="primary">{dl.subjectName}</Badge>
+                        <Badge variant="default">{dl.className}</Badge>
+                        {dl.isOverdue && <Badge variant="danger">Overdue</Badge>}
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900">{dl.title}</h3>
+                      <p className="text-xs text-[var(--text-muted)] font-mono">
+                        {new Date(dl.dueDate).toLocaleDateString()} at{" "}
+                        {new Date(dl.dueDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </p>
                     </div>
-                    <span className="text-xs font-mono text-slate-500">
-                      {new Date(dl.dueDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-extrabold text-slate-900">{dl.title}</h3>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                    <CountdownWidget dueDate={dl.dueDate} />
-                    <Link href={`/student-assignments/${dl.assignmentId || dl.id}`}>
-                      <Button size="sm" variant="outline" className="gap-1 text-xs">
-                        Open Studio <ChevronRight className="h-3.5 w-3.5" />
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <CountdownWidget dueDate={dl.dueDate} />
+                      <Link href={`/student-assignments/${dl.assignmentId}`}>
+                        <Button size="sm" variant="outline" className="gap-1 text-xs">
+                          Open <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </Card>
               ))
@@ -176,24 +159,48 @@ export function StudentDashboard({ userName }: { userName: string }) {
           </div>
         </div>
 
-        {/* Right Column — Quick Workspace Directives */}
-        <div className="lg:col-span-5 space-y-6">
-          <Card className="p-6 glass-card space-y-4 border-indigo-200/80 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-indigo-100/80 text-indigo-600">
-                <BookOpen className="h-6 w-6" />
+        {/* Grade Performance */}
+        <div className="lg:col-span-4 space-y-4">
+          <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-amber-500" />
+            Grade Performance
+          </h2>
+
+          {perf ? (
+            <Card className="p-6 glass-card space-y-4">
+              <div className="text-center space-y-1">
+                <p className="text-3xl font-extrabold text-slate-900">
+                  {perf.averagePercentage.toFixed(1)}%
+                </p>
+                <p className="text-xs text-[var(--text-muted)]">Average Score</p>
               </div>
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900">Submission Studio</h3>
-                <p className="text-xs text-slate-500">Upload PDF, DOCX, ZIP files and track version history.</p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Total Graded</span>
+                  <span className="font-bold">{perf.totalGraded}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Passed</span>
+                  <span className="font-bold text-emerald-600">{perf.passedCount}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Failed</span>
+                  <span className="font-bold text-rose-600">{perf.failedCount}</span>
+                </div>
               </div>
-            </div>
-            <Link href="/student-assignments">
-              <Button variant="primary" className="w-full gap-2 mt-2">
-                Open Workspace ({itemsList.length} Tasks) <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </Card>
+
+              <Link href="/grades">
+                <Button variant="outline" className="w-full gap-2">
+                  View Detailed Grades <ChevronRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </Card>
+          ) : (
+            <Card className="p-6 glass-card text-center text-xs text-slate-500">
+              No grade data available yet.
+            </Card>
+          )}
         </div>
       </div>
     </div>

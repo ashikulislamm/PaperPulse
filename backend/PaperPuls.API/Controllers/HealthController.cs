@@ -1,38 +1,57 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Common.Models;
-using PaperPulse.Persistence.Context;
 
 namespace PaperPuls.API.Controllers;
 
 public class HealthController : ApiControllerBase
 {
-    private readonly PaperPulseDbContext _context;
+    private readonly ISender _mediator;
 
-    public HealthController(PaperPulseDbContext context)
+    public HealthController(ISender mediator)
     {
-        _context = context;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<ActionResult<ApiResponse<object>>> CheckHealth(CancellationToken cancellationToken)
     {
-        var canConnectDb = await _context.Database.CanConnectAsync(cancellationToken);
+        var result = await _mediator.Send(new HealthCheckQuery(), cancellationToken);
 
-        var healthStatus = new
+        if (!result.CanConnectDb)
         {
-            Status = canConnectDb ? "Healthy" : "Degraded",
-            Database = canConnectDb ? "Connected" : "Disconnected",
-            Timestamp = DateTimeOffset.UtcNow,
-            Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"
-        };
-
-        if (!canConnectDb)
-        {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, 
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
                 ApiResponse<object>.FailureResponse("Database connection unavailable.", StatusCodes.Status503ServiceUnavailable));
         }
 
-        return OkResponse<object>(healthStatus, "System health check passed.");
+        return OkResponse<object>(result, "System health check passed.");
+    }
+}
+
+public record HealthCheckQuery : IRequest<HealthCheckResult>;
+
+public record HealthCheckResult(bool CanConnectDb, string Status, string Database, DateTimeOffset Timestamp);
+
+public class HealthCheckQueryHandler : IRequestHandler<HealthCheckQuery, HealthCheckResult>
+{
+    private readonly IApplicationDbContext _context;
+
+    public HealthCheckQueryHandler(IApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<HealthCheckResult> Handle(HealthCheckQuery request, CancellationToken cancellationToken)
+    {
+        var dbContext = _context as DbContext;
+        var canConnectDb = dbContext != null && await dbContext.Database.CanConnectAsync(cancellationToken);
+
+        return new HealthCheckResult(
+            canConnectDb,
+            canConnectDb ? "Healthy" : "Degraded",
+            canConnectDb ? "Connected" : "Disconnected",
+            DateTimeOffset.UtcNow);
     }
 }

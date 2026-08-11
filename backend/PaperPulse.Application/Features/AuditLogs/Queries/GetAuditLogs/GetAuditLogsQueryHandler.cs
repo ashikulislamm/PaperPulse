@@ -17,6 +17,7 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
 
     public async Task<PagedResult<AuditLogDto>> Handle(GetAuditLogsQuery request, CancellationToken cancellationToken)
     {
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var query = _context.AuditLogs
             .AsNoTracking()
             .Include(a => a.User)
@@ -66,8 +67,8 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
         var totalCount = await query.CountAsync(cancellationToken);
 
         var logs = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = logs.Select(a => new AuditLogDto(
@@ -83,6 +84,6 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
             a.CreatedAt
         )).ToList();
 
-        return new PagedResult<AuditLogDto>(dtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<AuditLogDto>(dtos, totalCount, request.PageNumber, cappedPageSize);
     }
 }

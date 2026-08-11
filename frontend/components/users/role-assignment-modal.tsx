@@ -57,7 +57,7 @@ export function RoleAssignmentModal({
       onSuccess();
       onClose();
     } catch {
-      // Toast handles global error display
+      toast.error("Failed to update user roles.");
     } finally {
       setIsLoading(false);
     }

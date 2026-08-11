@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/api/auth-store";
@@ -31,7 +31,6 @@ import {
 
 export default function AssignmentDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const assignmentId = params.id as string;
   const { user } = useAuthStore();
   const userRoles = user?.roles || [];
@@ -65,7 +64,7 @@ export default function AssignmentDetailPage() {
     teacherAssignmentId: "018f4a2b-8910-7400-8000-000000000001",
     className: "Grade 10-A",
     subjectName: "Mathematics",
-    teacherName: "Sarah Conner",
+    teacherName: "Unassigned",
     attachments: [
       {
         id: "att-1",
@@ -96,6 +95,7 @@ export default function AssignmentDetailPage() {
       }
       refetch();
     } catch (err) {
+      toast.error("Failed to perform action.");
     } finally {
       setIsActionLoading(false);
       setActionType(null);
@@ -191,7 +191,7 @@ export default function AssignmentDetailPage() {
               <Badge variant="default">{item.className || "Grade 10-A"}</Badge>
               <span className="text-xs font-semibold text-slate-600 flex items-center gap-1.5 ml-2">
                 <UserCheck className="h-3.5 w-3.5 text-indigo-600" />
-                Created by: <span className="font-bold text-slate-900">{item.teacherName || "Sarah Conner"}</span>
+                Created by: <span className="font-bold text-slate-900">{item.teacherName || "Unassigned"}</span>
               </span>
             </div>
             <Badge

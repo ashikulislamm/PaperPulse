@@ -49,6 +49,7 @@ export default function LoginPage() {
       const response = await apiClient.post("/auth/login", {
         email: values.email,
         password: values.password,
+        tenantId: values.tenantId,
       });
 
       if (response.data?.success && response.data?.data) {
@@ -62,7 +63,7 @@ export default function LoginPage() {
 
         if (user.mustChangePassword) {
           toast.warning("First login detected. Please update your password.");
-          router.push("/profile/change-password");
+          router.push("/profile");
         } else {
           router.push("/dashboard");
         }

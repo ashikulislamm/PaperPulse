@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
@@ -24,14 +24,14 @@ import {
 interface SubmissionVersion {
   id: string;
   versionNumber: number;
-  content: string;
+  submissionText: string;
   submittedAt: string;
   isLate: boolean;
   attachments: Array<{
     id: string;
     fileName: string;
     filePath: string;
-    fileType: string;
+    mimeType: string;
     fileSizeBytes: number;
   }>;
 }
@@ -65,19 +65,34 @@ interface GradeDetail {
 
 export default function GradeDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const submissionId = params.id as string;
 
-  // Fetch grade detail from the grades list
+  // Check if grade data was passed via URL search params (avoids re-fetching all grades)
+  const gradeDataParam = searchParams.get("gradeData");
+  const navState = React.useMemo(() => {
+    if (!gradeDataParam) return null;
+    try {
+      return JSON.parse(gradeDataParam) as GradeDetail;
+    } catch {
+      return null;
+    }
+  }, [gradeDataParam]);
+
+  // Fetch grade detail from the grades list (fallback for direct URL access)
   const { data: gradeData, isLoading: gradeLoading } = useQuery({
-    queryKey: queryKeys.studentAssignments.grades({}),
+    queryKey: [...queryKeys.studentAssignments.grades({}), "detail", submissionId],
+    enabled: !navState,
     queryFn: async () => {
       const response = await apiClient.get("/student/grades", {
-        params: { pageNumber: 1, pageSize: 100 },
+        params: { pageNumber: 1, pageSize: 50 },
       });
       const items = response.data?.data?.items as GradeDetail[];
       return items?.find((g) => g.submissionId === submissionId) || null;
     },
   });
+
+  const effectiveGrade = navState || gradeData;
 
   // Fetch submission detail with version history
   const { data: submission, isLoading: submissionLoading } = useQuery({
@@ -89,7 +104,7 @@ export default function GradeDetailPage() {
     },
   });
 
-  const isLoading = gradeLoading || submissionLoading;
+  const isLoading = !navState && (gradeLoading || submissionLoading);
 
   if (isLoading) {
     return (
@@ -108,7 +123,7 @@ export default function GradeDetailPage() {
     );
   }
 
-  if (!gradeData) {
+  if (!effectiveGrade) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto">
         <Link
@@ -124,7 +139,7 @@ export default function GradeDetailPage() {
     );
   }
 
-  const percentage = Math.round((gradeData.scoreObtained / gradeData.maxMarks) * 100);
+  const percentage = Math.round((effectiveGrade.scoreObtained / effectiveGrade.maxMarks) * 100);
   const latestVersion = submission?.versions?.[submission.versions.length - 1];
 
   return (
@@ -142,13 +157,13 @@ export default function GradeDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-extrabold text-[var(--text-primary)]">
-              {gradeData.assignmentTitle}
+              {effectiveGrade.assignmentTitle}
             </h1>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="primary">{gradeData.subjectName}</Badge>
-              <Badge variant="default">{gradeData.className}</Badge>
-              <Badge variant={gradeData.isPassed ? "success" : "danger"} dot>
-                {gradeData.isPassed ? "Passed" : "Failed"}
+              <Badge variant="primary">{effectiveGrade.subjectName}</Badge>
+              <Badge variant="default">{effectiveGrade.className}</Badge>
+              <Badge variant={effectiveGrade.isPassed ? "success" : "danger"} dot>
+                {effectiveGrade.isPassed ? "Passed" : "Failed"}
               </Badge>
             </div>
           </div>
@@ -158,7 +173,7 @@ export default function GradeDetailPage() {
                 Graded By
               </p>
               <p className="text-xs font-semibold text-slate-900 flex items-center gap-1">
-                <User className="h-3 w-3" /> {gradeData.teacherName}
+                <User className="h-3 w-3" /> {effectiveGrade.teacherName}
               </p>
             </div>
             <div className="text-right">
@@ -166,7 +181,7 @@ export default function GradeDetailPage() {
                 Graded On
               </p>
               <p className="text-xs font-mono text-slate-900">
-                {new Date(gradeData.gradedAt).toLocaleDateString("en-US", {
+                {new Date(effectiveGrade.gradedAt).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -198,9 +213,9 @@ export default function GradeDetailPage() {
                 </div>
               </div>
 
-              {latestVersion.content ? (
+              {latestVersion.submissionText ? (
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap font-mono text-xs">
-                  {latestVersion.content}
+                  {latestVersion.submissionText}
                 </div>
               ) : (
                 <p className="text-xs text-[var(--text-muted)] text-center py-4">
@@ -270,8 +285,8 @@ export default function GradeDetailPage() {
                         {new Date(v.submittedAt).toLocaleString()}
                       </span>
                     </div>
-                    {v.content && (
-                      <p className="text-xs text-slate-700 line-clamp-2">{v.content}</p>
+                    {v.submissionText && (
+                      <p className="text-xs text-slate-700 line-clamp-2">{v.submissionText}</p>
                     )}
                     {v.attachments && v.attachments.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -289,13 +304,13 @@ export default function GradeDetailPage() {
           )}
 
           {/* Teacher Feedback */}
-          {gradeData.feedbackComments.length > 0 && (
+          {effectiveGrade.feedbackComments.length > 0 && (
             <Card className="p-6 space-y-4">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-indigo-600" /> Teacher Feedback
               </h3>
               <div className="space-y-3">
-                {gradeData.feedbackComments.map((comment, idx) => (
+                {effectiveGrade.feedbackComments.map((comment, idx) => (
                   <div
                     key={idx}
                     className="p-4 rounded-xl border border-slate-200/60 bg-slate-50/50"
@@ -320,7 +335,7 @@ export default function GradeDetailPage() {
               <div className="relative">
                 <div
                   className={`w-32 h-32 rounded-full flex items-center justify-center border-4 ${
-                    gradeData.isPassed
+                    effectiveGrade.isPassed
                       ? "border-emerald-200 bg-emerald-50"
                       : "border-rose-200 bg-rose-50"
                   }`}
@@ -330,7 +345,7 @@ export default function GradeDetailPage() {
                       {percentage}%
                     </p>
                     <p className="text-[10px] font-bold text-[var(--text-secondary)]">
-                      {gradeData.isPassed ? "PASSED" : "FAILED"}
+                      {effectiveGrade.isPassed ? "PASSED" : "FAILED"}
                     </p>
                   </div>
                 </div>
@@ -342,19 +357,19 @@ export default function GradeDetailPage() {
               <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200/60">
                 <span className="text-xs font-semibold text-slate-600">Score Obtained</span>
                 <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                  {gradeData.scoreObtained}
+                  {effectiveGrade.scoreObtained}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200/60">
                 <span className="text-xs font-semibold text-slate-600">Maximum Marks</span>
                 <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                  {gradeData.maxMarks}
+                  {effectiveGrade.maxMarks}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200/60">
                 <span className="text-xs font-semibold text-slate-600">Pass Marks</span>
                 <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                  {gradeData.passMarks}
+                  {effectiveGrade.passMarks}
                 </span>
               </div>
 
@@ -368,7 +383,7 @@ export default function GradeDetailPage() {
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200/60">
                 <span className="text-xs font-semibold text-slate-600">Result</span>
-                {gradeData.isPassed ? (
+                {effectiveGrade.isPassed ? (
                   <span className="flex items-center gap-1 text-xs font-bold text-emerald-600">
                     <CheckCircle2 className="h-3.5 w-3.5" /> Passed
                   </span>

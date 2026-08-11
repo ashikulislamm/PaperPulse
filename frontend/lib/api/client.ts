@@ -50,7 +50,9 @@ const getValidToken = (): string | null => {
         }
       }
     } catch (e) {
-      console.error("[ApiClient] Failed parsing localStorage:", e);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[ApiClient] Failed parsing localStorage:", e);
+      }
     }
   }
   return token;

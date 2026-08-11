@@ -105,7 +105,7 @@ export function UserModal({ isOpen, onClose, onSuccess, userToEdit }: UserModalP
   const hasMinLength = passwordValue.length >= 8;
   const hasUppercase = /[A-Z]/.test(passwordValue);
   const hasDigit = /[0-9]/.test(passwordValue);
-  const hasSpecialChar = /[^a border-subtleA-Za-z0-9]/.test(passwordValue);
+  const hasSpecialChar = /[^a-zA-Z0-9]/.test(passwordValue);
 
   const onSubmit = async (values: UserFormValues) => {
     setIsLoading(true);

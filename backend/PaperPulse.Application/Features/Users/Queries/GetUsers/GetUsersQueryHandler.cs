@@ -19,6 +19,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
 
     public async Task<PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var query = _context.Users
             .AsNoTracking()
             .Include(u => u.UserRoles)
@@ -55,8 +56,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
 
         // 6. Pagination fetch
         var users = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = users.Select(u => new UserDto(
@@ -72,6 +73,6 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
             u.UserRoles.Select(ur => ur.Role.Name.ToString()).ToList()
         )).ToList();
 
-        return new PagedResult<UserDto>(dtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<UserDto>(dtos, totalCount, request.PageNumber, cappedPageSize);
     }
 }

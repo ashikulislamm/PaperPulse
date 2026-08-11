@@ -23,6 +23,7 @@ public class GetStudentGradesQueryHandler : IRequestHandler<GetStudentGradesQuer
 
     public async Task<PagedResult<StudentGradeSummaryDto>> Handle(GetStudentGradesQuery request, CancellationToken cancellationToken)
     {
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var studentId = _currentUserService.UserId;
         if (!studentId.HasValue)
         {
@@ -62,8 +63,8 @@ public class GetStudentGradesQueryHandler : IRequestHandler<GetStudentGradesQuer
         var totalCount = await query.CountAsync(cancellationToken);
 
         var submissions = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = submissions.Select(s =>
@@ -89,6 +90,6 @@ public class GetStudentGradesQueryHandler : IRequestHandler<GetStudentGradesQuer
             );
         }).ToList();
 
-        return new PagedResult<StudentGradeSummaryDto>(dtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<StudentGradeSummaryDto>(dtos, totalCount, request.PageNumber, cappedPageSize);
     }
 }

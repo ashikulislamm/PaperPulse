@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileQuestion, ArrowLeft, LayoutDashboard, Home as HomeIcon } from "lucide-react";
+import { FileQuestion, LayoutDashboard, Home as HomeIcon } from "lucide-react";
 
 export default function NotFound() {
   return (

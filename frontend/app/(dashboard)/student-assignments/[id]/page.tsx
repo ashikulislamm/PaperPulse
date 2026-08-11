@@ -37,7 +37,7 @@ interface AssignmentDetail {
   maxMarks: number;
   passMarks: number;
   dueDate: string;
-  allowLateSubmission: boolean;
+  allowLateSubmissions: boolean;
   latePenaltyPercentage: number;
   status: string;
   attachments?: Array<{
@@ -87,7 +87,7 @@ export default function SubmissionStudioPage() {
     },
   });
 
-  // 2. Query Student Submission — try fetching by assignmentId (backend may resolve it)
+  // 2. Query Student Submission — backend resolves by assignmentId for current student
   const {
     data: submissionData,
     isLoading: isSubmissionLoading,
@@ -95,20 +95,30 @@ export default function SubmissionStudioPage() {
     queryKey: queryKeys.submissions.byAssignment(assignmentId),
     enabled: !!isValidGuid && !localSubmission,
     queryFn: async () => {
-      try {
-        const response = await apiClient.get(`/submissions/${assignmentId}`);
-        return response.data?.data as SubmissionData;
-      } catch {
-        return null;
-      }
+      const response = await apiClient.get(`/submissions/${assignmentId}`);
+      return response.data?.data as SubmissionData;
     },
   });
 
   // 3. Create Submission Mutation (POST /submissions)
   const createSubmissionMutation = useMutation({
-    mutationFn: async (payload: { assignmentId: string; content: string }) => {
-      const response = await apiClient.post("/submissions", payload);
-      return response.data?.data as SubmissionData;
+    mutationFn: async (payload: { assignmentId: string; content: string; file?: File | null }) => {
+      const response = await apiClient.post("/submissions", {
+        assignmentId: payload.assignmentId,
+        content: payload.content,
+      });
+      const submissionData = response.data?.data as SubmissionData;
+
+      // Upload file if provided
+      if (payload.file && submissionData?.versions?.[0]?.id) {
+        const formData = new FormData();
+        formData.append("file", payload.file);
+        await apiClient.post(`/submissions/${submissionData.versions[0].id}/upload`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      return submissionData;
     },
     onSuccess: (data) => {
       toast.success("Submission created successfully!");
@@ -123,12 +133,24 @@ export default function SubmissionStudioPage() {
 
   // 4. Update/Resubmit Mutation (PUT /submissions/{id})
   const updateSubmissionMutation = useMutation({
-    mutationFn: async (payload: { submissionId: string; content: string }) => {
+    mutationFn: async (payload: { submissionId: string; content: string; file?: File | null }) => {
       const response = await apiClient.put(`/submissions/${payload.submissionId}`, {
         submissionId: payload.submissionId,
         content: payload.content,
       });
-      return response.data?.data as SubmissionData;
+      const submissionData = response.data?.data as SubmissionData;
+
+      // Upload file if provided — attach to the latest version
+      if (payload.file && submissionData?.versions?.length) {
+        const latestVersion = submissionData.versions[submissionData.versions.length - 1];
+        const formData = new FormData();
+        formData.append("file", payload.file);
+        await apiClient.post(`/submissions/${latestVersion.id}/upload`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      return submissionData;
     },
     onSuccess: (data) => {
       toast.success("Resubmission recorded as new version!");
@@ -166,16 +188,19 @@ export default function SubmissionStudioPage() {
   // Handle Submit / Resubmit
   const handleSubmitWork = async () => {
     const content = comments.trim() || `Submission for ${assignmentData?.title || "assignment"}`;
+    const file = selectedFile?.file || null;
 
     if (hasSubmission && effectiveSubmission?.id) {
       updateSubmissionMutation.mutate({
         submissionId: effectiveSubmission.id,
         content,
+        file,
       });
     } else {
       createSubmissionMutation.mutate({
         assignmentId,
         content,
+        file,
       });
     }
   };
@@ -191,7 +216,7 @@ export default function SubmissionStudioPage() {
     maxMarks: 100,
     passMarks: 40,
     dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-    allowLateSubmission: true,
+    allowLateSubmissions: true,
     latePenaltyPercentage: 10,
     status: "Published",
     attachments: [],
@@ -271,7 +296,7 @@ export default function SubmissionStudioPage() {
                     Late Policy
                   </span>
                   <div className="text-xs font-extrabold font-mono text-slate-900">
-                    {assignment.allowLateSubmission
+                    {assignment.allowLateSubmissions
                       ? `Allowed (-${assignment.latePenaltyPercentage}%)`
                       : "Strictly Disallowed"}
                   </div>

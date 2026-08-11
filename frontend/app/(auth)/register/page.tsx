@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 const registerSchema = z
   .object({
-    role: z.enum(["Student", "Teacher", "Admin"]),
+    role: z.enum(["Student", "Teacher"]),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Please enter a valid email address"),
@@ -112,7 +112,6 @@ export default function RegisterPage() {
             options={[
               { label: "Student", value: "Student" },
               { label: "Teacher", value: "Teacher" },
-              { label: "System Admin", value: "Admin" },
             ]}
           />
 

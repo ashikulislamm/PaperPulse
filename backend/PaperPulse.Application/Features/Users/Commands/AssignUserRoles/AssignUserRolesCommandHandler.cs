@@ -10,10 +10,12 @@ namespace PaperPulse.Application.Features.Users.Commands.AssignUserRoles;
 public class AssignUserRolesCommandHandler : IRequestHandler<AssignUserRolesCommand, UserDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditLogService _auditLogService;
 
-    public AssignUserRolesCommandHandler(IApplicationDbContext context)
+    public AssignUserRolesCommandHandler(IApplicationDbContext context, IAuditLogService auditLogService)
     {
         _context = context;
+        _auditLogService = auditLogService;
     }
 
     public async Task<UserDto> Handle(AssignUserRolesCommand request, CancellationToken cancellationToken)
@@ -51,6 +53,13 @@ public class AssignUserRolesCommandHandler : IRequestHandler<AssignUserRolesComm
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "AssignRoles",
+            "User",
+            request.UserId,
+            newValues: new { Roles = request.Roles },
+            cancellationToken: cancellationToken);
 
         return new UserDto(
             user.Id,

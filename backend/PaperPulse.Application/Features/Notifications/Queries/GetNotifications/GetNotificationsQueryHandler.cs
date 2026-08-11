@@ -22,6 +22,7 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
 
     public async Task<PagedResult<NotificationDto>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
     {
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var userId = _currentUserService.UserId;
         if (!userId.HasValue)
         {
@@ -43,8 +44,8 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
         var totalCount = await query.CountAsync(cancellationToken);
 
         var notifications = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = notifications.Select(n => new NotificationDto(
@@ -58,6 +59,6 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
             n.ReadAt
         )).ToList();
 
-        return new PagedResult<NotificationDto>(dtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<NotificationDto>(dtos, totalCount, request.PageNumber, cappedPageSize);
     }
 }

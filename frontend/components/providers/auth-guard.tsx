@@ -52,7 +52,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   // Step 2: Validate session by calling GET /auth/me
   const token = useAuthStore((s) => s.token);
   const updateUser = useAuthStore((s) => s.updateUser);
-  const logout = useAuthStore((s) => s.logout);
 
   const { data: meData, isError: meError } = useQuery({
     queryKey: queryKeys.auth.me(),

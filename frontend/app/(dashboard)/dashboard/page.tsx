@@ -14,7 +14,6 @@ export default function DashboardPage() {
 
   const isAdmin = userRoles.includes("Admin");
   const isTeacher = userRoles.includes("Teacher");
-  const isStudent = userRoles.includes("Student") && !isTeacher && !isAdmin;
 
   if (isAdmin) {
     return <AdminDashboard userName={userName} />;

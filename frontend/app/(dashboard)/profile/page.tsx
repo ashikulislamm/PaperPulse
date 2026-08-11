@@ -100,6 +100,7 @@ export default function ProfilePage() {
       }
       toast.success("Profile details updated successfully!");
     } catch (err: any) {
+      toast.error("Failed to update profile.");
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -115,6 +116,7 @@ export default function ProfilePage() {
       toast.success("Password changed successfully!");
       resetPasswordForm();
     } catch (err: any) {
+      toast.error("Failed to change password.");
     } finally {
       setIsUpdatingPassword(false);
     }

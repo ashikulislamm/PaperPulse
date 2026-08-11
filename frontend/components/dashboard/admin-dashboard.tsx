@@ -7,50 +7,61 @@ import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { StatCard } from "@/components/common/stat-card";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Users,
+  GraduationCap,
+  BookOpen,
+  FileText,
   ShieldCheck,
   Building2,
-  BookOpen,
   ChevronRight,
   UserPlus,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
+interface AdminSubmissionStatsDto {
+  totalSubmissions: number;
+  gradedSubmissions: number;
+  pendingSubmissions: number;
+  lateSubmissions: number;
+  submissionRatePercentage: number;
+}
+
 interface AdminDashboardDto {
-  totalUsersCount?: number;
-  activeTenantsCount?: number;
-  totalSystemAssignmentsCount?: number;
-  totalSubmissionsCount?: number;
+  totalStudents: number;
+  totalTeachers: number;
+  totalClasses: number;
+  totalAssignments: number;
+  submissionStatistics: AdminSubmissionStatsDto;
 }
 
 export function AdminDashboard({ userName }: { userName: string }) {
-  // Fetch Admin Dashboard Metrics
-  const { data: dashboardData } = useQuery<AdminDashboardDto | null>({
+  const { data: dashboardData, isLoading } = useQuery<AdminDashboardDto | null>({
     queryKey: queryKeys.dashboard.admin(),
     queryFn: async () => {
       try {
         const response = await apiClient.get("/dashboard/admin");
         return response.data?.data as AdminDashboardDto;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
   });
 
-  const totalUsers = dashboardData?.totalUsersCount ?? 12;
-  const activeTenants = dashboardData?.activeTenantsCount ?? 1;
-  const totalAssignments = dashboardData?.totalSystemAssignmentsCount ?? 8;
-  const totalSubmissions = dashboardData?.totalSubmissionsCount ?? 15;
+  const d = dashboardData;
+  const stats = d?.submissionStatistics;
 
   return (
     <div className="space-y-8">
-      {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">System Administration — {userName} 🛡️</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">System Administration</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            System tenant health, user directory controls, role governance, and security audit logs.
+            Welcome back, {userName}. Manage users, tenants, and review platform health.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -61,85 +72,134 @@ export function AdminDashboard({ userName }: { userName: string }) {
           </Link>
           <Link href="/audit-logs">
             <Button variant="outline" className="gap-2">
-              <ShieldCheck className="h-4 w-4" /> View Audit Logs
+              <ShieldCheck className="h-4 w-4" /> Audit Logs
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Metrics Row */}
+      {/* Core Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Total Users"
-          value={totalUsers}
-          subtext="Students, Teachers, Admins"
+          title="Total Students"
+          value={d?.totalStudents ?? 0}
+          subtext="Enrolled across all classes"
           accentColor="indigo"
+          icon={<GraduationCap className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Total Teachers"
+          value={d?.totalTeachers ?? 0}
+          subtext="Active staff members"
+          accentColor="sky"
           icon={<Users className="h-5 w-5" />}
         />
         <StatCard
-          title="School Tenants"
-          value={activeTenants}
-          subtext="Active tenant instances"
-          accentColor="sky"
+          title="Classes"
+          value={d?.totalClasses ?? 0}
+          subtext="Active class sections"
+          accentColor="emerald"
           icon={<Building2 className="h-5 w-5" />}
         />
         <StatCard
-          title="System Assignments"
-          value={totalAssignments}
-          subtext="Authored across platform"
-          accentColor="emerald"
-          icon={<BookOpen className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Total Submissions"
-          value={totalSubmissions}
-          subtext="Processed solution files"
+          title="Assignments"
+          value={d?.totalAssignments ?? 0}
+          subtext="Created across platform"
           accentColor="amber"
-          icon={<ShieldCheck className="h-5 w-5" />}
+          icon={<BookOpen className="h-5 w-5" />}
         />
       </div>
 
-      {/* Main Grid: Management Shortcuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column — User Directory */}
-        <div className="lg:col-span-7 space-y-4">
-          <Card className="p-6 glass-card space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-indigo-100/80 text-indigo-600">
-                <Users className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900">User Governance &amp; Directory</h3>
-                <p className="text-xs text-slate-500">Provision accounts, assign role permissions, and toggle active/inactive status.</p>
-              </div>
+      {/* Submission Statistics */}
+      {stats && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <Card className="p-4 glass-card flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-slate-100 text-slate-600">
+              <FileText className="h-4 w-4" />
             </div>
-            <Link href="/users">
-              <Button variant="primary" className="w-full gap-2">
-                User Management Console <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div>
+              <p className="text-xs text-[var(--text-muted)]">Total Submissions</p>
+              <p className="text-lg font-bold">{stats.totalSubmissions}</p>
+            </div>
+          </Card>
+          <Card className="p-4 glass-card flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-[var(--text-muted)]">Graded</p>
+              <p className="text-lg font-bold">{stats.gradedSubmissions}</p>
+            </div>
+          </Card>
+          <Card className="p-4 glass-card flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
+              <Clock className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-[var(--text-muted)]">Pending</p>
+              <p className="text-lg font-bold">{stats.pendingSubmissions}</p>
+            </div>
+          </Card>
+          <Card className="p-4 glass-card flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-rose-100 text-rose-600">
+              <AlertTriangle className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-[var(--text-muted)]">Late</p>
+              <p className="text-lg font-bold">{stats.lateSubmissions}</p>
+            </div>
+          </Card>
+          <Card className="p-4 glass-card flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-indigo-100 text-indigo-600">
+              <FileText className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-[var(--text-muted)]">Submission Rate</p>
+              <p className="text-lg font-bold">{stats.submissionRatePercentage.toFixed(1)}%</p>
+            </div>
           </Card>
         </div>
+      )}
 
-        {/* Right Column — Audit Logs */}
-        <div className="lg:col-span-5 space-y-4">
-          <Card className="p-6 glass-card space-y-4 border-slate-200">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-slate-100 text-slate-700">
-                <ShieldCheck className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900">Security Audit Logs</h3>
-                <p className="text-xs text-slate-500">Track user authentication attempts, role changes, and system activities.</p>
-              </div>
+      {/* Management Shortcuts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card className="p-6 glass-card space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-indigo-100/80 text-indigo-600">
+              <Users className="h-6 w-6" />
             </div>
-            <Link href="/audit-logs">
-              <Button variant="outline" className="w-full gap-2">
-                Open Audit Trail <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </Card>
-        </div>
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">User Directory</h3>
+              <p className="text-xs text-slate-500">
+                Provision accounts, assign roles, and manage active status.
+              </p>
+            </div>
+          </div>
+          <Link href="/users">
+            <Button variant="primary" className="w-full gap-2">
+              Manage Users <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </Card>
+
+        <Card className="p-6 glass-card space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-slate-100 text-slate-700">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Audit Trail</h3>
+              <p className="text-xs text-slate-500">
+                Review authentication attempts, role changes, and system activity.
+              </p>
+            </div>
+          </div>
+          <Link href="/audit-logs">
+            <Button variant="outline" className="w-full gap-2">
+              Open Audit Logs <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </Card>
       </div>
     </div>
   );

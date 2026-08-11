@@ -13,7 +13,6 @@ export const queryKeys = {
   },
   studentAssignments: {
     feed: (filter?: string) => ["student", "assignments", filter] as const,
-    deadlines: () => ["student", "deadlines"] as const,
     grades: (filters?: Record<string, unknown>) => ["student", "grades", filters] as const,
   },
   submissions: {
@@ -40,7 +39,6 @@ export const queryKeys = {
   auditLogs: {
     all: (filters?: Record<string, unknown>) => ["audit-logs", filters] as const,
     security: () => ["audit-logs", "security"] as const,
-    user: (userId: string) => ["audit-logs", "user", userId] as const,
     detail: (id: string) => ["audit-logs", "detail", id] as const,
   },
 };

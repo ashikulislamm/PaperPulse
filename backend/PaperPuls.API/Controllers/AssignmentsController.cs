@@ -11,6 +11,7 @@ using PaperPulse.Application.Features.Assignments.DTOs;
 using PaperPulse.Application.Features.Assignments.Queries.GetAssignmentById;
 using PaperPulse.Application.Features.Assignments.Queries.GetAssignments;
 using PaperPulse.Domain.Constants;
+using PaperPulse.Application.Features.Assignments.Commands.UploadAssignmentAttachment;
 using PaperPulse.Infrastructure.Authorization;
 
 namespace PaperPuls.API.Controllers;
@@ -143,5 +144,33 @@ public class AssignmentsController : ApiControllerBase
     {
         await Mediator.Send(new DeleteAssignmentCommand(id), cancellationToken);
         return NoContentResponse("Assignment deleted successfully.");
+    }
+
+    /// <summary>
+    /// Upload a file attachment for an assignment
+    /// </summary>
+    [HttpPost("{id:guid}/upload")]
+    [HasPermission(Permissions.Assignments.Create)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> UploadAssignmentFile(
+        [FromRoute] Guid id,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        using var stream = file.OpenReadStream();
+        var result = await Mediator.Send(
+            new UploadAssignmentAttachmentCommand(id, stream, file.FileName, file.ContentType),
+            cancellationToken);
+
+        return Ok(ApiResponse<object>.SuccessResponse(new
+        {
+            attachmentId = result.AttachmentId,
+            fileName = result.FileName,
+            filePath = result.FilePath,
+            fileSize = result.FileSize
+        }, "File uploaded successfully.", StatusCodes.Status200OK));
     }
 }

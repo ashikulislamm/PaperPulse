@@ -79,9 +79,9 @@ public class GetSubmissionByIdQueryHandler : IRequestHandler<GetSubmissionByIdQu
             submission.Assignment?.Title ?? "Assignment",
             submission.StudentId,
             studentName,
-            submission.CreatedAt,
+            submission.SubmittedAt,
             submission.Status.ToString(),
-            versionDtos.Count,
+            submission.AttemptCount,
             versionDtos
         );
     }

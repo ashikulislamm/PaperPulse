@@ -18,6 +18,7 @@ public class GetAssignmentsQueryHandler : IRequestHandler<GetAssignmentsQuery, P
 
     public async Task<PagedResult<AssignmentDto>> Handle(GetAssignmentsQuery request, CancellationToken cancellationToken)
     {
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var query = _context.Assignments
             .AsNoTracking()
             .Include(a => a.TeacherAssignment)
@@ -69,8 +70,8 @@ public class GetAssignmentsQueryHandler : IRequestHandler<GetAssignmentsQuery, P
         var totalCount = await query.CountAsync(cancellationToken);
 
         var assignments = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = assignments.Select(a => new AssignmentDto(
@@ -90,6 +91,6 @@ public class GetAssignmentsQueryHandler : IRequestHandler<GetAssignmentsQuery, P
             a.CreatedAt
         )).ToList();
 
-        return new PagedResult<AssignmentDto>(dtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<AssignmentDto>(dtos, totalCount, request.PageNumber, cappedPageSize);
     }
 }

@@ -9,10 +9,12 @@ namespace PaperPulse.Application.Features.Users.Commands.DeactivateUser;
 public class DeactivateUserCommandHandler : IRequestHandler<DeactivateUserCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditLogService _auditLogService;
 
-    public DeactivateUserCommandHandler(IApplicationDbContext context)
+    public DeactivateUserCommandHandler(IApplicationDbContext context, IAuditLogService auditLogService)
     {
         _context = context;
+        _auditLogService = auditLogService;
     }
 
     public async Task<Unit> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
@@ -41,6 +43,14 @@ public class DeactivateUserCommandHandler : IRequestHandler<DeactivateUserComman
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "DeactivateUser",
+            "User",
+            request.Id,
+            newValues: new { Status = "Inactive" },
+            cancellationToken: cancellationToken);
+
         return Unit.Value;
     }
 }

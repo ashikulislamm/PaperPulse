@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Users,
   BookOpen,
-  Upload,
   ClipboardList,
   Bell,
   ShieldCheck,
@@ -17,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Award,
+  X,
 } from "lucide-react";
 
 interface NavItem {
@@ -28,7 +28,25 @@ interface NavItem {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, isSidebarOpen, toggleSidebar } = useAuthStore();
+  const { user, isSidebarOpen, toggleSidebar, setSidebarOpen } = useAuthStore();
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+
+  // Sync mobile open state with sidebar state
+  React.useEffect(() => {
+    // On desktop, follow isSidebarOpen. On mobile, close by default.
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMobileOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Close mobile sidebar on route change
+  React.useEffect(() => {
+    setIsMobileOpen(false);
+  }, [pathname]);
 
   const userRoles = user?.roles || ["Student"];
   const isStudent = userRoles.includes("Student") && !userRoles.includes("Teacher") && !userRoles.includes("Admin");
@@ -53,7 +71,7 @@ export function Sidebar() {
     return item.roles.some((r) => userRoles.includes(r));
   });
 
-  return (
+  const sidebarContent = (
     <aside
       className={cn(
         "sticky top-0 h-screen glass-panel border-r border-[var(--border-subtle)] flex flex-col justify-between transition-all duration-300 z-40 select-none",
@@ -78,6 +96,13 @@ export function Sidebar() {
               </div>
             )}
           </Link>
+          {/* Mobile close button */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 md:hidden cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Navigation Items */}
@@ -112,11 +137,11 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Sidebar Collapse Toggle */}
+      {/* Sidebar Collapse Toggle (desktop only) */}
       <div className="p-3 border-t border-[var(--border-subtle)]/60">
         <button
           onClick={toggleSidebar}
-          className="w-full flex items-center justify-center gap-2 p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors text-xs font-semibold cursor-pointer"
+          className="w-full hidden md:flex items-center justify-center gap-2 p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors text-xs font-semibold cursor-pointer"
         >
           {isSidebarOpen ? (
             <>
@@ -130,4 +155,39 @@ export function Sidebar() {
       </div>
     </aside>
   );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">{sidebarContent}</div>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setIsMobileOpen(false)}
+          />
+          <div className="relative h-full w-64 shadow-2xl">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile trigger — exposed via Navbar's hamburger button */}
+      <MobileSidebarTrigger onOpen={() => setIsMobileOpen(true)} />
+    </>
+  );
+}
+
+function MobileSidebarTrigger({ onOpen }: { onOpen: () => void }) {
+  // This is rendered inside Sidebar but the actual hamburger button is in Navbar.
+  // We expose a global function via a custom event so Navbar can trigger it.
+  React.useEffect(() => {
+    const handler = () => onOpen();
+    window.addEventListener("open-mobile-sidebar", handler);
+    return () => window.removeEventListener("open-mobile-sidebar", handler);
+  }, [onOpen]);
+
+  return null;
 }

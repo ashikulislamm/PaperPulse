@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { FileUploader, AttachmentItem } from "./file-uploader";
 import { apiClient } from "@/lib/api/client";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/api/query-keys";
 
 const assignmentSchema = z
   .object({
@@ -89,6 +91,44 @@ export function AssignmentModal({
 
   const allowLate = watch("allowLateSubmissions");
 
+  // Fetch existing assignments to extract unique teacherAllocation options
+  const { data: allocationsData } = useQuery({
+    queryKey: queryKeys.assignments.all({ _allocations: true }),
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get("/assignments", {
+          params: { pageNumber: 1, pageSize: 100 },
+        });
+        const items = response.data?.data?.items as Array<{
+          teacherAssignmentId: string;
+          className: string;
+          subjectName: string;
+        }>;
+        // Extract unique teacherAssignmentId + class/subject combos
+        const seen = new Map<string, { label: string; value: string }>();
+        items?.forEach((item) => {
+          if (!seen.has(item.teacherAssignmentId)) {
+            seen.set(item.teacherAssignmentId, {
+              label: `${item.className} — ${item.subjectName}`,
+              value: item.teacherAssignmentId,
+            });
+          }
+        });
+        return Array.from(seen.values());
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const allocationOptions = allocationsData?.length
+    ? allocationsData
+    : [
+        { label: "Grade 10-A — Mathematics", value: "018f4a2b-8910-7400-8000-000000000001" },
+        { label: "Grade 11-B — Physics Lab", value: "018f4a2b-8910-7400-8000-000000000002" },
+        { label: "Grade 12-A — Organic Chemistry", value: "018f4a2b-8910-7400-8000-000000000003" },
+      ];
+
   React.useEffect(() => {
     if (assignmentToEdit) {
       reset({
@@ -120,13 +160,13 @@ export function AssignmentModal({
   }, [assignmentToEdit, reset]);
 
   const handleFileUpload = async (file: File) => {
-    // Simulate local attachment addition for demo / call attachment API
     const newAttachment: AttachmentItem = {
       id: Math.random().toString(),
       fileName: file.name,
       fileUrl: URL.createObjectURL(file),
       fileSize: file.size,
       contentType: file.type || "application/pdf",
+      _rawFile: file,
     };
     setAttachments((prev) => [...prev, newAttachment]);
     toast.success(`Attached "${file.name}"`);
@@ -140,6 +180,8 @@ export function AssignmentModal({
   const onSubmit = async (values: AssignmentFormValues) => {
     setIsLoading(true);
     try {
+      let assignmentId: string | null = null;
+
       if (isEditing) {
         await apiClient.put(`/assignments/${assignmentToEdit.id}`, {
           id: assignmentToEdit.id,
@@ -151,9 +193,10 @@ export function AssignmentModal({
           allowLateSubmissions: values.allowLateSubmissions,
           latePenaltyPercentage: values.latePenaltyPercentage,
         });
+        assignmentId = assignmentToEdit.id;
         toast.success("Assignment updated successfully!");
       } else {
-        await apiClient.post("/assignments", {
+        const response = await apiClient.post("/assignments", {
           title: values.title,
           description: values.description,
           teacherAssignmentId: values.teacherAssignmentId,
@@ -163,11 +206,32 @@ export function AssignmentModal({
           allowLateSubmissions: values.allowLateSubmissions,
           latePenaltyPercentage: values.latePenaltyPercentage,
         });
+        assignmentId = response.data?.data?.id;
         toast.success("Assignment authored successfully as Draft!");
       }
+
+      // Upload new attachments that don't have a real server path
+      if (assignmentId) {
+        const newAttachments = attachments.filter((a) => a.fileUrl.startsWith("blob:"));
+        for (const att of newAttachments) {
+          try {
+            if (att._rawFile) {
+              const formData = new FormData();
+              formData.append("file", att._rawFile);
+              await apiClient.post(`/assignments/${assignmentId}/upload`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+              });
+            }
+          } catch {
+            toast.error("Attachment upload failed. The assignment was saved without this file.");
+          }
+        }
+      }
+
       onSuccess();
       onClose();
     } catch (err: any) {
+      toast.error("Failed to save assignment.");
     } finally {
       setIsLoading(false);
     }
@@ -192,11 +256,7 @@ export function AssignmentModal({
           label="Class & Subject Allocation"
           error={errors.teacherAssignmentId?.message}
           {...register("teacherAssignmentId")}
-          options={[
-            { label: "Grade 10-A — Mathematics", value: "018f4a2b-8910-7400-8000-000000000001" },
-            { label: "Grade 11-B — Physics Lab", value: "018f4a2b-8910-7400-8000-000000000002" },
-            { label: "Grade 12-A — Organic Chemistry", value: "018f4a2b-8910-7400-8000-000000000003" },
-          ]}
+          options={allocationOptions}
         />
 
         <Textarea

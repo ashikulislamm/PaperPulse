@@ -24,6 +24,7 @@ public class GetSubmissionsForGradingQueryHandler : IRequestHandler<GetSubmissio
 
     public async Task<PagedResult<SubmissionGradingDetailDto>> Handle(GetSubmissionsForGradingQuery request, CancellationToken cancellationToken)
     {
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var assignment = await _context.Assignments
             .Include(a => a.TeacherAssignment)
             .FirstOrDefaultAsync(a => a.Id == request.AssignmentId, cancellationToken);
@@ -64,8 +65,8 @@ public class GetSubmissionsForGradingQueryHandler : IRequestHandler<GetSubmissio
         var totalCount = await query.CountAsync(cancellationToken);
 
         var submissions = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = submissions.Select(s =>
@@ -119,6 +120,6 @@ public class GetSubmissionsForGradingQueryHandler : IRequestHandler<GetSubmissio
             );
         }).ToList();
 
-        return new PagedResult<SubmissionGradingDetailDto>(dtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<SubmissionGradingDetailDto>(dtos, totalCount, request.PageNumber, cappedPageSize);
     }
 }

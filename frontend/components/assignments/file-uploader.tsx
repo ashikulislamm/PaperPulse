@@ -10,6 +10,7 @@ export interface AttachmentItem {
   fileUrl: string;
   fileSize: number;
   contentType: string;
+  _rawFile?: File;
 }
 
 interface FileUploaderProps {

@@ -30,6 +30,7 @@ public class GetSecurityAuditLogsQueryHandler : IRequestHandler<GetSecurityAudit
 
     public async Task<PagedResult<AuditLogDto>> Handle(GetSecurityAuditLogsQuery request, CancellationToken cancellationToken)
     {
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var query = _context.AuditLogs
             .AsNoTracking()
             .Include(a => a.User)
@@ -39,8 +40,8 @@ public class GetSecurityAuditLogsQueryHandler : IRequestHandler<GetSecurityAudit
         var totalCount = await query.CountAsync(cancellationToken);
 
         var logs = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = logs.Select(a => new AuditLogDto(
@@ -56,6 +57,6 @@ public class GetSecurityAuditLogsQueryHandler : IRequestHandler<GetSecurityAudit
             a.CreatedAt
         )).ToList();
 
-        return new PagedResult<AuditLogDto>(dtos, totalCount, request.PageNumber, request.PageSize);
+        return new PagedResult<AuditLogDto>(dtos, totalCount, request.PageNumber, cappedPageSize);
     }
 }

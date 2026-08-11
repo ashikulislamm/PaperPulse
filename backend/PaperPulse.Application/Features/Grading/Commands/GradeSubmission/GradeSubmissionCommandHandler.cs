@@ -48,6 +48,7 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
                 .ThenInclude(a => a.TeacherAssignment)
             .Include(s => s.Mark)
             .Include(s => s.Feedbacks)
+                .ThenInclude(f => f.Teacher)
             .Include(s => s.Versions)
                 .ThenInclude(v => v.Attachments)
             .FirstOrDefaultAsync(s => s.Id == request.SubmissionId, cancellationToken);
@@ -129,7 +130,7 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
             f.Id,
             f.Comments,
             f.IsPrivate,
-            teacherName,
+            $"{f.Teacher.FirstName} {f.Teacher.LastName}",
             f.CreatedAt
         )).ToList();
 

@@ -83,7 +83,9 @@ export default function UsersPage() {
       await apiClient.patch(`/users/${userId}/activate`);
       toast.success("User account activated successfully.");
       refetch();
-    } catch (err) {}
+    } catch (err) {
+      toast.error("Failed to activate user.");
+    }
   };
 
   const handleDeactivate = async (userId: string) => {
@@ -91,7 +93,9 @@ export default function UsersPage() {
       await apiClient.patch(`/users/${userId}/deactivate`);
       toast.warning("User account deactivated.");
       refetch();
-    } catch (err) {}
+    } catch (err) {
+      toast.error("Failed to deactivate user.");
+    }
   };
 
   const handleBan = async (userId: string) => {
@@ -99,7 +103,9 @@ export default function UsersPage() {
       await apiClient.patch(`/users/${userId}/ban`);
       toast.error("User account suspended / banned.");
       refetch();
-    } catch (err) {}
+    } catch (err) {
+      toast.error("Failed to suspend user.");
+    }
   };
 
   const handleDelete = async (userId: string) => {
@@ -108,7 +114,9 @@ export default function UsersPage() {
       await apiClient.delete(`/users/${userId}`);
       toast.success("User deleted.");
       refetch();
-    } catch (err) {}
+    } catch (err) {
+      toast.error("Failed to delete user.");
+    }
   };
 
   const columns: Column<UserItem>[] = [

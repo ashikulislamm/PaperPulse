@@ -14,7 +14,8 @@ public class CreateAssignmentCommandValidator : AbstractValidator<CreateAssignme
             .MaximumLength(200).WithMessage("Title must not exceed 200 characters.");
 
         RuleFor(x => x.Description)
-            .NotEmpty().WithMessage("Assignment description is required.");
+            .NotEmpty().WithMessage("Assignment description is required.")
+            .MaximumLength(5000).WithMessage("Description must not exceed 5000 characters.");
 
         RuleFor(x => x.MaxMarks)
             .GreaterThan(0).WithMessage("Max marks must be greater than 0.");

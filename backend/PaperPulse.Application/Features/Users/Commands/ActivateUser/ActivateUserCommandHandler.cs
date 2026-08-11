@@ -9,10 +9,12 @@ namespace PaperPulse.Application.Features.Users.Commands.ActivateUser;
 public class ActivateUserCommandHandler : IRequestHandler<ActivateUserCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditLogService _auditLogService;
 
-    public ActivateUserCommandHandler(IApplicationDbContext context)
+    public ActivateUserCommandHandler(IApplicationDbContext context, IAuditLogService auditLogService)
     {
         _context = context;
+        _auditLogService = auditLogService;
     }
 
     public async Task<Unit> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
@@ -29,6 +31,14 @@ public class ActivateUserCommandHandler : IRequestHandler<ActivateUserCommand, U
         _context.Users.Update(user);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "ActivateUser",
+            "User",
+            request.Id,
+            newValues: new { Status = "Active" },
+            cancellationToken: cancellationToken);
+
         return Unit.Value;
     }
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlertOctagon, RotateCcw, LayoutDashboard } from "lucide-react";
 
-export default function Error({
+export default function DashboardError({
   error,
   reset,
 }: {
@@ -15,14 +15,12 @@ export default function Error({
 }) {
   React.useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      console.error("Application Error Boundary caught:", error);
+      console.error("Dashboard Error Boundary:", error);
     }
   }, [error]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-base)] text-[var(--text-primary)] p-6 relative overflow-hidden">
-      <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] bg-rose-500/10 rounded-full blur-[140px] pointer-events-none -z-10" />
-
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
       <div className="w-full max-w-md text-center space-y-6">
         <Card className="glass-card p-8 border border-rose-200/80 shadow-2xl space-y-6">
           <div className="h-16 w-16 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center mx-auto">
@@ -34,7 +32,7 @@ export default function Error({
               Something Went Wrong
             </h1>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              An unexpected application runtime error occurred. Please try again or return to the dashboard.
+              An unexpected error occurred in the dashboard. Please try again or return to the main view.
             </p>
           </div>
 

@@ -9,10 +9,12 @@ namespace PaperPulse.Application.Features.Users.Commands.BanUser;
 public class BanUserCommandHandler : IRequestHandler<BanUserCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditLogService _auditLogService;
 
-    public BanUserCommandHandler(IApplicationDbContext context)
+    public BanUserCommandHandler(IApplicationDbContext context, IAuditLogService auditLogService)
     {
         _context = context;
+        _auditLogService = auditLogService;
     }
 
     public async Task<Unit> Handle(BanUserCommand request, CancellationToken cancellationToken)
@@ -41,6 +43,14 @@ public class BanUserCommandHandler : IRequestHandler<BanUserCommand, Unit>
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "BanUser",
+            "User",
+            request.Id,
+            newValues: new { Status = "Suspended", Reason = request.Reason },
+            cancellationToken: cancellationToken);
+
         return Unit.Value;
     }
 }

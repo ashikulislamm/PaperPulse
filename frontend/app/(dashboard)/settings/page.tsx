@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   ShieldAlert,
   AlertTriangle,
+  Timer,
 } from "lucide-react";
 
 interface JobStatus {
@@ -36,6 +37,7 @@ export default function SettingsPage() {
     "auto-close-assignments": { lastRunAt: null, lastResult: null, isRunning: false },
     "cleanup-tokens": { lastRunAt: null, lastResult: null, isRunning: false },
     "cleanup-notifications": { lastRunAt: null, lastResult: null, isRunning: false },
+    "deadline-reminders": { lastRunAt: null, lastResult: null, isRunning: false },
   });
 
   const updateJobStatus = (jobKey: string, updates: Partial<JobStatus>) => {
@@ -116,6 +118,31 @@ export default function SettingsPage() {
     },
   });
 
+  // Send deadline reminders mutation
+  const deadlineRemindersMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post("/notifications/trigger-deadline-reminders", null, {
+        params: { hoursThreshold: 24 },
+      });
+      return response.data?.data as number;
+    },
+    onMutate: () => {
+      updateJobStatus("deadline-reminders", { isRunning: true });
+    },
+    onSuccess: (count) => {
+      updateJobStatus("deadline-reminders", {
+        lastRunAt: new Date().toISOString(),
+        lastResult: count,
+        isRunning: false,
+      });
+      toast.success(`Sent ${count} deadline reminder${count !== 1 ? "s" : ""} to students.`);
+    },
+    onError: () => {
+      updateJobStatus("deadline-reminders", { isRunning: false });
+      toast.error("Failed to send deadline reminders.");
+    },
+  });
+
   // Redirect non-admins
   React.useEffect(() => {
     if (!isAdmin) {
@@ -158,6 +185,16 @@ export default function SettingsPage() {
       mutation: cleanupNotificationsMutation,
       permission: "Purges read notifications older than 30 days",
     },
+    {
+      key: "deadline-reminders",
+      title: "Send Deadline Reminders",
+      description:
+        "Sends in-app notifications to students with upcoming assignment deadlines within 24 hours. Students who haven't submitted will be reminded.",
+      icon: <Timer className="h-6 w-6" />,
+      accentColor: "sky" as const,
+      mutation: deadlineRemindersMutation,
+      permission: "Notifies students of upcoming deadlines",
+    },
   ];
 
   return (
@@ -186,7 +223,7 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {jobs.map((job) => {
             const status = jobStatuses[job.key];
             const isRunning = job.mutation.isPending;
@@ -203,6 +240,8 @@ export default function SettingsPage() {
                           ? "bg-indigo-100/70 text-indigo-600"
                           : job.accentColor === "amber"
                           ? "bg-amber-100/70 text-amber-600"
+                          : job.accentColor === "sky"
+                          ? "bg-sky-100/70 text-sky-600"
                           : "bg-emerald-100/70 text-emerald-600"
                       }`}
                     >
@@ -293,6 +332,10 @@ export default function SettingsPage() {
             <li className="flex items-start gap-2">
               <span className="text-indigo-500 mt-0.5">•</span>
               Notification cleanup only removes read notifications older than 30 days. Unread notifications are preserved.
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-indigo-500 mt-0.5">•</span>
+              Deadline reminders notify students with unsubmitted work for assignments due within 24 hours. The background job runs hourly; this manual trigger sends reminders immediately.
             </li>
           </ul>
         </CardContent>

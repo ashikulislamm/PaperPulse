@@ -8,10 +8,12 @@ namespace PaperPulse.Application.Features.Users.Commands.DeleteUser;
 public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditLogService _auditLogService;
 
-    public DeleteUserCommandHandler(IApplicationDbContext context)
+    public DeleteUserCommandHandler(IApplicationDbContext context, IAuditLogService auditLogService)
     {
         _context = context;
+        _auditLogService = auditLogService;
     }
 
     public async Task<Unit> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
@@ -38,6 +40,13 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Unit>
 
         _context.Users.Remove(user); // Triggers EF Core soft delete interceptor
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "DeleteUser",
+            "User",
+            request.Id,
+            newValues: new { Status = "SoftDeleted" },
+            cancellationToken: cancellationToken);
 
         return Unit.Value;
     }

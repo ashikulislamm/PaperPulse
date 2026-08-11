@@ -98,40 +98,6 @@ export default function AssignmentsPage() {
     },
   });
 
-  // Mock Fallback Data
-  const mockAssignments: AssignmentItem[] = [
-    {
-      id: "018f4a2b-8910-7500-8000-000000000001",
-      title: "Calculus Problem Set #4 — Derivatives",
-      description: "Complete all exercises in Chapter 4 covering chain rule, implicit differentiation, and optimization problems.",
-      status: "Published",
-      maxMarks: 100,
-      passMarks: 40,
-      dueDate: new Date(Date.now() + 86400000 * 3).toISOString(),
-      allowLateSubmissions: true,
-      latePenaltyPercentage: 10,
-      teacherAssignmentId: "018f4a2b-8910-7400-8000-000000000001",
-      className: "Grade 10-A",
-      subjectName: "Mathematics",
-      teacherName: "Sarah Conner",
-    },
-    {
-      id: "018f4a2b-8910-7500-8000-000000000002",
-      title: "Physics Motion & Vectors Lab Report",
-      description: "Submit digital PDF report detailing velocity vectors, momentum conservation, and experimental error analysis.",
-      status: "Draft",
-      maxMarks: 50,
-      passMarks: 20,
-      dueDate: new Date(Date.now() + 86400000 * 5).toISOString(),
-      allowLateSubmissions: false,
-      latePenaltyPercentage: 0,
-      teacherAssignmentId: "018f4a2b-8910-7400-8000-000000000002",
-      className: "Grade 11-B",
-      subjectName: "Physics",
-      teacherName: "Dr. Robert Vance",
-    },
-  ];
-
   // Use real DB data returned by API query
   const assignmentsList = data?.items ?? [];
 
@@ -152,6 +118,7 @@ export default function AssignmentsPage() {
       }
       refetch();
     } catch (err) {
+      toast.error("Failed to perform action.");
     } finally {
       setIsActionLoading(false);
       setActionTarget(null);
@@ -165,7 +132,9 @@ export default function AssignmentsPage() {
       await apiClient.delete(`/assignments/${id}`);
       toast.success("Assignment deleted.");
       refetch();
-    } catch (err) {}
+    } catch (err) {
+      toast.error("Failed to delete assignment.");
+    }
   };
 
   const columns: Column<AssignmentItem>[] = [
@@ -190,7 +159,7 @@ export default function AssignmentsPage() {
       cell: (row) => (
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
           <UserCheck className="h-3.5 w-3.5 text-indigo-600" />
-          <span>{row.teacherName || "Sarah Conner"}</span>
+          <span>{row.teacherName || "Unassigned"}</span>
         </div>
       ),
     },
@@ -418,7 +387,7 @@ export default function AssignmentsPage() {
                     <Badge variant="default">{item.className || "Grade 10-A"}</Badge>
                   </div>
                   <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                    <UserCheck className="h-3 w-3 text-indigo-600" /> {item.teacherName || "Sarah Conner"}
+                    <UserCheck className="h-3 w-3 text-indigo-600" /> {item.teacherName || "Unassigned"}
                   </span>
                 </div>
               </div>
