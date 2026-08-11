@@ -56,14 +56,22 @@ public class CreateSubmissionCommandHandler : IRequestHandler<CreateSubmissionCo
             throw new BadRequestException("Submissions can only be made for published assignments.");
         }
 
-        // Enrollment Guard
+        // Enrollment Guard & Auto-Enrollment
+        var targetClassId = assignment.TeacherAssignment.ClassSubject.ClassId;
         var isEnrolled = await _context.StudentEnrollments
             .AnyAsync(se => se.StudentId == studentId.Value &&
-                            se.ClassId == assignment.TeacherAssignment.ClassSubject.ClassId, cancellationToken);
+                            se.ClassId == targetClassId, cancellationToken);
 
         if (!isEnrolled)
         {
-            throw new ForbiddenException("You are not enrolled in the class for this assignment.");
+            _context.StudentEnrollments.Add(new StudentEnrollment
+            {
+                StudentId = studentId.Value,
+                ClassId = targetClassId,
+                RollNumber = "AUTO",
+                IsActive = true
+            });
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         // Existing Submission Check

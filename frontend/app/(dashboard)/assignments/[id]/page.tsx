@@ -102,7 +102,8 @@ export default function AssignmentDetailPage() {
     }
   };
 
-  const getFileIcon = (contentType: string) => {
+  const getFileIcon = (type?: string) => {
+    const contentType = (type || "").toLowerCase();
     if (contentType.includes("pdf")) return <FileText className="h-6 w-6 text-rose-500" />;
     if (contentType.includes("zip") || contentType.includes("compressed"))
       return <FileArchive className="h-6 w-6 text-amber-500" />;
@@ -285,25 +286,33 @@ export default function AssignmentDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {item.attachments?.map((att) => (
+          {item.attachments?.map((att: any) => (
             <div
               key={att.id}
               className="flex items-center justify-between p-4 rounded-xl border border-[var(--border-subtle)] bg-slate-50/50 hover:bg-slate-100/60 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
-                {getFileIcon(att.contentType)}
+                {getFileIcon(att.mimeType || att.contentType || att.fileName)}
                 <div className="flex flex-col truncate">
                   <span className="text-xs font-bold text-[var(--text-primary)] truncate">
                     {att.fileName}
                   </span>
                   <span className="text-[10px] font-mono text-[var(--text-muted)]">
-                    {formatFileSize(att.fileSize)}
+                    {formatFileSize(att.fileSizeBytes || att.fileSize || 0)}
                   </span>
                 </div>
               </div>
 
               <a
-                href={att.fileUrl}
+                href={
+                  att.fileUrl || att.filePath
+                    ? (att.fileUrl || att.filePath).startsWith("http")
+                      ? att.fileUrl || att.filePath
+                      : `${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:5109"}${
+                          (att.fileUrl || att.filePath).startsWith("/") ? "" : "/"
+                        }${att.fileUrl || att.filePath}`
+                    : "#"
+                }
                 target="_blank"
                 rel="noreferrer"
                 className="p-2 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 transition-colors shadow-2xs shrink-0"

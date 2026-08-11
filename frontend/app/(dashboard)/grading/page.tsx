@@ -28,6 +28,7 @@ interface Assignment {
 
 interface SubmissionItem {
   id: string;
+  submissionId?: string;
   studentId: string;
   studentName: string;
   studentEmail: string;
@@ -36,10 +37,18 @@ interface SubmissionItem {
   status: string;
   submittedAt: string;
   attemptCount: number;
-  scoreObtained: number | null;
-  isPassed: boolean | null;
+  scoreObtained?: number | null;
+  isPassed?: boolean | null;
   maxMarks: number;
   passMarks: number;
+  mark?: {
+    scoreObtained: number;
+    maxMarks: number;
+    passMarks: number;
+    isPassed: boolean;
+    gradedAt: string;
+    teacherName: string;
+  } | null;
 }
 
 interface PagedSubmissionResponse {
@@ -154,25 +163,32 @@ export default function GradingPage() {
     },
     {
       header: "Score",
-      cell: (row) => (
-        <ScoreIndicator
-          scoreObtained={row.scoreObtained}
-          maxMarks={row.maxMarks}
-          passMarks={row.passMarks}
-          isPassed={row.isPassed}
-          showBar={false}
-        />
-      ),
+      cell: (row) => {
+        const score = row.mark ? row.mark.scoreObtained : row.scoreObtained;
+        const passed = row.mark ? row.mark.isPassed : row.isPassed;
+        return (
+          <ScoreIndicator
+            scoreObtained={score !== undefined ? score : null}
+            maxMarks={row.maxMarks}
+            passMarks={row.passMarks}
+            isPassed={passed !== undefined ? passed : null}
+            showBar={false}
+          />
+        );
+      },
     },
     {
       header: "Actions",
-      cell: (row) => (
-        <Link href={`/grading/${row.id}`}>
-          <Button size="sm" variant="outline" className="gap-1.5">
-            <Eye className="h-3.5 w-3.5" /> Grade
-          </Button>
-        </Link>
-      ),
+      cell: (row) => {
+        const targetId = row.id || row.submissionId;
+        return (
+          <Link href={`/grading/${targetId}`}>
+            <Button size="sm" variant="outline" className="gap-1.5">
+              <Eye className="h-3.5 w-3.5" /> Grade
+            </Button>
+          </Link>
+        );
+      },
     },
   ];
 

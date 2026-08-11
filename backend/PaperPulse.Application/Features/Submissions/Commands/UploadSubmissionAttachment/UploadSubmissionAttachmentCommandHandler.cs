@@ -44,12 +44,19 @@ public class UploadSubmissionAttachmentCommandHandler
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/msword",
             "application/zip",
+            "application/x-zip-compressed",
             "application/x-rar-compressed",
-            "text/plain"
+            "application/octet-stream",
+            "text/plain",
+            "image/png",
+            "image/jpeg"
         };
 
-        if (!allowedTypes.Contains(request.ContentType))
-            throw new ValidationException("Invalid file type. Allowed: PDF, DOCX, ZIP, TXT.");
+        var ext = Path.GetExtension(request.FileName).ToLowerInvariant();
+        var allowedExts = new[] { ".pdf", ".docx", ".doc", ".zip", ".rar", ".txt", ".png", ".jpg", ".jpeg" };
+
+        if (!allowedTypes.Contains(request.ContentType) && !allowedExts.Contains(ext))
+            throw new ValidationException("Invalid file type. Allowed: PDF, DOCX, ZIP, TXT, Images.");
 
         if (request.FileStream.Length > 25 * 1024 * 1024)
             throw new ValidationException("File size exceeds 25MB limit.");

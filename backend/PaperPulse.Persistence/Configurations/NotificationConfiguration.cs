@@ -77,7 +77,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         // Check Constraints
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint("chk_notifications_type", "type IN ('AssignmentCreated', 'AssignmentDueSoon', 'SubmissionGraded', 'FeedbackAdded', 'SystemAlert')");
+            t.HasCheckConstraint("chk_notifications_type", "type IN ('AssignmentCreated', 'AssignmentPublished', 'AssignmentDueSoon', 'DeadlineReminder', 'SubmissionReceived', 'SubmissionGraded', 'FeedbackAdded', 'SystemAlert')");
             t.HasCheckConstraint("chk_notifications_status", "status IN ('Unread', 'Read', 'Archived')");
         });
 

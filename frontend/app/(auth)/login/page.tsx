@@ -61,11 +61,9 @@ export default function LoginPage() {
 
         toast.success(`Welcome back, ${user.firstName}!`);
 
-        if (user.mustChangePassword) {
-          toast.warning("First login detected. Please update your password.");
-          router.push("/profile");
-        } else {
-          router.push("/dashboard");
+        const targetUrl = user.mustChangePassword ? "/profile" : "/dashboard";
+        if (typeof window !== "undefined") {
+          window.location.href = targetUrl;
         }
       } else {
         setErrorMessage(response.data?.message || "Login failed.");

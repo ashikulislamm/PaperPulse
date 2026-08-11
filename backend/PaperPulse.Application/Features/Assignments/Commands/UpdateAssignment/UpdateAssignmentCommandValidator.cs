@@ -25,7 +25,7 @@ public class UpdateAssignmentCommandValidator : AbstractValidator<UpdateAssignme
             .LessThanOrEqualTo(x => x.MaxMarks).WithMessage("Pass marks cannot exceed Max marks.");
 
         RuleFor(x => x.DueDate)
-            .GreaterThan(DateTimeOffset.UtcNow).WithMessage("Due date must be in the future.");
+            .NotEmpty().WithMessage("Due date is required.");
 
         RuleFor(x => x.LatePenaltyPercentage)
             .GreaterThanOrEqualTo(0).WithMessage("Late penalty percentage cannot be negative.")

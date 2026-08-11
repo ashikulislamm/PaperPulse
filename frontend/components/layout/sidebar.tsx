@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Award,
+  GraduationCap,
   X,
 } from "lucide-react";
 
@@ -54,6 +55,7 @@ export function Sidebar() {
   const navItems: NavItem[] = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "User Management", href: "/users", icon: Users, roles: ["Admin"] },
+    { label: "Classes & Subjects", href: "/academic", icon: GraduationCap, roles: ["Admin"] },
     {
       label: isStudent ? "My Assignments & Submissions" : "Assignment Studio",
       href: isStudent ? "/student-assignments" : "/assignments",

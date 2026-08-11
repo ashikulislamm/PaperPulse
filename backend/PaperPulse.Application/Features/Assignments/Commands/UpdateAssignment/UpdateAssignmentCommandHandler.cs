@@ -42,7 +42,7 @@ public class UpdateAssignmentCommandHandler : IRequestHandler<UpdateAssignmentCo
         var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
         var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
 
-        if (isTeacher && !isAdmin && assignment.TeacherAssignment.TeacherId != _currentUserService.UserId)
+        if (isTeacher && !isAdmin && assignment.TeacherAssignment != null && assignment.TeacherAssignment.TeacherId != _currentUserService.UserId)
         {
             throw new ForbiddenException("You can only edit assignments assigned to you.");
         }

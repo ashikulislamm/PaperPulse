@@ -23,7 +23,9 @@ export function Navbar() {
       // Proceed with local logout even if server call fails
     } finally {
       logout();
-      router.push("/login");
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
     }
   };
 

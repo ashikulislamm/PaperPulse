@@ -42,7 +42,8 @@ export interface AssignmentItem {
   maxMarks: number;
   passMarks: number;
   dueDate: string;
-  allowLateSubmissions: boolean;
+  allowLateSubmission?: boolean;
+  allowLateSubmissions?: boolean;
   latePenaltyPercentage: number;
   teacherAssignmentId: string;
   className?: string;
@@ -140,7 +141,7 @@ export function AssignmentModal({
         dueDate: assignmentToEdit.dueDate
           ? new Date(assignmentToEdit.dueDate).toISOString().slice(0, 16)
           : new Date().toISOString().slice(0, 16),
-        allowLateSubmissions: assignmentToEdit.allowLateSubmissions,
+        allowLateSubmissions: assignmentToEdit.allowLateSubmissions ?? assignmentToEdit.allowLateSubmission ?? true,
         latePenaltyPercentage: assignmentToEdit.latePenaltyPercentage,
       });
       setAttachments(assignmentToEdit.attachments || []);
@@ -190,6 +191,7 @@ export function AssignmentModal({
           maxMarks: values.maxMarks,
           passMarks: values.passMarks,
           dueDate: new Date(values.dueDate).toISOString(),
+          allowLateSubmission: values.allowLateSubmissions,
           allowLateSubmissions: values.allowLateSubmissions,
           latePenaltyPercentage: values.latePenaltyPercentage,
         });
@@ -203,6 +205,7 @@ export function AssignmentModal({
           maxMarks: values.maxMarks,
           passMarks: values.passMarks,
           dueDate: new Date(values.dueDate).toISOString(),
+          allowLateSubmission: values.allowLateSubmissions,
           allowLateSubmissions: values.allowLateSubmissions,
           latePenaltyPercentage: values.latePenaltyPercentage,
         });
@@ -212,7 +215,9 @@ export function AssignmentModal({
 
       // Upload new attachments that don't have a real server path
       if (assignmentId) {
-        const newAttachments = attachments.filter((a) => a.fileUrl.startsWith("blob:"));
+        const newAttachments = attachments.filter(
+          (a) => a.fileUrl && typeof a.fileUrl === "string" && a.fileUrl.startsWith("blob:")
+        );
         for (const att of newAttachments) {
           try {
             if (att._rawFile) {
@@ -222,8 +227,10 @@ export function AssignmentModal({
                 headers: { "Content-Type": "multipart/form-data" },
               });
             }
-          } catch {
-            toast.error("Attachment upload failed. The assignment was saved without this file.");
+          } catch (uploadErr: any) {
+            if (!uploadErr.response || uploadErr.response.status < 500) {
+              toast.error("Attachment upload failed. The assignment was saved without this file.");
+            }
           }
         }
       }
@@ -231,7 +238,9 @@ export function AssignmentModal({
       onSuccess();
       onClose();
     } catch (err: any) {
-      toast.error("Failed to save assignment.");
+      const msg = err.response?.data?.message || err.response?.data?.title || "Failed to save assignment.";
+      if (!err.response || err.response.status >= 500) return;
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

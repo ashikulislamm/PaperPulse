@@ -13,5 +13,6 @@ public record StudentAssignmentSummaryDto(
     string AssignmentStatus,
     string SubmissionStatus,
     DateTimeOffset? SubmittedAt,
-    bool IsOverdue
+    bool IsOverdue,
+    decimal? GradeObtained
 );

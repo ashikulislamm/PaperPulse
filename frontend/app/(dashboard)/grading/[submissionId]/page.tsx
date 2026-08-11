@@ -332,14 +332,20 @@ export default function GradingDetailPage() {
             submissionId={submissionId}
             maxMarks={submission.maxMarks}
             passMarks={submission.passMarks}
-            currentScore={submission.scoreObtained}
+            currentScore={submission.mark?.scoreObtained ?? submission.scoreObtained}
             currentStatus={submission.status}
-            onSuccess={() => refetch()}
+            onSuccess={() => {
+              refetch();
+              queryClient.invalidateQueries({ queryKey: ["grading"] });
+            }}
           />
 
           <FeedbackForm
             submissionId={submissionId}
-            onSuccess={() => refetch()}
+            onSuccess={() => {
+              refetch();
+              queryClient.invalidateQueries({ queryKey: ["grading"] });
+            }}
           />
         </div>
       </div>

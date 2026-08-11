@@ -23,12 +23,13 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
 
     public async Task<PagedResult<StudentAssignmentSummaryDto>> Handle(GetStudentAssignmentsQuery request, CancellationToken cancellationToken)
     {
-        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var studentId = _currentUserService.UserId;
         if (!studentId.HasValue)
         {
             throw new UnauthorizedException("Student is not authenticated.");
         }
+
+        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
 
         // Get class IDs student is currently enrolled in
         var enrolledClassIds = await _context.StudentEnrollments
@@ -50,6 +51,7 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
                 .ThenInclude(ta => ta.ClassSubject)
                     .ThenInclude(cs => cs.Subject)
             .Include(a => a.Submissions.Where(s => s.StudentId == studentId.Value))
+                .ThenInclude(s => s.Mark)
             .Where(a => enrolledClassIds.Contains(a.TeacherAssignment.ClassSubject.ClassId) &&
                         (a.Status == AssignmentStatus.Published || a.Status == AssignmentStatus.Closed))
             .AsQueryable();
@@ -92,6 +94,7 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
                 : (a.DueDate < now ? "Overdue" : "Pending");
             var isOverdue = submission == null && a.DueDate < now;
             var teacherName = $"{a.TeacherAssignment.Teacher.FirstName} {a.TeacherAssignment.Teacher.LastName}";
+            var gradeObtained = submission?.Mark?.ScoreObtained;
 
             return new StudentAssignmentSummaryDto(
                 a.Id,
@@ -106,7 +109,8 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
                 a.Status.ToString(),
                 submissionStatus,
                 submission?.SubmittedAt,
-                isOverdue
+                isOverdue,
+                gradeObtained
             );
         }).ToList();
 

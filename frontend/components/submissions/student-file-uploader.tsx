@@ -65,10 +65,13 @@ export function StudentFileUploader({
     });
   };
 
-  const getFileIcon = (contentType: string) => {
+  const getFileIcon = (type?: string) => {
+    const contentType = (type || "").toLowerCase();
     if (contentType.includes("pdf")) return <FileText className="h-6 w-6 text-rose-500" />;
     if (contentType.includes("zip") || contentType.includes("compressed"))
       return <FileArchive className="h-6 w-6 text-amber-500" />;
+    if (contentType.includes("sheet") || contentType.includes("excel"))
+      return <FileSpreadsheet className="h-6 w-6 text-emerald-500" />;
     return <FileText className="h-6 w-6 text-indigo-500" />;
   };
 

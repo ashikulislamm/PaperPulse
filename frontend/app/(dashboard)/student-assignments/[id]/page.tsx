@@ -55,6 +55,13 @@ interface SubmissionVersion {
   submissionText: string;
   submittedAt: string;
   isLate: boolean;
+  attachments: Array<{
+    id: string;
+    fileName: string;
+    filePath: string;
+    fileType: string;
+    fileSizeBytes: number;
+  }>;
 }
 
 interface SubmissionData {
@@ -116,6 +123,9 @@ export default function SubmissionStudioPage() {
         await apiClient.post(`/submissions/${submissionData.versions[0].id}/upload`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        // Refetch to get the updated submission with attachment info
+        const refreshed = await apiClient.get(`/submissions/${assignmentId}`);
+        return refreshed.data?.data as SubmissionData;
       }
 
       return submissionData;
@@ -148,6 +158,9 @@ export default function SubmissionStudioPage() {
         await apiClient.post(`/submissions/${latestVersion.id}/upload`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        // Refetch to get the updated submission with attachment info
+        const refreshed = await apiClient.get(`/submissions/${assignmentId}`);
+        return refreshed.data?.data as SubmissionData;
       }
 
       return submissionData;
@@ -171,18 +184,26 @@ export default function SubmissionStudioPage() {
   // Build version timeline from API data
   const versions: SubmissionVersionItem[] = React.useMemo(() => {
     if (!effectiveSubmission?.versions) return [];
-    return effectiveSubmission.versions.map((v) => ({
-      id: v.id,
-      versionNumber: v.versionNumber,
-      fileName: `Submission_v${v.versionNumber}.txt`,
-      fileUrl: "#",
-      fileSize: v.submissionText?.length || 0,
-      contentType: "text/plain",
-      comments: v.submissionText,
-      submittedAt: v.submittedAt,
-      isLate: v.isLate,
-      status: effectiveSubmission.status,
-    }));
+    const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:5109";
+    return effectiveSubmission.versions.map((v) => {
+      const attachment = v.attachments?.[0];
+      const hasAttachment = !!attachment;
+      const fileUrl = hasAttachment
+        ? `${apiBase}/${attachment.filePath}`
+        : "#";
+      return {
+        id: v.id,
+        versionNumber: v.versionNumber,
+        fileName: hasAttachment ? attachment.fileName : `Submission_v${v.versionNumber}.txt`,
+        fileUrl,
+        fileSize: hasAttachment ? attachment.fileSizeBytes : (v.submissionText?.length || 0),
+        contentType: hasAttachment ? attachment.fileType : "text/plain",
+        comments: v.submissionText,
+        submittedAt: v.submittedAt,
+        isLate: v.isLate,
+        status: effectiveSubmission.status,
+      };
+    });
   }, [effectiveSubmission]);
 
   // Handle Submit / Resubmit
@@ -318,26 +339,37 @@ export default function SubmissionStudioPage() {
             <Card className="p-6 space-y-4">
               <h3 className="text-sm font-bold text-slate-900">Teacher Materials &amp; Reference Files</h3>
               <div className="space-y-3">
-                {assignment.attachments.map((att) => (
-                  <div
-                    key={att.id}
-                    className="flex items-center justify-between p-3 rounded-xl border border-[var(--border-subtle)] bg-slate-50/50 hover:bg-slate-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <FileText className="h-5 w-5 text-indigo-500 shrink-0" />
-                      <span className="text-xs font-bold text-slate-900 truncate">{att.fileName}</span>
-                    </div>
-                    <a
-                      href={att.fileUrl || att.filePath || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 transition-colors shadow-2xs shrink-0"
-                      title="Download Material"
+                {assignment.attachments.map((att: any) => {
+                  const targetPath = att.fileUrl || att.filePath || "";
+                  const fullUrl = targetPath
+                    ? targetPath.startsWith("http")
+                      ? targetPath
+                      : `${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:5109"}${
+                          targetPath.startsWith("/") ? "" : "/"
+                        }${targetPath}`
+                    : "#";
+
+                  return (
+                    <div
+                      key={att.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-[var(--border-subtle)] bg-slate-50/50 hover:bg-slate-100 transition-colors"
                     >
-                      <Download className="h-4 w-4" />
-                    </a>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText className="h-5 w-5 text-indigo-500 shrink-0" />
+                        <span className="text-xs font-bold text-slate-900 truncate">{att.fileName}</span>
+                      </div>
+                      <a
+                        href={fullUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 transition-colors shadow-2xs shrink-0"
+                        title="Download Material"
+                      >
+                        <Download className="h-4 w-4" />
+                      </a>
+                    </div>
+                  );
+                })}
               </div>
             </Card>
           )}

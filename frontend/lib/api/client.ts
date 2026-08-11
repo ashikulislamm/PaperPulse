@@ -65,6 +65,10 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Let Axios auto-detect multipart boundary for FormData uploads
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -176,15 +180,18 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // ── Global Toast for other server errors ───────────────────────────────
+    // ── Global Toast for unexpected server errors ──────────────────────────────
     const errorMessage =
       error.response?.data?.message ||
       error.response?.data?.title ||
       error.message ||
       "An unexpected server error occurred.";
 
-    if (status !== 401 && status !== 403 && status !== 404 && typeof window !== "undefined") {
-      toast.error(errorMessage);
+    // Only show global toast for 5xx and network errors — 4xx are handled by components
+    if (!status || status >= 500) {
+      if (typeof window !== "undefined") {
+        toast.error(errorMessage);
+      }
     }
 
     return Promise.reject(error);

@@ -42,7 +42,8 @@ export function FileUploader({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
-  const getFileIcon = (contentType: string) => {
+  const getFileIcon = (type?: string) => {
+    const contentType = (type || "").toLowerCase();
     if (contentType.includes("pdf")) return <FileText className="h-5 w-5 text-rose-500" />;
     if (contentType.includes("zip") || contentType.includes("compressed"))
       return <FileArchive className="h-5 w-5 text-amber-500" />;
@@ -89,7 +90,7 @@ export function FileUploader({
               className="flex items-center justify-between p-3 rounded-lg border border-[var(--border-subtle)] bg-white shadow-2xs hover:border-slate-300 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
-                {getFileIcon(file.contentType)}
+                {getFileIcon(file.contentType || (file as any).mimeType || file.fileName)}
                 <div className="flex flex-col truncate">
                   <span className="text-xs font-bold text-[var(--text-primary)] truncate">
                     {file.fileName}

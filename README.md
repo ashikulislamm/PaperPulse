@@ -72,7 +72,7 @@ When you launch the backend via `dotnet run`, the application automatically:
 2. Checks if database seed data exists.
 3. Automatically seeds system roles, tenant records, sample classes, default subjects, test users (`Admin`, `Teacher`, `Student`), authored assignments, and submissions.
 
-> 💡 **No manual SQL scripts or database table creation is required!**
+> **No manual SQL scripts or database table creation is required!**
 
 ---
 

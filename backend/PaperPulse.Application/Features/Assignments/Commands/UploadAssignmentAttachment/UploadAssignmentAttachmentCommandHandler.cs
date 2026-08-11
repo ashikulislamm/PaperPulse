@@ -37,14 +37,19 @@ public class UploadAssignmentAttachmentCommandHandler
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/msword",
             "application/zip",
+            "application/x-zip-compressed",
             "application/x-rar-compressed",
+            "application/octet-stream",
             "text/plain",
             "image/png",
             "image/jpeg",
             "image/gif"
         };
 
-        if (!allowedTypes.Contains(request.ContentType))
+        var ext = Path.GetExtension(request.FileName).ToLowerInvariant();
+        var allowedExts = new[] { ".pdf", ".docx", ".doc", ".zip", ".rar", ".txt", ".png", ".jpg", ".jpeg", ".gif" };
+
+        if (!allowedTypes.Contains(request.ContentType) && !allowedExts.Contains(ext))
             throw new ValidationException("Invalid file type. Allowed: PDF, DOCX, ZIP, TXT, Images.");
 
         if (request.FileStream.Length > 50 * 1024 * 1024)

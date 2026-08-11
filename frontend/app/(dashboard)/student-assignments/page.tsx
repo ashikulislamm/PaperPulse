@@ -174,7 +174,7 @@ export default function StudentAssignmentsPage() {
                       }
                       dot
                     >
-                      {item.submissionStatus === "Graded"
+                      {item.submissionStatus === "Graded" && item.gradeObtained !== undefined && item.gradeObtained !== null
                         ? `Graded (${item.gradeObtained}/${item.maxMarks})`
                         : item.submissionStatus}
                     </Badge>

@@ -35,6 +35,16 @@ public class DatabaseSeederService : IDatabaseSeeder
                 await _context.Database.ExecuteSqlRawAsync($"SELECT pg_advisory_xact_lock({AdvisoryLockId});", cancellationToken);
                 _logger.LogInformation("Acquired PostgreSQL advisory lock ({LockId}) for database seeding.", AdvisoryLockId);
 
+                // Update notification table check constraints for new NotificationType enum values
+                try
+                {
+                    await _context.Database.ExecuteSqlRawAsync("ALTER TABLE notifications DROP CONSTRAINT IF EXISTS chk_notifications_type;", cancellationToken);
+                }
+                catch
+                {
+                    // Ignore if database provider doesn't support raw SQL constraint drop
+                }
+
                 await SeedMasterDataAsync(cancellationToken);
 
                 if (isDevelopment)

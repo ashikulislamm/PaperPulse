@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/api/auth-store";
 import { apiClient } from "@/lib/api/client";
@@ -54,6 +54,7 @@ export default function AssignmentsPage() {
     }
   }, [isStudent, router]);
 
+  const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [selectedStatus, setSelectedStatus] = React.useState<string>("All");
@@ -117,6 +118,7 @@ export default function AssignmentsPage() {
         toast.success(`Archived "${actionTarget.title}"`);
       }
       refetch();
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all() });
     } catch (err) {
       toast.error("Failed to perform action.");
     } finally {
@@ -484,7 +486,10 @@ export default function AssignmentsPage() {
       <AssignmentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => refetch()}
+        onSuccess={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all() });
+        }}
         assignmentToEdit={editingAssignment}
       />
 
