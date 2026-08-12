@@ -120,9 +120,7 @@ export default function SubmissionStudioPage() {
       if (payload.file && submissionData?.versions?.[0]?.id) {
         const formData = new FormData();
         formData.append("file", payload.file);
-        await apiClient.post(`/submissions/${submissionData.versions[0].id}/upload`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiClient.post(`/submissions/${submissionData.versions[0].id}/upload`, formData);
         // Refetch to get the updated submission with attachment info
         const refreshed = await apiClient.get(`/submissions/${assignmentId}`);
         return refreshed.data?.data as SubmissionData;
@@ -155,9 +153,7 @@ export default function SubmissionStudioPage() {
         const latestVersion = submissionData.versions[submissionData.versions.length - 1];
         const formData = new FormData();
         formData.append("file", payload.file);
-        await apiClient.post(`/submissions/${latestVersion.id}/upload`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiClient.post(`/submissions/${latestVersion.id}/upload`, formData);
         // Refetch to get the updated submission with attachment info
         const refreshed = await apiClient.get(`/submissions/${assignmentId}`);
         return refreshed.data?.data as SubmissionData;

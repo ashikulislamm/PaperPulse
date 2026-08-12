@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Events;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Features.Grading.DTOs;
 using PaperPulse.Domain.Entities;
@@ -12,13 +13,16 @@ public class AddFeedbackCommandHandler : IRequestHandler<AddFeedbackCommand, Fee
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPublisher _publisher;
 
     public AddFeedbackCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IPublisher publisher)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _publisher = publisher;
     }
 
     public async Task<FeedbackDto> Handle(AddFeedbackCommand request, CancellationToken cancellationToken)
@@ -65,6 +69,7 @@ public class AddFeedbackCommandHandler : IRequestHandler<AddFeedbackCommand, Fee
 
         _context.Feedbacks.Add(feedback);
         await _context.SaveChangesAsync(cancellationToken);
+        await _publisher.Publish(new FeedbackAddedEvent(feedback.Id), cancellationToken);
 
         var teacherName = $"{teacher.FirstName} {teacher.LastName}";
 

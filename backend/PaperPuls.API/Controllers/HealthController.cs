@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PaperPulse.Application.Common.Interfaces;
+using PaperPulse.Application.Common.HealthCheck;
 using PaperPulse.Application.Common.Models;
 
 namespace PaperPuls.API.Controllers;
@@ -27,31 +26,5 @@ public class HealthController : ApiControllerBase
         }
 
         return OkResponse<object>(result, "System health check passed.");
-    }
-}
-
-public record HealthCheckQuery : IRequest<HealthCheckResult>;
-
-public record HealthCheckResult(bool CanConnectDb, string Status, string Database, DateTimeOffset Timestamp);
-
-public class HealthCheckQueryHandler : IRequestHandler<HealthCheckQuery, HealthCheckResult>
-{
-    private readonly IApplicationDbContext _context;
-
-    public HealthCheckQueryHandler(IApplicationDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<HealthCheckResult> Handle(HealthCheckQuery request, CancellationToken cancellationToken)
-    {
-        var dbContext = _context as DbContext;
-        var canConnectDb = dbContext != null && await dbContext.Database.CanConnectAsync(cancellationToken);
-
-        return new HealthCheckResult(
-            canConnectDb,
-            canConnectDb ? "Healthy" : "Degraded",
-            canConnectDb ? "Connected" : "Disconnected",
-            DateTimeOffset.UtcNow);
     }
 }

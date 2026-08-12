@@ -19,6 +19,7 @@ import { FeedbackForm } from "@/components/grading/feedback-form";
 import {
   ArrowLeft,
   Clock,
+  Download,
   FileText,
   MessageSquare,
   Send,
@@ -44,6 +45,13 @@ interface SubmissionDetail {
     submissionText: string;
     submittedAt: string;
     isLate: boolean;
+    attachments: Array<{
+      id: string;
+      fileName: string;
+      filePath: string;
+      fileType: string;
+      fileSizeBytes: number;
+    }>;
   }>;
   feedbacks: Array<{
     id: string;
@@ -241,9 +249,42 @@ export default function GradingDetailPage() {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap font-mono text-xs">
                 {latestVersion.submissionText}
               </div>
-            ) : (
+            ) : !(latestVersion?.attachments && latestVersion.attachments.length > 0) ? (
               <div className="p-6 sm:p-8 text-center text-xs text-[var(--text-muted)]">
                 No submission text content available.
+              </div>
+            ) : null}
+
+            {latestVersion?.attachments && latestVersion.attachments.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Submitted Files</p>
+                {latestVersion.attachments.map((att) => {
+                  const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:5109";
+                  const fileUrl = `${apiBase}/${att.filePath}`;
+                  return (
+                    <div
+                      key={att.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-slate-200/60 bg-slate-50/50 hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold text-slate-900 truncate block">{att.fileName}</span>
+                          <span className="text-[10px] text-slate-500">{(att.fileSizeBytes / 1024).toFixed(1)} KB</span>
+                        </div>
+                      </div>
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 transition-colors shadow-2xs shrink-0"
+                        title="Download submission file"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -290,6 +331,30 @@ export default function GradingDetailPage() {
                     </div>
                     {v.submissionText && (
                       <p className="text-xs text-slate-700 line-clamp-2">{v.submissionText}</p>
+                    )}
+                    {v.attachments && v.attachments.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {v.attachments.map((att) => {
+                          const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:5109";
+                          const fileUrl = `${apiBase}/${att.filePath}`;
+                          return (
+                            <div key={att.id} className="flex items-center gap-2 text-xs">
+                              <FileText className="h-3 w-3 text-indigo-400 shrink-0" />
+                              <span className="text-slate-700 font-medium truncate">{att.fileName}</span>
+                              <span className="text-slate-400">({(att.fileSizeBytes / 1024).toFixed(1)} KB)</span>
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-indigo-600 hover:text-indigo-800 shrink-0"
+                                title="Download"
+                              >
+                                <Download className="h-3 w-3" />
+                              </a>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 ))}
