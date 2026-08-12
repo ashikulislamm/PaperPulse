@@ -15,12 +15,19 @@ public class GetSecurityAuditLogsQueryHandler : IRequestHandler<GetSecurityAudit
         "UserLogin",
         "UserLoginFailed",
         "PasswordChanged",
+        "BanUser",
         "UserBanned",
+        "ActivateUser",
         "UserActivated",
+        "DeactivateUser",
         "UserDeactivated",
+        "AssignRoles",
         "RolesAssigned",
+        "Register",
         "UserCreated",
-        "UserDeleted"
+        "DeleteUser",
+        "UserDeleted",
+        "ProfileUpdated"
     };
 
     public GetSecurityAuditLogsQueryHandler(IApplicationDbContext context)
@@ -30,8 +37,10 @@ public class GetSecurityAuditLogsQueryHandler : IRequestHandler<GetSecurityAudit
 
     public async Task<PagedResult<AuditLogDto>> Handle(GetSecurityAuditLogsQuery request, CancellationToken cancellationToken)
     {
-        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
+        var pageNumber = Math.Max(1, request.PageNumber);
+        var cappedPageSize = Math.Clamp(request.PageSize > 0 ? request.PageSize : 10, 1, 100);
         var query = _context.AuditLogs
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Include(a => a.User)
             .Where(a => SecurityActions.Contains(a.Action))
@@ -40,7 +49,7 @@ public class GetSecurityAuditLogsQueryHandler : IRequestHandler<GetSecurityAudit
         var totalCount = await query.CountAsync(cancellationToken);
 
         var logs = await query
-            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Skip((pageNumber - 1) * cappedPageSize)
             .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 

@@ -18,6 +18,7 @@ public class GetAuditLogByIdQueryHandler : IRequestHandler<GetAuditLogByIdQuery,
     public async Task<AuditLogDetailDto> Handle(GetAuditLogByIdQuery request, CancellationToken cancellationToken)
     {
         var log = await _context.AuditLogs
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Include(a => a.User)
             .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);

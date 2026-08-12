@@ -11,13 +11,16 @@ public class UpdateAssignmentCommandHandler : IRequestHandler<UpdateAssignmentCo
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAuditLogService _auditLogService;
 
     public UpdateAssignmentCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _auditLogService = auditLogService;
     }
 
     public async Task<AssignmentDetailDto> Handle(UpdateAssignmentCommand request, CancellationToken cancellationToken)
@@ -57,6 +60,13 @@ public class UpdateAssignmentCommandHandler : IRequestHandler<UpdateAssignmentCo
 
         _context.Assignments.Update(assignment);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "AssignmentUpdated",
+            "Assignment",
+            assignment.Id,
+            newValues: new { assignment.Title, assignment.MaxMarks, assignment.PassMarks, assignment.DueDate },
+            cancellationToken: cancellationToken);
 
         var teacherName = $"{assignment.TeacherAssignment.Teacher.FirstName} {assignment.TeacherAssignment.Teacher.LastName}";
 

@@ -17,8 +17,8 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
 
     public async Task<PagedResult<AuditLogDto>> Handle(GetAuditLogsQuery request, CancellationToken cancellationToken)
     {
-        var cappedPageSize = Math.Clamp(request.PageSize, 1, 100);
         var query = _context.AuditLogs
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Include(a => a.User)
             .AsQueryable();
@@ -32,14 +32,16 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
                 (a.User != null && (a.User.FirstName.ToLower().Contains(searchLower) || a.User.LastName.ToLower().Contains(searchLower) || a.User.Email.ToLower().Contains(searchLower))));
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Action))
+        if (!string.IsNullOrWhiteSpace(request.Action) && !request.Action.Equals("All", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(a => a.Action == request.Action.Trim());
+            var actionTrim = request.Action.Trim().ToLower();
+            query = query.Where(a => a.Action.ToLower() == actionTrim || (actionTrim == "userbanned" && a.Action.ToLower() == "banuser"));
         }
 
-        if (!string.IsNullOrWhiteSpace(request.EntityName))
+        if (!string.IsNullOrWhiteSpace(request.EntityName) && !request.EntityName.Equals("All", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(a => a.EntityName == request.EntityName.Trim());
+            var entityTrim = request.EntityName.Trim().ToLower();
+            query = query.Where(a => a.EntityName.ToLower() == entityTrim);
         }
 
         if (request.UserId.HasValue)
@@ -54,20 +56,23 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
 
         if (request.StartDate.HasValue)
         {
-            query = query.Where(a => a.CreatedAt >= request.StartDate.Value);
+            var startUtc = new DateTimeOffset(request.StartDate.Value.Year, request.StartDate.Value.Month, request.StartDate.Value.Day, 0, 0, 0, TimeSpan.Zero);
+            query = query.Where(a => a.CreatedAt >= startUtc);
         }
 
         if (request.EndDate.HasValue)
         {
-            query = query.Where(a => a.CreatedAt <= request.EndDate.Value);
+            var endUtc = new DateTimeOffset(request.EndDate.Value.Year, request.EndDate.Value.Month, request.EndDate.Value.Day, 23, 59, 59, 999, TimeSpan.Zero);
+            query = query.Where(a => a.CreatedAt <= endUtc);
         }
 
-        query = query.OrderByDescending(a => a.CreatedAt);
+        var pageNumber = Math.Max(1, request.PageNumber);
+        var cappedPageSize = Math.Clamp(request.PageSize > 0 ? request.PageSize : 10, 1, 100);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
         var logs = await query
-            .Skip((request.PageNumber - 1) * cappedPageSize)
+            .Skip((pageNumber - 1) * cappedPageSize)
             .Take(cappedPageSize)
             .ToListAsync(cancellationToken);
 

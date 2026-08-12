@@ -14,15 +14,18 @@ public class UpdateSubmissionCommandHandler : IRequestHandler<UpdateSubmissionCo
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPublisher _publisher;
+    private readonly IAuditLogService _auditLogService;
 
     public UpdateSubmissionCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUserService,
-        IPublisher publisher)
+        IPublisher publisher,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _publisher = publisher;
+        _auditLogService = auditLogService;
     }
 
     public async Task<SubmissionDto> Handle(UpdateSubmissionCommand request, CancellationToken cancellationToken)
@@ -84,6 +87,12 @@ public class UpdateSubmissionCommandHandler : IRequestHandler<UpdateSubmissionCo
 
         await _context.SaveChangesAsync(cancellationToken);
         await _publisher.Publish(new SubmissionReceivedEvent(submission.Id), cancellationToken);
+        await _auditLogService.LogAsync(
+            "SubmissionUpdated",
+            "StudentSubmission",
+            submission.Id,
+            newValues: new { submission.Assignment.Title, VersionNumber = nextVersionNumber, Status = submission.Status.ToString(), IsLate = isLate },
+            cancellationToken: cancellationToken);
 
         var studentName = $"{submission.Student.FirstName} {submission.Student.LastName}";
 

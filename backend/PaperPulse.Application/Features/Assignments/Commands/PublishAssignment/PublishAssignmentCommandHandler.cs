@@ -12,15 +12,18 @@ public class PublishAssignmentCommandHandler : IRequestHandler<PublishAssignment
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPublisher _publisher;
+    private readonly IAuditLogService _auditLogService;
 
     public PublishAssignmentCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUserService,
-        IPublisher publisher)
+        IPublisher publisher,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _publisher = publisher;
+        _auditLogService = auditLogService;
     }
 
     public async Task<Unit> Handle(PublishAssignmentCommand request, CancellationToken cancellationToken)
@@ -47,6 +50,12 @@ public class PublishAssignmentCommandHandler : IRequestHandler<PublishAssignment
 
         await _context.SaveChangesAsync(cancellationToken);
         await _publisher.Publish(new AssignmentPublishedEvent(assignment.Id), cancellationToken);
+        await _auditLogService.LogAsync(
+            "AssignmentPublished",
+            "Assignment",
+            assignment.Id,
+            newValues: new { assignment.Title, Status = assignment.Status.ToString() },
+            cancellationToken: cancellationToken);
 
         return Unit.Value;
     }

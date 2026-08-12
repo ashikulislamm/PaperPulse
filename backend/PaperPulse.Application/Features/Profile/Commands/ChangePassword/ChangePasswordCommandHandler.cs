@@ -10,15 +10,18 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IAuditLogService _auditLogService;
 
     public ChangePasswordCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUserService,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _passwordHasher = passwordHasher;
+        _auditLogService = auditLogService;
     }
 
     public async Task<Unit> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -60,6 +63,13 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "PasswordChanged",
+            "User",
+            user.Id,
+            cancellationToken: cancellationToken);
+
         return Unit.Value;
     }
 }

@@ -10,13 +10,16 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAuditLogService _auditLogService;
 
     public UpdateProfileCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _auditLogService = auditLogService;
     }
 
     public async Task<UserDto> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
@@ -44,6 +47,13 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
 
         _context.Users.Update(user);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "ProfileUpdated",
+            "User",
+            user.Id,
+            newValues: new { request.FirstName, request.LastName, request.PhoneNumber },
+            cancellationToken: cancellationToken);
 
         return new UserDto(
             user.Id,

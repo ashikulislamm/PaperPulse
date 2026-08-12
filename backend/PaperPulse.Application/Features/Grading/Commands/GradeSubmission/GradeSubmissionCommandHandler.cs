@@ -15,15 +15,18 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPublisher _publisher;
+    private readonly IAuditLogService _auditLogService;
 
     public GradeSubmissionCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUserService,
-        IPublisher publisher)
+        IPublisher publisher,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _currentUserService = currentUserService;
         _publisher = publisher;
+        _auditLogService = auditLogService;
     }
 
     public async Task<SubmissionGradingDetailDto> Handle(GradeSubmissionCommand request, CancellationToken cancellationToken)
@@ -112,6 +115,12 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
 
         await _context.SaveChangesAsync(cancellationToken);
         await _publisher.Publish(new SubmissionGradedEvent(submission.Id), cancellationToken);
+        await _auditLogService.LogAsync(
+            "SubmissionGraded",
+            "StudentSubmission",
+            submission.Id,
+            newValues: new { submission.Assignment.Title, ScoreObtained = request.ScoreObtained, submission.Assignment.MaxMarks, IsPassed = isPassed },
+            cancellationToken: cancellationToken);
 
         var studentName = $"{submission.Student.FirstName} {submission.Student.LastName}";
         var teacherName = $"{teacher.FirstName} {teacher.LastName}";

@@ -10,13 +10,16 @@ public class ArchiveAssignmentCommandHandler : IRequestHandler<ArchiveAssignment
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAuditLogService _auditLogService;
 
     public ArchiveAssignmentCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IAuditLogService auditLogService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _auditLogService = auditLogService;
     }
 
     public async Task<Unit> Handle(ArchiveAssignmentCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,14 @@ public class ArchiveAssignmentCommandHandler : IRequestHandler<ArchiveAssignment
         _context.Assignments.Update(assignment);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            "AssignmentArchived",
+            "Assignment",
+            assignment.Id,
+            newValues: new { assignment.Title, Status = assignment.Status.ToString() },
+            cancellationToken: cancellationToken);
+
         return Unit.Value;
     }
 }

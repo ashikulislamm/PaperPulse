@@ -51,14 +51,15 @@ const ACTION_FILTERS = [
   "UserLoginFailed",
   "UserCreated",
   "UserDeleted",
-  "UserBanned",
-  "UserActivated",
-  "UserDeactivated",
+  "BanUser",
+  "ActivateUser",
+  "DeactivateUser",
   "PasswordChanged",
   "RolesAssigned",
   "AssignmentCreated",
   "AssignmentUpdated",
   "AssignmentPublished",
+  "AssignmentClosed",
   "SubmissionCreated",
   "SubmissionGraded",
 ];
@@ -149,7 +150,8 @@ export default function AuditLogsPage() {
         const response = await apiClient.get("/audit-logs/security", {
           params: { pageNumber, pageSize },
         });
-        return response.data?.data as PagedAuditLogResponse;
+        const res = response.data?.data || response.data;
+        return res as PagedAuditLogResponse;
       }
 
       const params: Record<string, unknown> = { pageNumber, pageSize };
@@ -161,7 +163,8 @@ export default function AuditLogsPage() {
       if (endDate) params.endDate = endDate;
 
       const response = await apiClient.get("/audit-logs", { params });
-      return response.data?.data as PagedAuditLogResponse;
+      const res = response.data?.data || response.data;
+      return res as PagedAuditLogResponse;
     },
   });
 
@@ -345,9 +348,9 @@ export default function AuditLogsPage() {
                   }}
                 />
               </div>
-              {(search || selectedAction !== "All" || entityFilter || userIdFilter || startDate || endDate) && (
+              {(search || selectedAction !== "All" || entityFilter || userIdFilter || startDate || endDate) ? (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     setSearch("");
@@ -358,11 +361,11 @@ export default function AuditLogsPage() {
                     setEndDate("");
                     setPageNumber(1);
                   }}
-                  className="text-xs font-semibold text-slate-500 hover:text-indigo-600 self-start sm:self-auto"
+                  className="text-xs font-bold text-indigo-600 border-indigo-200 hover:bg-indigo-50 self-start sm:self-auto"
                 >
-                  Reset Filters
+                  Reset Filters &amp; Clear Dates
                 </Button>
-              )}
+              ) : null}
             </div>
 
             {/* Filters Row (only for All tab) */}

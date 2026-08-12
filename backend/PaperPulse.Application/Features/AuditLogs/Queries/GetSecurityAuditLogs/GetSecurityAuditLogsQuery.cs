@@ -4,7 +4,16 @@ using PaperPulse.Application.Features.AuditLogs.DTOs;
 
 namespace PaperPulse.Application.Features.AuditLogs.Queries.GetSecurityAuditLogs;
 
-public record GetSecurityAuditLogsQuery(
-    int PageNumber = 1,
-    int PageSize = 10
-) : IRequest<PagedResult<AuditLogDto>>;
+public class GetSecurityAuditLogsQuery : IRequest<PagedResult<AuditLogDto>>
+{
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+
+    public GetSecurityAuditLogsQuery() { }
+
+    public GetSecurityAuditLogsQuery(int pageNumber = 1, int pageSize = 10)
+    {
+        PageNumber = pageNumber;
+        PageSize = pageSize;
+    }
+}

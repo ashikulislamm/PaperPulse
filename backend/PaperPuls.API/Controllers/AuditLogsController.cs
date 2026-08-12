@@ -11,6 +11,7 @@ using PaperPulse.Infrastructure.Authorization;
 namespace PaperPuls.API.Controllers;
 
 [Authorize]
+[Route("api/v1/audit-logs")]
 public class AuditLogsController : ApiControllerBase
 {
     /// <summary>
@@ -53,7 +54,7 @@ public class AuditLogsController : ApiControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetAuditLogsQuery(UserId: userId, PageNumber: pageNumber, PageSize: pageSize);
+        var query = new GetAuditLogsQuery(userId: userId, pageNumber: pageNumber, pageSize: pageSize);
         var result = await Mediator.Send(query, cancellationToken);
         return PagedResponse(result, "User audit logs retrieved successfully.");
     }
