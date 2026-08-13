@@ -17,10 +17,6 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasColumnName("id")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(n => n.TenantId)
-            .HasColumnName("tenant_id")
-            .IsRequired();
-
         builder.Property(n => n.UserId)
             .HasColumnName("user_id")
             .IsRequired();
@@ -64,11 +60,6 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
 
         // Relationships
-        builder.HasOne(n => n.Tenant)
-            .WithMany()
-            .HasForeignKey(n => n.TenantId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(n => n.User)
             .WithMany(u => u.Notifications)
             .HasForeignKey(n => n.UserId)
@@ -82,7 +73,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         });
 
         // Indexes
-        builder.HasIndex(n => new { n.TenantId, n.UserId, n.CreatedAt })
+        builder.HasIndex(n => new { n.UserId, n.CreatedAt })
             .HasDatabaseName("idx_notifications_unread_user")
             .HasFilter("status = 'Unread' AND is_deleted = false");
 

@@ -38,7 +38,6 @@ public class AuditLogService : IAuditLogService
 
         var auditLog = new AuditLog
         {
-            TenantId = _currentUserService.TenantId,
             UserId = _currentUserService.UserId,
             Action = action.Trim(),
             EntityName = entityName.Trim(),

@@ -69,7 +69,6 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
             u.PhoneNumber,
             u.Status.ToString(),
             u.MustChangePassword,
-            u.TenantId,
             u.UserRoles.Select(ur => ur.Role.Name.ToString()).ToList()
         )).ToList();
 

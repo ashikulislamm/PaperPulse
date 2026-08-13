@@ -92,7 +92,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
             user.PhoneNumber,
             user.Status.ToString(),
             user.MustChangePassword,
-            user.TenantId,
             rolesList
         );
 

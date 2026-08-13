@@ -16,10 +16,6 @@ public class AcademicTermConfiguration : IEntityTypeConfiguration<AcademicTerm>
             .HasColumnName("id")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(at => at.TenantId)
-            .HasColumnName("tenant_id")
-            .IsRequired();
-
         builder.Property(at => at.Name)
             .HasColumnName("name")
             .HasMaxLength(100)
@@ -52,16 +48,10 @@ public class AcademicTermConfiguration : IEntityTypeConfiguration<AcademicTerm>
         builder.Property(at => at.DeletedBy).HasColumnName("deleted_by");
         builder.Property(at => at.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
 
-        // Relationships
-        builder.HasOne(at => at.Tenant)
-            .WithMany(t => t.AcademicTerms)
-            .HasForeignKey(at => at.TenantId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         // Indexes
-        builder.HasIndex(at => new { at.TenantId, at.Code })
+        builder.HasIndex(at => at.Code)
             .IsUnique()
-            .HasDatabaseName("idx_academic_terms_tenant_code_active")
+            .HasDatabaseName("idx_academic_terms_code_active")
             .HasFilter("is_deleted = false");
 
         builder.HasQueryFilter(at => !at.IsDeleted);

@@ -5,7 +5,6 @@ namespace PaperPulse.Domain.Entities;
 
 public class Notification : BaseEntity
 {
-    public Guid TenantId { get; set; }
     public Guid UserId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
@@ -15,6 +14,5 @@ public class Notification : BaseEntity
     public DateTimeOffset? ReadAt { get; set; }
 
     // Navigation properties
-    public Tenant Tenant { get; set; } = null!;
     public User User { get; set; } = null!;
 }

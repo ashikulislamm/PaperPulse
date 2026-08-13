@@ -38,7 +38,6 @@ interface UserDetail {
   status: string;
   roles: string[];
   mustChangePassword: boolean;
-  tenantId?: string;
   createdAt?: string;
   updatedAt?: string;
 }

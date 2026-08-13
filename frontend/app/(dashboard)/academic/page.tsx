@@ -192,14 +192,14 @@ export default function AcademicManagementPage() {
               onClick={() => setIsAddClassOpen(true)}
               className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold gap-2"
             >
-              <Plus className="h-4 w-4" /> Add Independent Class
+              <Plus className="h-4 w-4" /> Add Class
             </Button>
             <Button
               variant="primary"
               onClick={() => setIsAddSubjectOpen(true)}
               className="shadow-lg shadow-indigo-500/25 text-xs font-bold gap-2"
             >
-              <Plus className="h-4 w-4" /> Add Subject to Class
+              <Plus className="h-4 w-4" /> Add Subject
             </Button>
           </>
         }
@@ -262,7 +262,7 @@ export default function AcademicManagementPage() {
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Independent Classes ({classesData.length})
+              Classes ({classesData.length})
             </button>
             <button
               onClick={() => setActiveTab("subjects")}
@@ -272,7 +272,7 @@ export default function AcademicManagementPage() {
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Class Subjects ({subjectsData.length})
+             Subjects ({subjectsData.length})
             </button>
           </div>
 
@@ -300,7 +300,7 @@ export default function AcademicManagementPage() {
                 <GraduationCap className="h-10 w-10 text-slate-300 mx-auto" />
                 <p className="text-sm font-bold text-slate-700">No Academic Classes Found</p>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Create an independent class first (e.g. Grade 10 - Section A), then assign subjects to it.
+                  Create an class first (e.g. Grade 10 - Section A), then assign subjects to it.
                 </p>
                 <Button
                   variant="primary"
@@ -324,7 +324,7 @@ export default function AcademicManagementPage() {
                         </div>
                         <div className="min-w-0">
                           <h3 className="text-base font-extrabold text-slate-900 truncate">{cls.name}</h3>
-                          <span className="text-[10px] text-slate-500 font-medium">Independent Class</span>
+                          <span className="text-[10px] text-slate-500 font-medium">Class</span>
                         </div>
                       </div>
                     </div>

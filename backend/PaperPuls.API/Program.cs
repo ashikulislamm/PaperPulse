@@ -113,7 +113,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "PaperPulse REST API",
         Version = "v1",
-        Description = "PaperPulse — Multi-Tenant School Management & Assignment Platform REST API",
+        Description = "PaperPulse — Academic Workspace & Assignment Submission Studio REST API",
         Contact = new OpenApiContact
         {
             Name = "PaperPulse Engineering Team",

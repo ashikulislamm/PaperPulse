@@ -98,7 +98,6 @@ public class CreateSubmissionCommandHandler : IRequestHandler<CreateSubmissionCo
 
         var submission = new StudentSubmission
         {
-            TenantId = assignment.TenantId,
             AssignmentId = assignment.Id,
             StudentId = studentId.Value,
             SubmittedAt = now,

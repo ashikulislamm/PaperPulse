@@ -230,7 +230,7 @@ export default function UsersPage() {
       <PageBanner
         badge="Users"
         heading="System User Administration"
-        description="Manage system and tenant users, role claims, status enforcement, and account provisioning."
+        description="Manage system users, role claims, status enforcement, and account provisioning."
         icon={<UsersIcon className="h-5 w-5" />}
         actions={
           <Button

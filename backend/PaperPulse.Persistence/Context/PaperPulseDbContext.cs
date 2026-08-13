@@ -4,7 +4,6 @@ using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Domain.Common;
 using PaperPulse.Domain.Entities;
 using PaperPulse.Persistence.Seed;
-
 namespace PaperPulse.Persistence.Context;
 
 public class PaperPulseDbContext : DbContext, IApplicationDbContext
@@ -14,7 +13,6 @@ public class PaperPulseDbContext : DbContext, IApplicationDbContext
     {
     }
 
-    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<AcademicTerm> AcademicTerms => Set<AcademicTerm>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();

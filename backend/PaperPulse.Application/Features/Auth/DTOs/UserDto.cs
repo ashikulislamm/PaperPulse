@@ -9,6 +9,5 @@ public record UserDto(
     string? PhoneNumber,
     string Status,
     bool MustChangePassword,
-    Guid? TenantId,
     List<string> Roles
 );

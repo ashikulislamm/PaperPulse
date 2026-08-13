@@ -16,10 +16,6 @@ public class ClassConfiguration : IEntityTypeConfiguration<Class>
             .HasColumnName("id")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(c => c.TenantId)
-            .HasColumnName("tenant_id")
-            .IsRequired();
-
         builder.Property(c => c.AcademicTermId)
             .HasColumnName("academic_term_id")
             .IsRequired();
@@ -49,11 +45,6 @@ public class ClassConfiguration : IEntityTypeConfiguration<Class>
         builder.Property(c => c.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
 
         // Relationships
-        builder.HasOne(c => c.Tenant)
-            .WithMany(t => t.Classes)
-            .HasForeignKey(c => c.TenantId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(c => c.AcademicTerm)
             .WithMany(at => at.Classes)
             .HasForeignKey(c => c.AcademicTermId)
@@ -63,9 +54,9 @@ public class ClassConfiguration : IEntityTypeConfiguration<Class>
         builder.ToTable(t => t.HasCheckConstraint("chk_classes_capacity", "max_capacity > 0"));
 
         // Indexes
-        builder.HasIndex(c => new { c.TenantId, c.Code })
+        builder.HasIndex(c => c.Code)
             .IsUnique()
-            .HasDatabaseName("idx_classes_tenant_code_active")
+            .HasDatabaseName("idx_classes_code_active")
             .HasFilter("is_deleted = false");
 
         builder.HasIndex(c => c.AcademicTermId)

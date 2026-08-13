@@ -11,11 +11,9 @@ import { apiClient } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/api/auth-store";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
 const loginSchema = z.object({
-  tenantId: z.string().min(1, "Tenant selection is required"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
@@ -35,7 +33,6 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      tenantId: "11111111-1111-1111-1111-111111111111",
       email: "admin@paperpulse.com",
       password: "AdminPass123!",
     },
@@ -49,7 +46,6 @@ export default function LoginPage() {
       const response = await apiClient.post("/auth/login", {
         email: values.email,
         password: values.password,
-        tenantId: values.tenantId,
       });
 
       if (response.data?.success && response.data?.data) {
@@ -93,17 +89,6 @@ export default function LoginPage() {
               <span>{errorMessage}</span>
             </div>
           )}
-
-          {/* Tenant Selector */}
-          <Select
-            label="Organization / Tenant"
-            error={errors.tenantId?.message}
-            {...register("tenantId")}
-            options={[
-              { label: "Primary School Tenant (Default)", value: "11111111-1111-1111-1111-111111111111" },
-              { label: "Secondary Academy Campus", value: "22222222-2222-2222-2222-222222222222" },
-            ]}
-          />
 
           {/* Email Input */}
           <Input

@@ -55,7 +55,6 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         // 3. Create User entity
         var user = new User
         {
-            TenantId = request.TenantId,
             Email = emailNormalized,
             PasswordHash = _passwordHasher.HashPassword(request.Password),
             FirstName = request.FirstName.Trim(),
@@ -114,7 +113,6 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
             user.PhoneNumber,
             user.Status.ToString(),
             user.MustChangePassword,
-            user.TenantId,
             rolesList
         );
 

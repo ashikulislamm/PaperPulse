@@ -10,7 +10,6 @@ export interface UserProfile {
   roles: string[];
   permissions?: string[];
   mustChangePassword: boolean;
-  tenantId?: string;
   phoneNumber?: string;
   avatarUrl?: string;
 }
@@ -21,14 +20,12 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isSidebarOpen: boolean;
-  activeTenantId: string | null;
 
   setAuth: (user: UserProfile, token: string, refreshToken: string) => void;
   updateUser: (user: Partial<UserProfile>) => void;
   logout: () => void;
   toggleSidebar: () => void;
   setSidebarOpen: (isOpen: boolean) => void;
-  setActiveTenantId: (tenantId: string) => void;
   hasPermission: (permissionCode: string) => boolean;
   hasRole: (roleName: string) => boolean;
 }
@@ -41,7 +38,6 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       isAuthenticated: false,
       isSidebarOpen: true,
-      activeTenantId: null,
 
       setAuth: (user, token, refreshToken) => {
         set({
@@ -49,7 +45,6 @@ export const useAuthStore = create<AuthState>()(
           token,
           refreshToken,
           isAuthenticated: true,
-          activeTenantId: user.tenantId || null,
         });
       },
 
@@ -64,7 +59,6 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           refreshToken: null,
           isAuthenticated: false,
-          activeTenantId: null,
         });
       },
 
@@ -72,8 +66,6 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 
       setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
-
-      setActiveTenantId: (tenantId) => set({ activeTenantId: tenantId }),
 
       hasPermission: (permissionCode) => {
         const { user } = get();
@@ -97,7 +89,6 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
         isSidebarOpen: state.isSidebarOpen,
-        activeTenantId: state.activeTenantId,
       }),
     }
   )

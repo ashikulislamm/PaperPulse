@@ -27,15 +27,6 @@ public class CurrentUserService : ICurrentUserService
     public string? Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
                              ?? _httpContextAccessor.HttpContext?.User?.FindFirst("email")?.Value;
 
-    public Guid? TenantId
-    {
-        get
-        {
-            var tenantClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("tenant_id")?.Value;
-            return Guid.TryParse(tenantClaim, out var id) ? id : null;
-        }
-    }
-
     public IEnumerable<string> Roles => _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role)
         .Select(c => c.Value) ?? Enumerable.Empty<string>();
 

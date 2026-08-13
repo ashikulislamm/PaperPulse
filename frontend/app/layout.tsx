@@ -18,7 +18,7 @@ const fontMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "PaperPulse — Modern Academic & Assignment Workspace",
-  description: "High-performance multi-tenant academic management, assignment workflow, and analytics platform.",
+  description: "Academic workspace for assignment management, submission workflow, and analytics.",
 };
 
 export default function RootLayout({

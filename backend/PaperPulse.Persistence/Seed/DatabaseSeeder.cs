@@ -90,7 +90,6 @@ public static class DatabaseSeeder
         var adminUser = new User
         {
             Id = DefaultAdminId,
-            TenantId = null,
             Email = "admin@paperpulse.com",
             // Pre-hashed BCrypt hash for "AdminPass123!"
             PasswordHash = "$2a$12$K890V.3Jj.g5Mh9qG9f7d.2Y7vA0lZ3F4g5h6i7j8k9l0m1n2o3p4",

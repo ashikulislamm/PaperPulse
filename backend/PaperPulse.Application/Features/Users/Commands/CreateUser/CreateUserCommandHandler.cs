@@ -44,7 +44,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
 
         var user = new User
         {
-            TenantId = request.TenantId,
             Email = emailNormalized,
             PasswordHash = _passwordHasher.HashPassword(request.Password),
             FirstName = request.FirstName.Trim(),
@@ -73,7 +72,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             user.PhoneNumber,
             user.Status.ToString(),
             user.MustChangePassword,
-            user.TenantId,
             new List<string> { role.Name.ToString() }
         );
     }

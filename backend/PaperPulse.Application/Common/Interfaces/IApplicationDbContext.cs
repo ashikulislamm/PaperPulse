@@ -5,7 +5,6 @@ namespace PaperPulse.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
-    DbSet<Tenant> Tenants { get; }
     DbSet<AcademicTerm> AcademicTerms { get; }
     DbSet<User> Users { get; }
     DbSet<Role> Roles { get; }

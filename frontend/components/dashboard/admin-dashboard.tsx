@@ -61,7 +61,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">System Administration</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Welcome back, {userName}. Manage users, tenants, and review platform health.
+            Welcome back, {userName}. Manage users, roles, and review platform health.
           </p>
         </div>
         <div className="flex items-center gap-3">

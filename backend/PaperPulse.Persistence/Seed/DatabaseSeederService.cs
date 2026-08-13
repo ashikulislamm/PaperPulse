@@ -204,37 +204,18 @@ public class DatabaseSeederService : IDatabaseSeeder
 
     private async Task SeedDevelopmentDataAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Seeding Development Sample Data (Tenant, Terms, Sample Users, Classes, Assignments)...");
+        _logger.LogInformation("Seeding Development Sample Data (Terms, Sample Users, Classes, Assignments)...");
 
-        // 1. Sample Tenant
-        var tenantSlug = "springfield-academy";
-        var tenant = await _context.Tenants
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(t => t.Slug == tenantSlug, cancellationToken);
-
-        if (tenant == null)
-        {
-            tenant = new Tenant
-            {
-                Name = "Springfield Academy",
-                Slug = tenantSlug,
-                Status = "active"
-            };
-            _context.Tenants.Add(tenant);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-
-        // 2. Academic Term
+        // 1. Academic Term
         var termCode = "FALL-2025";
         var academicTerm = await _context.AcademicTerms
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(at => at.TenantId == tenant.Id && at.Code == termCode, cancellationToken);
+            .FirstOrDefaultAsync(at => at.Code == termCode, cancellationToken);
 
         if (academicTerm == null)
         {
             academicTerm = new AcademicTerm
             {
-                TenantId = tenant.Id,
                 Name = "2025-2026 Fall Semester",
                 Code = termCode,
                 StartDate = new DateTimeOffset(2025, 9, 1, 0, 0, 0, TimeSpan.Zero),
@@ -258,7 +239,6 @@ public class DatabaseSeederService : IDatabaseSeeder
         {
             teacher = new User
             {
-                TenantId = tenant.Id,
                 Email = teacherEmail,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("TeacherPass123!"),
                 FirstName = "Sarah",
@@ -281,7 +261,6 @@ public class DatabaseSeederService : IDatabaseSeeder
         {
             student = new User
             {
-                TenantId = tenant.Id,
                 Email = studentEmail,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("StudentPass123!"),
                 FirstName = "John",
@@ -299,13 +278,12 @@ public class DatabaseSeederService : IDatabaseSeeder
         var classCode = "G10-A";
         var academicClass = await _context.Classes
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(c => c.TenantId == tenant.Id && c.Code == classCode, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Code == classCode, cancellationToken);
 
         if (academicClass == null)
         {
             academicClass = new Class
             {
-                TenantId = tenant.Id,
                 AcademicTermId = academicTerm.Id,
                 Name = "Grade 10 - Section A",
                 Code = classCode,
@@ -318,13 +296,12 @@ public class DatabaseSeederService : IDatabaseSeeder
         var subjectCode = "MATH-101";
         var subject = await _context.Subjects
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(s => s.TenantId == tenant.Id && s.Code == subjectCode, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Code == subjectCode, cancellationToken);
 
         if (subject == null)
         {
             subject = new Subject
             {
-                TenantId = tenant.Id,
                 Name = "Algebra & Trigonometry",
                 Code = subjectCode,
                 Description = "Core mathematics course covering linear equations and trigonometry"
@@ -386,13 +363,12 @@ public class DatabaseSeederService : IDatabaseSeeder
         var assignmentTitle = "Algebra Practice Worksheet #1";
         var assignment = await _context.Assignments
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(a => a.TenantId == tenant.Id && a.Title == assignmentTitle, cancellationToken);
+            .FirstOrDefaultAsync(a => a.Title == assignmentTitle, cancellationToken);
 
         if (assignment == null)
         {
             assignment = new Assignment
             {
-                TenantId = tenant.Id,
                 TeacherAssignmentId = teacherAssignment.Id,
                 Title = assignmentTitle,
                 Description = "Solve exercises 1 through 20 from chapter 3 of the textbook.",

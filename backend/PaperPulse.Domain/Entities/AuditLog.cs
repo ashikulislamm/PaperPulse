@@ -3,7 +3,6 @@ namespace PaperPulse.Domain.Entities;
 public class AuditLog
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
-    public Guid? TenantId { get; set; }
     public Guid? UserId { get; set; }
     public string Action { get; set; } = string.Empty;
     public string EntityName { get; set; } = string.Empty;
@@ -15,6 +14,5 @@ public class AuditLog
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     // Navigation properties
-    public Tenant? Tenant { get; set; }
     public User? User { get; set; }
 }

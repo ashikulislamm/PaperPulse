@@ -37,7 +37,6 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
             user.PhoneNumber,
             user.Status.ToString(),
             user.MustChangePassword,
-            user.TenantId,
             user.UserRoles.Select(ur => ur.Role.Name.ToString()).ToList()
         );
     }

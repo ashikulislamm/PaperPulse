@@ -48,11 +48,8 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
             throw new ForbiddenException("You can only create assignments for classes and subjects assigned to you.");
         }
 
-        var tenantId = teacherAssignment.ClassSubject.Class.TenantId;
-
         var assignment = new Assignment
         {
-            TenantId = tenantId,
             TeacherAssignmentId = teacherAssignment.Id,
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),

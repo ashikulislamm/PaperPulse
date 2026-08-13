@@ -86,7 +86,6 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
                     user.PhoneNumber,
                     user.Status.ToString(),
                     user.MustChangePassword,
-                    user.TenantId,
                     rolesListGrace
                 );
 
@@ -152,7 +151,6 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
             user.PhoneNumber,
             user.Status.ToString(),
             user.MustChangePassword,
-            user.TenantId,
             rolesList
         );
 

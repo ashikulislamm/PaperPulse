@@ -48,7 +48,6 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, U
             user.PhoneNumber,
             user.Status.ToString(),
             user.MustChangePassword,
-            user.TenantId,
             rolesList
         );
     }

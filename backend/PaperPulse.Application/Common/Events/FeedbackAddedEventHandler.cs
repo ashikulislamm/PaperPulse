@@ -34,7 +34,6 @@ public class FeedbackAddedEventHandler : INotificationHandler<FeedbackAddedEvent
 
             var inAppNotification = new Notification
             {
-                TenantId = submission.TenantId,
                 UserId = submission.StudentId,
                 Title = "New Feedback Added",
                 Message = $"{teacherName} left feedback on your submission for '{submission.Assignment.Title}'.",

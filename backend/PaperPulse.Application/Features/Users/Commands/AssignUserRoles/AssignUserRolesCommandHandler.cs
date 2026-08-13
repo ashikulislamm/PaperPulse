@@ -70,7 +70,6 @@ public class AssignUserRolesCommandHandler : IRequestHandler<AssignUserRolesComm
             user.PhoneNumber,
             user.Status.ToString(),
             user.MustChangePassword,
-            user.TenantId,
             rolesToAssign.Select(r => r.Name.ToString()).ToList()
         );
     }

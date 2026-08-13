@@ -32,7 +32,6 @@ public class SubmissionReceivedEventHandler : INotificationHandler<SubmissionRec
 
             var inAppNotification = new Notification
             {
-                TenantId = submission.TenantId,
                 UserId = teacherId,
                 Title = "New Submission Received",
                 Message = $"{studentName} submitted work for '{submission.Assignment.Title}'.",

@@ -36,7 +36,6 @@ public class AssignmentPublishedEventHandler : INotificationHandler<AssignmentPu
 
         var notifications = enrolledStudentIds.Select(studentId => new Notification
         {
-            TenantId = assignment.TenantId,
             UserId = studentId,
             Title = "New Assignment Published",
             Message = $"Assignment '{assignment.Title}' has been published.",

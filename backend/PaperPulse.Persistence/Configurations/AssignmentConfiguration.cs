@@ -17,10 +17,6 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
             .HasColumnName("id")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(a => a.TenantId)
-            .HasColumnName("tenant_id")
-            .IsRequired();
-
         builder.Property(a => a.TeacherAssignmentId)
             .HasColumnName("teacher_assignment_id")
             .IsRequired();
@@ -82,11 +78,6 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
         builder.Property(a => a.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
 
         // Relationships
-        builder.HasOne(a => a.Tenant)
-            .WithMany()
-            .HasForeignKey(a => a.TenantId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(a => a.TeacherAssignment)
             .WithMany(ta => ta.Assignments)
             .HasForeignKey(a => a.TeacherAssignmentId)
@@ -100,8 +91,8 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
         });
 
         // Indexes
-        builder.HasIndex(a => new { a.TenantId, a.TeacherAssignmentId, a.Status, a.DueDate })
-            .HasDatabaseName("idx_assignments_tenant_teacher_assign_status")
+        builder.HasIndex(a => new { a.TeacherAssignmentId, a.Status, a.DueDate })
+            .HasDatabaseName("idx_assignments_teacher_assign_status")
             .HasFilter("is_deleted = false");
 
         builder.HasIndex(a => a.DueDate)

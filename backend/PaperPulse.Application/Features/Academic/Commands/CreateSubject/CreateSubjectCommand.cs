@@ -19,37 +19,14 @@ public record CreateSubjectCommand(
 public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand, SubjectDto>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
 
-    public CreateSubjectCommandHandler(
-        IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+    public CreateSubjectCommandHandler(IApplicationDbContext context)
     {
         _context = context;
-        _currentUserService = currentUserService;
     }
 
     public async Task<SubjectDto> Handle(CreateSubjectCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _currentUserService.TenantId;
-        if (!tenantId.HasValue)
-        {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == _currentUserService.UserId, cancellationToken);
-            tenantId = user?.TenantId;
-        }
-        if (!tenantId.HasValue)
-        {
-            var firstTenant = await _context.Tenants
-                .FirstOrDefaultAsync(t => !t.IsDeleted, cancellationToken);
-            tenantId = firstTenant?.Id;
-        }
-        if (!tenantId.HasValue)
-        {
-            throw new BadRequestException("No tenant found. Please create a tenant first.");
-        }
-        var resolvedTenantId = tenantId.Value;
-
         // Verify Class exists
         var academicClass = await _context.Classes
             .FirstOrDefaultAsync(c => c.Id == request.ClassId, cancellationToken);
@@ -62,7 +39,6 @@ public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand,
         // Create Subject Entity
         var subject = new Subject
         {
-            TenantId = resolvedTenantId,
             Name = request.Name.Trim(),
             Code = request.Code.Trim().ToUpper(),
             Description = request.Description?.Trim()
@@ -88,7 +64,7 @@ public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand,
         {
             var defaultTeacher = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == "teacher@paperpulse.com", cancellationToken);
-            targetTeacherId = defaultTeacher?.Id ?? _currentUserService.UserId;
+            targetTeacherId = defaultTeacher?.Id;
         }
 
         string assignedTeacherName = "Unassigned";

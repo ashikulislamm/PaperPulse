@@ -9,6 +9,5 @@ public record RegisterCommand(
     string Password,
     string FirstName,
     string LastName,
-    RoleType Role = RoleType.Student,
-    Guid? TenantId = null
+    RoleType Role = RoleType.Student
 ) : IRequest<AuthResponse>;

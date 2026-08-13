@@ -16,9 +16,6 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
             .HasColumnName("id")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(al => al.TenantId)
-            .HasColumnName("tenant_id");
-
         builder.Property(al => al.UserId)
             .HasColumnName("user_id");
 
@@ -57,11 +54,6 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
             .IsRequired();
 
         // Relationships
-        builder.HasOne(al => al.Tenant)
-            .WithMany()
-            .HasForeignKey(al => al.TenantId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         builder.HasOne(al => al.User)
             .WithMany(u => u.AuditLogs)
             .HasForeignKey(al => al.UserId)

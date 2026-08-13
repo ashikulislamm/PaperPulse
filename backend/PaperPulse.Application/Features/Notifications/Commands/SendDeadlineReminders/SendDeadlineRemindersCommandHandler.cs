@@ -68,7 +68,6 @@ public class SendDeadlineRemindersCommandHandler : IRequestHandler<SendDeadlineR
 
             var notifications = unsubmittedStudentIds.Select(studentId => new Notification
             {
-                TenantId = assignment.TenantId,
                 UserId = studentId,
                 Title = "Assignment Deadline Approaching",
                 Message = $"Reminder: '{assignment.Title}' is due in {timeRemainingHours} hours.",

@@ -17,10 +17,6 @@ public class StudentSubmissionConfiguration : IEntityTypeConfiguration<StudentSu
             .HasColumnName("id")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(ss => ss.TenantId)
-            .HasColumnName("tenant_id")
-            .IsRequired();
-
         builder.Property(ss => ss.AssignmentId)
             .HasColumnName("assignment_id")
             .IsRequired();
@@ -62,11 +58,6 @@ public class StudentSubmissionConfiguration : IEntityTypeConfiguration<StudentSu
         builder.Property(ss => ss.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
 
         // Relationships
-        builder.HasOne(ss => ss.Tenant)
-            .WithMany()
-            .HasForeignKey(ss => ss.TenantId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(ss => ss.Assignment)
             .WithMany(a => a.Submissions)
             .HasForeignKey(ss => ss.AssignmentId)
@@ -86,8 +77,8 @@ public class StudentSubmissionConfiguration : IEntityTypeConfiguration<StudentSu
             .HasDatabaseName("idx_submissions_unique_student")
             .HasFilter("is_deleted = false");
 
-        builder.HasIndex(ss => new { ss.TenantId, ss.AssignmentId, ss.Status })
-            .HasDatabaseName("idx_submissions_tenant_assignment_status")
+        builder.HasIndex(ss => new { ss.AssignmentId, ss.Status })
+            .HasDatabaseName("idx_submissions_assignment_status")
             .HasFilter("is_deleted = false");
 
         builder.HasIndex(ss => ss.StudentId)

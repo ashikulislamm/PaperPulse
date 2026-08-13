@@ -32,7 +32,6 @@ public class GetAuditLogByIdQueryHandler : IRequestHandler<GetAuditLogByIdQuery,
 
         return new AuditLogDetailDto(
             log.Id,
-            log.TenantId,
             log.UserId,
             userName,
             log.User?.Email ?? "N/A",

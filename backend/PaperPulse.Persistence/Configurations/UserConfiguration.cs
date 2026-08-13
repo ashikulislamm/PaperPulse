@@ -17,9 +17,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("id")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(u => u.TenantId)
-            .HasColumnName("tenant_id");
-
         builder.Property(u => u.Email)
             .HasColumnName("email")
             .HasMaxLength(255)
@@ -72,12 +69,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.DeletedBy).HasColumnName("deleted_by");
         builder.Property(u => u.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
 
-        // Relationships
-        builder.HasOne(u => u.Tenant)
-            .WithMany(t => t.Users)
-            .HasForeignKey(u => u.TenantId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         // Check Constraints
         builder.ToTable(t =>
         {
@@ -90,11 +81,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique()
             .HasDatabaseName("idx_users_email_active")
             .HasFilter("is_deleted = false");
-
-        builder.HasIndex(u => new { u.TenantId, u.Email })
-            .IsUnique()
-            .HasDatabaseName("idx_users_tenant_email_active")
-            .HasFilter("is_deleted = false AND tenant_id IS NOT NULL");
 
         builder.HasIndex(u => u.Status)
             .HasDatabaseName("idx_users_status")

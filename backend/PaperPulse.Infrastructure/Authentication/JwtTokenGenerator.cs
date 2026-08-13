@@ -32,11 +32,6 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        if (user.TenantId.HasValue)
-        {
-            claims.Add(new Claim("tenant_id", user.TenantId.Value.ToString()));
-        }
-
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));

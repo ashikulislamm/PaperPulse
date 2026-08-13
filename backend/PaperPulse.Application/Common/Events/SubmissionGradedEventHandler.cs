@@ -30,7 +30,6 @@ public class SubmissionGradedEventHandler : INotificationHandler<SubmissionGrade
 
         var inAppNotification = new Notification
         {
-            TenantId = submission.TenantId,
             UserId = submission.StudentId,
             Title = "Submission Graded",
             Message = message,

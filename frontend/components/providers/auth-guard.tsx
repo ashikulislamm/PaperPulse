@@ -16,7 +16,6 @@ interface AuthMeResponse {
   roles: string[];
   permissions?: string[];
   mustChangePassword: boolean;
-  tenantId?: string;
   phoneNumber?: string;
   avatarUrl?: string;
 }
@@ -85,7 +84,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           roles: meData.roles,
           permissions: meData.permissions,
           mustChangePassword: meData.mustChangePassword,
-          tenantId: meData.tenantId,
           phoneNumber: meData.phoneNumber,
           avatarUrl: meData.avatarUrl,
         });

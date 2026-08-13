@@ -23,7 +23,7 @@ export default function AuthLayout({
             PaperPulse
           </span>
           <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            Multi-Tenant Academic Platform
+            Academic Workspace & Submission Studio
           </span>
         </div>
 

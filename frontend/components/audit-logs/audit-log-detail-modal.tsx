@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface AuditLogDetail {
   id: string;
-  tenantId: string | null;
   userId: string | null;
   userName: string;
   userEmail: string;

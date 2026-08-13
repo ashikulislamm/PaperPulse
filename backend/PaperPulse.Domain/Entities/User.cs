@@ -5,7 +5,6 @@ namespace PaperPulse.Domain.Entities;
 
 public class User : BaseEntity
 {
-    public Guid? TenantId { get; set; }
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
@@ -17,7 +16,6 @@ public class User : BaseEntity
     public DateTimeOffset? LastLoginAt { get; set; }
 
     // Navigation properties
-    public Tenant? Tenant { get; set; }
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<TeacherAssignment> TeacherAssignments { get; set; } = new List<TeacherAssignment>();
