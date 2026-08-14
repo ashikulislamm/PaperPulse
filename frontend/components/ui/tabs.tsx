@@ -27,10 +27,10 @@ export function Tabs({ tabs, activeTab, onChange, className }: TabsProps) {
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "relative flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 cursor-pointer select-none rounded-lg",
+              "relative flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 cursor-pointer select-none rounded-lg focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30",
               isActive
-                ? "text-[var(--color-primary)] bg-indigo-50/80 shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-100/60"
+                ? "text-indigo-700 bg-indigo-50 border border-indigo-200/80 shadow-xs font-bold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium"
             )}
           >
             {tab.icon && <span className="h-4 w-4">{tab.icon}</span>}

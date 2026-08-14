@@ -4,6 +4,7 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { FileText, Download, Clock, History, AlertTriangle, CheckCircle2, MessageSquare } from "lucide-react";
+import { formatFileSize } from "@/lib/utils";
 
 export interface SubmissionVersionItem {
   id: string;
@@ -24,14 +25,6 @@ interface SubmissionVersionTimelineProps {
 }
 
 export function SubmissionVersionTimeline({ versions }: SubmissionVersionTimelineProps) {
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  };
-
   const sortedVersions = [...versions].sort((a, b) => b.versionNumber - a.versionNumber);
 
   if (versions.length === 0) {

@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   UserCheck,
 } from "lucide-react";
+import { formatFileSize, getFileIcon } from "@/lib/utils";
 
 export default function AssignmentDetailPage() {
   const params = useParams();
@@ -91,22 +92,6 @@ export default function AssignmentDetailPage() {
       setIsActionLoading(false);
       setActionType(null);
     }
-  };
-
-  const getFileIcon = (type?: string) => {
-    const contentType = (type || "").toLowerCase();
-    if (contentType.includes("pdf")) return <FileText className="h-6 w-6 text-rose-500" />;
-    if (contentType.includes("zip") || contentType.includes("compressed"))
-      return <FileArchive className="h-6 w-6 text-amber-500" />;
-    return <FileText className="h-6 w-6 text-indigo-500" />;
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   return (
@@ -283,7 +268,7 @@ export default function AssignmentDetailPage() {
               className="flex items-center justify-between p-4 rounded-xl border border-[var(--border-subtle)] bg-slate-50/50 hover:bg-slate-100/60 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
-                {getFileIcon(att.mimeType || att.contentType || att.fileName)}
+                {getFileIcon(att.mimeType || att.contentType || att.fileName, "lg")}
                 <div className="flex flex-col truncate">
                   <span className="text-xs font-bold text-[var(--text-primary)] truncate">
                     {att.fileName}

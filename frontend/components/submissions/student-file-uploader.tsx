@@ -3,6 +3,7 @@
 import * as React from "react";
 import { UploadCloud, FileText, FileArchive, FileSpreadsheet, X, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatFileSize, getFileIcon } from "@/lib/utils";
 
 export interface SelectedFile {
   file: File;
@@ -24,14 +25,6 @@ export function StudentFileUploader({
 }: StudentFileUploaderProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMessage(null);
@@ -63,16 +56,6 @@ export function StudentFileUploader({
       size: file.size,
       type: file.type || "application/pdf",
     });
-  };
-
-  const getFileIcon = (type?: string) => {
-    const contentType = (type || "").toLowerCase();
-    if (contentType.includes("pdf")) return <FileText className="h-6 w-6 text-rose-500" />;
-    if (contentType.includes("zip") || contentType.includes("compressed"))
-      return <FileArchive className="h-6 w-6 text-amber-500" />;
-    if (contentType.includes("sheet") || contentType.includes("excel"))
-      return <FileSpreadsheet className="h-6 w-6 text-emerald-500" />;
-    return <FileText className="h-6 w-6 text-indigo-500" />;
   };
 
   return (

@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -111,7 +112,7 @@ export function GradePanel({
           Score (0 — {maxMarks})
         </label>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <input
+          <Input
             type="number"
             min={0}
             max={maxMarks}
@@ -119,7 +120,7 @@ export function GradePanel({
             value={score}
             onChange={(e) => setScore(e.target.value)}
             placeholder={`0 - ${maxMarks}`}
-            className="flex h-10 w-full rounded-lg border border-[var(--border-subtle)] bg-white/90 px-3 py-2 text-sm font-mono font-bold text-[var(--text-primary)] ring-offset-background transition-all focus-visible:outline-none focus-visible:border-[var(--border-focused)] focus-visible:ring-2 focus-visible:ring-indigo-500/20"
+            className="font-mono font-bold"
           />
           <span className="text-xs text-[var(--text-muted)] font-mono whitespace-nowrap">
             / {maxMarks}

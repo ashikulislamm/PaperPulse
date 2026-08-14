@@ -7,6 +7,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/client";
 
@@ -106,26 +108,22 @@ export function CreateSubjectModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Add Subject" className="max-w-lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
         {/* Class Selector */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            Assigned Class <span className="text-rose-500">*</span>
-          </label>
-          <select
-            {...register("classId")}
-            className="w-full h-10 px-3 rounded-lg border border-[var(--border-subtle)] bg-white text-xs font-medium text-[var(--text-primary)] focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-          >
-            {classes.length === 0 ? (
-              <option value="">No classes available. Add a class first.</option>
-            ) : (
-              classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name} ({cls.code})
-                </option>
-              ))
-            )}
-          </select>
-          {errors.classId && <p className="text-[11px] text-rose-500 font-medium">{errors.classId.message}</p>}
-        </div>
+        <Select
+          label="Assigned Class *"
+          options={[]}
+          {...register("classId")}
+          error={errors.classId?.message}
+        >
+          {classes.length === 0 ? (
+            <option value="">No classes available. Add a class first.</option>
+          ) : (
+            classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name} ({cls.code})
+              </option>
+            ))
+          )}
+        </Select>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
@@ -152,36 +150,27 @@ export function CreateSubjectModal({
           />
 
           {/* Primary Teacher Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-              Primary Teacher <span className="text-rose-500">*</span>
-            </label>
-            <select
-              {...register("teacherId")}
-              className="w-full h-10 px-3 rounded-lg border border-[var(--border-subtle)] bg-white text-xs font-medium text-[var(--text-primary)] focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-            >
-              <option value="">Select a teacher...</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-            {errors.teacherId && <p className="text-[11px] text-rose-500 font-medium">{errors.teacherId.message}</p>}
-          </div>
+          <Select
+            label="Primary Teacher *"
+            options={[]}
+            {...register("teacherId")}
+            error={errors.teacherId?.message}
+          >
+            <option value="">Select a teacher...</option>
+            {teachers.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </Select>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            Description / Syllabus Overview
-          </label>
-          <textarea
-            {...register("description")}
-            rows={3}
-            placeholder="Brief overview of subject content..."
-            className="w-full p-3 rounded-lg border border-[var(--border-subtle)] bg-white text-xs text-[var(--text-primary)] focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-          />
-        </div>
+        <Textarea
+          label="Description / Syllabus Overview"
+          placeholder="Brief overview of subject content..."
+          rows={3}
+          {...register("description")}
+        />
 
         <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
           {teachers.length === 0 && (

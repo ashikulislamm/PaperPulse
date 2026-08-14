@@ -108,7 +108,7 @@ export default function GradeDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-5xl mx-auto">
+      <div className="space-y-8 max-w-5xl mx-auto">
         <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
@@ -125,7 +125,7 @@ export default function GradeDetailPage() {
 
   if (!effectiveGrade) {
     return (
-      <div className="space-y-6 max-w-5xl mx-auto">
+      <div className="space-y-8 max-w-5xl mx-auto">
         <Link
           href="/grades"
           className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-indigo-600 transition-colors"
@@ -143,7 +143,7 @@ export default function GradeDetailPage() {
   const latestVersion = submission?.versions?.[submission.versions.length - 1];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto">
       {/* Back Navigation */}
       <Link
         href="/grades"
@@ -195,7 +195,7 @@ export default function GradeDetailPage() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column — Submission & Feedback */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           {/* Latest Submission */}
           {latestVersion && (
             <Card className="p-6 space-y-4">
@@ -324,8 +324,8 @@ export default function GradeDetailPage() {
         </div>
 
         {/* Right Column — Score Breakdown */}
-        <div className="space-y-6">
-          <Card className="p-6 space-y-6">
+        <div className="space-y-8">
+          <Card className="p-6 space-y-8">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Trophy className="h-4 w-4 text-indigo-600" /> Score Breakdown
             </h3>

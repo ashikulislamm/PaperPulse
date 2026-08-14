@@ -3,6 +3,7 @@
 import * as React from "react";
 import { FileText, UploadCloud, X, Download, FileArchive, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatFileSize, getFileIcon } from "@/lib/utils";
 
 export interface AttachmentItem {
   id: string;
@@ -32,24 +33,6 @@ export function FileUploader({
     if (e.target.files && e.target.files[0]) {
       onUpload(e.target.files[0]);
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  };
-
-  const getFileIcon = (type?: string) => {
-    const contentType = (type || "").toLowerCase();
-    if (contentType.includes("pdf")) return <FileText className="h-5 w-5 text-rose-500" />;
-    if (contentType.includes("zip") || contentType.includes("compressed"))
-      return <FileArchive className="h-5 w-5 text-amber-500" />;
-    if (contentType.includes("sheet") || contentType.includes("excel"))
-      return <FileSpreadsheet className="h-5 w-5 text-emerald-500" />;
-    return <FileText className="h-5 w-5 text-indigo-500" />;
   };
 
   return (

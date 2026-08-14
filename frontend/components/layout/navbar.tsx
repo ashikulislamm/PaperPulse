@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api/client";
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
+import { Input } from "@/components/ui/input";
 import { Search, User, KeyRound, Settings, LogOut, Menu } from "lucide-react";
 
 export function Navbar() {
@@ -51,14 +52,13 @@ export function Navbar() {
           <Menu className="h-5 w-5" />
         </button>
         <form onSubmit={handleSearch} className="relative w-full">
-          <input
-            type="text"
-            placeholder="Search assignments, users, submissions..."
+          <Input
+            placeholder="Search assignments..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 text-xs bg-slate-100/80 border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            className="h-9 pl-9 pr-4 text-xs bg-slate-100/80"
           />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4 pointer-events-none" />
         </form>
       </div>
 

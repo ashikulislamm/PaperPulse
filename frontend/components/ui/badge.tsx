@@ -28,7 +28,7 @@ const badgeVariants = cva(
         submitted:
           "bg-emerald-50 text-emerald-700 border border-emerald-200/80",
         overdue:
-          "bg-rose-50 text-rose-700 border border-rose-200/80 animate-pulse",
+          "bg-rose-50 text-rose-700 border border-rose-200/80",
         graded:
           "bg-purple-50 text-purple-700 border border-purple-200/80",
       },

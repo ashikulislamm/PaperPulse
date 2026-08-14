@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { UserCog } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/client";
 
@@ -79,25 +80,21 @@ export function ChangeTeacherModal({
           </p>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            New Teacher <span className="text-rose-500">*</span>
-          </label>
-          <select
-            value={selectedTeacherId}
-            onChange={(e) => setSelectedTeacherId(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-[var(--border-subtle)] bg-white text-xs font-medium text-[var(--text-primary)] focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-          >
-            <option value="">Select a teacher...</option>
-            {teachers
-              .filter((t) => !target || t.name !== target.currentTeacherName)
-              .map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-          </select>
-        </div>
+        <Select
+          label="New Teacher *"
+          options={[]}
+          value={selectedTeacherId}
+          onChange={(e) => setSelectedTeacherId(e.target.value)}
+        >
+          <option value="">Select a teacher...</option>
+          {teachers
+            .filter((t) => !target || t.name !== target.currentTeacherName)
+            .map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+        </Select>
 
         <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
           <Button type="button" variant="outline" onClick={onClose}>

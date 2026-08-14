@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { StatCard } from "@/components/common/stat-card";
 import { PageBanner } from "@/components/common/page-banner";
 import {
@@ -275,35 +276,33 @@ export default function GradesPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-600">Class:</span>
-              <select
+              <Select
                 value={selectedClass}
                 onChange={(e) => {
                   setSelectedClass(e.target.value);
                   setPageNumber(1);
                 }}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] cursor-pointer"
-              >
-                <option value="All">All Classes</option>
-                {classOptions.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                options={[
+                  { label: "All Classes", value: "All" },
+                  ...classOptions.map((c) => ({ label: c, value: c })),
+                ]}
+                className="h-auto py-1.5 text-xs font-semibold w-auto"
+              />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-600">Subject:</span>
-              <select
+              <Select
                 value={selectedSubject}
                 onChange={(e) => {
                   setSelectedSubject(e.target.value);
                   setPageNumber(1);
                 }}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] cursor-pointer"
-              >
-                <option value="All">All Subjects</option>
-                {subjectOptions.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+                options={[
+                  { label: "All Subjects", value: "All" },
+                  ...subjectOptions.map((s) => ({ label: s, value: s })),
+                ]}
+                className="h-auto py-1.5 text-xs font-semibold w-auto"
+              />
             </div>
           </div>
         </div>

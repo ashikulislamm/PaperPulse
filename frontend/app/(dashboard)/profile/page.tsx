@@ -239,7 +239,7 @@ export default function ProfilePage() {
               {...registerPassword("confirmPassword")}
             />
 
-            <div className="flex justify-start pt-2">
+            <div className="flex justify-end pt-2">
               <Button type="submit" variant="primary" isLoading={isUpdatingPassword} className="gap-2">
                 <KeyRound className="h-4 w-4" /> Update Password
               </Button>

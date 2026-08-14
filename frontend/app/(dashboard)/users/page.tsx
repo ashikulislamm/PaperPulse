@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api/client";
@@ -39,6 +40,7 @@ interface PagedUserResponse {
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const [search, setSearch] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [selectedRole, setSelectedRole] = React.useState<string>("All");
@@ -191,7 +193,7 @@ export default function UsersPage() {
             {
               label: "View Profile",
               icon: <Eye className="h-4 w-4 text-slate-500" />,
-              onClick: () => (window.location.href = `/users/${row.id}`),
+              onClick: () => router.push(`/users/${row.id}`),
             },
             {
               label: "Edit Profile",

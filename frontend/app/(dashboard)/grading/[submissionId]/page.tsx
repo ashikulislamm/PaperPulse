@@ -114,7 +114,7 @@ export default function GradingDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-8 max-w-6xl mx-auto">
         <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-4">
@@ -132,7 +132,7 @@ export default function GradingDetailPage() {
 
   if (!submission) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-8 max-w-6xl mx-auto">
         <Link
           href="/grading"
           className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-indigo-600 transition-colors"
@@ -149,7 +149,7 @@ export default function GradingDetailPage() {
   const latestVersion = submission.versions?.[submission.versions.length - 1];
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto">
       {/* Back Navigation */}
       <div className="flex items-center justify-between">
         <Link
@@ -232,7 +232,7 @@ export default function GradingDetailPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column — Submission Content & History */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-8">
           {/* Latest Submission Content */}
           <Card className="p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
@@ -398,7 +398,7 @@ export default function GradingDetailPage() {
         </div>
 
         {/* Right Column — Grading Panel & Feedback */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-8">
           <GradePanel
             submissionId={submissionId}
             maxMarks={submission.maxMarks}

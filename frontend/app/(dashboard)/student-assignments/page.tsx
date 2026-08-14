@@ -155,7 +155,7 @@ export default function StudentAssignmentsPage() {
           </div>
         ) : (
           filteredItems.map((item: StudentAssignmentFeedItem) => {
-            const targetId = item.assignmentId || item.id || "018f4a2b-8910-7500-8000-000000000001";
+            const targetId = item.assignmentId || item.id;
             const isOverdue = new Date(item.dueDate).getTime() < Date.now() && item.submissionStatus !== "Submitted" && item.submissionStatus !== "Graded";
 
             return (

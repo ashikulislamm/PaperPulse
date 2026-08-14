@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { PageBanner } from "@/components/common/page-banner";
 import { apiClient } from "@/lib/api/client";
@@ -292,12 +293,11 @@ export default function AcademicManagementPage() {
 
           <div className="relative w-full sm:w-72">
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
+            <Input
               placeholder={`Search ${activeTab}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[var(--border-subtle)] bg-slate-50/50 text-[var(--text-primary)] focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="text-xs pl-9"
             />
           </div>
         </div>
@@ -374,28 +374,34 @@ export default function AcademicManagementPage() {
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <button
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
                                 onClick={() => setManageStudentsFor(cls)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 border border-emerald-200 transition-colors cursor-pointer"
                                 title="Manage Students"
                               >
                                 <UserPlus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Manage Students</span>
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
                                 onClick={() => setIsAddSubjectOpen(true)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 border border-indigo-200 transition-colors cursor-pointer"
                                 title="Add Subject"
                               >
                                 <Plus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Subject</span>
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                className="text-rose-600 hover:bg-rose-50"
                                 onClick={() => handleDeleteClass(cls)}
                                 disabled={deleteClassMutation.isPending}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer disabled:opacity-50"
                                 title="Delete"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -472,21 +478,25 @@ export default function AcademicManagementPage() {
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <button
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
                               onClick={() => handleChangeTeacher(sub)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
                               title="Change Teacher"
                             >
                               <UserCog className="h-4 w-4" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
                               onClick={() => handleDeleteSubject(sub)}
                               disabled={deleteSubjectMutation.isPending}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
                               title="Delete Subject"
                             >
                               <Trash2 className="h-4 w-4" />
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/api/auth-store";
@@ -45,6 +45,7 @@ interface PagedAssignmentResponse {
 
 export default function AssignmentsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const userRoles = user?.roles || [];
   const isStudent = userRoles.includes("Student") && !userRoles.includes("Teacher") && !userRoles.includes("Admin");
@@ -58,8 +59,8 @@ export default function AssignmentsPage() {
   }, [isStudent, router]);
 
   const queryClient = useQueryClient();
-  const [search, setSearch] = React.useState("");
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [search, setSearch] = React.useState(searchParams.get("search") || "");
+  const [debouncedSearch, setDebouncedSearch] = React.useState(searchParams.get("search") || "");
   const [selectedStatus, setSelectedStatus] = React.useState<string>("All");
   const [viewMode, setViewMode] = React.useState<"grid" | "table">("grid");
   const [pageNumber, setPageNumber] = React.useState(1);
@@ -219,7 +220,7 @@ export default function AssignmentsPage() {
             {
               label: "View Specification",
               icon: <Eye className="h-4 w-4 text-slate-500" />,
-              onClick: () => (window.location.href = `/assignments/${row.id}`),
+              onClick: () => router.push(`/assignments/${row.id}`),
             },
             ...(canManage
               ? [

@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Inbox,
 } from "lucide-react";
+import { timeAgo, notificationIcon } from "@/lib/utils";
 
 interface NotificationItem {
   id: string;
@@ -39,37 +40,6 @@ interface PagedNotificationResponse {
   pageNumber: number;
   pageSize: number;
   totalPages: number;
-}
-
-function timeAgo(dateStr: string): string {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now.getTime() - date.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHr < 24) return `${diffHr}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function notificationIcon(type: string) {
-  switch (type) {
-    case "AssignmentPublished":
-      return <FileText className="h-4 w-4 text-indigo-500" />;
-    case "DeadlineReminder":
-      return <Clock className="h-4 w-4 text-amber-500" />;
-    case "SubmissionGraded":
-      return <GraduationCap className="h-4 w-4 text-emerald-500" />;
-    case "SubmissionReceived":
-      return <FileText className="h-4 w-4 text-sky-500" />;
-    default:
-      return <Bell className="h-4 w-4 text-slate-500" />;
-  }
 }
 
 function notificationTypeLabel(type: string): string {

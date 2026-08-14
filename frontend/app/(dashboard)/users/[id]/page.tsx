@@ -109,9 +109,9 @@ export default function UserDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-8 max-w-4xl mx-auto">
         <Skeleton className="h-8 w-48" />
-        <Card className="p-5 sm:p-8 space-y-6">
+        <Card className="p-5 sm:p-8 space-y-8">
           <div className="flex items-center gap-6">
             <Skeleton className="h-20 w-20 rounded-full" />
             <div className="space-y-2">
@@ -133,7 +133,7 @@ export default function UserDetailPage() {
 
   if (!user) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-8 max-w-4xl mx-auto">
         <Link
           href="/users"
           className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-indigo-600 transition-colors"
@@ -148,7 +148,7 @@ export default function UserDetailPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto">
       {/* Back Navigation */}
       <Link
         href="/users"

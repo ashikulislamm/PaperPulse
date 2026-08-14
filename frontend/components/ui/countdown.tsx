@@ -65,7 +65,7 @@ export function CountdownWidget({
   if (timeLeft.isOverdue) {
     return (
       <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold font-mono", className)}>
-        <span className="h-2 w-2 rounded-full bg-rose-600 animate-ping" />
+        <span className="h-2 w-2 rounded-full bg-rose-600 animate-pulse" />
         <span>PASSED DUE DATE</span>
       </div>
     );
