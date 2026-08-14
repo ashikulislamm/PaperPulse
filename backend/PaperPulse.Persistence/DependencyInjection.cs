@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -92,7 +93,7 @@ public static class DependencyInjection
 
                 var builder = new NpgsqlConnectionStringBuilder
                 {
-                    Host = host,
+                    Host = ResolveIpv4(host),
                     Port = port,
                     Database = string.IsNullOrWhiteSpace(database) ? "postgres" : database,
                     Username = username,
@@ -110,5 +111,17 @@ public static class DependencyInjection
         }
 
         return connectionInput;
+    }
+
+    private static string ResolveIpv4(string host)
+    {
+        try
+        {
+            var addresses = Dns.GetHostAddresses(host);
+            var ipv4 = addresses.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            if (ipv4 != null) return ipv4.ToString();
+        }
+        catch { }
+        return host;
     }
 }
