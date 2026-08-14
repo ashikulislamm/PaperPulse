@@ -14,7 +14,16 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.Configure<JwtOptions>(options =>
+        {
+            configuration.GetSection(JwtOptions.SectionName).Bind(options);
+            // Override SecretKey from env var (env var takes precedence over config file)
+            var envSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+            if (!string.IsNullOrWhiteSpace(envSecret))
+            {
+                options.SecretKey = envSecret;
+            }
+        });
 
         services.AddHttpContextAccessor();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

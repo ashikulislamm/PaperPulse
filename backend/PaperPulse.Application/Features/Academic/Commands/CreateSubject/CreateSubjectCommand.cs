@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Features.Academic.DTOs;
 using PaperPulse.Domain.Entities;
+using PaperPulse.Domain.Enums;
 using PaperPulse.Domain.Exceptions;
 
 namespace PaperPulse.Application.Features.Academic.Commands.CreateSubject;
@@ -13,7 +14,7 @@ public record CreateSubjectCommand(
     string Code,
     string? Description,
     decimal PassMarks,
-    Guid? TeacherId
+    Guid TeacherId
 ) : IRequest<SubjectDto>;
 
 public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand, SubjectDto>
@@ -58,36 +59,42 @@ public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand,
         _context.ClassSubjects.Add(classSubject);
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Determine teacher to assign (provided teacher ID or current user)
+        // Determine teacher to assign
         var targetTeacherId = request.TeacherId;
-        if (!targetTeacherId.HasValue)
+
+        if (targetTeacherId == Guid.Empty)
         {
-            var defaultTeacher = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == "teacher@paperpulse.com", cancellationToken);
-            targetTeacherId = defaultTeacher?.Id;
+            throw new ValidationException("TeacherId", "A teacher must be assigned to the subject.");
         }
 
-        string assignedTeacherName = "Unassigned";
+        var teacher = await _context.Users
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == targetTeacherId, cancellationToken);
 
-        if (targetTeacherId.HasValue)
+        if (teacher == null)
         {
-            var teacher = await _context.Users.FirstOrDefaultAsync(u => u.Id == targetTeacherId.Value, cancellationToken);
-            if (teacher != null)
-            {
-                var teacherAssignment = new TeacherAssignment
-                {
-                    TeacherId = teacher.Id,
-                    ClassSubjectId = classSubject.Id,
-                    IsPrimary = true
-                };
-                _context.TeacherAssignments.Add(teacherAssignment);
-                await _context.SaveChangesAsync(cancellationToken);
-                assignedTeacherName = $"{teacher.FirstName} {teacher.LastName}";
-            }
+            throw new NotFoundException($"Teacher with ID '{targetTeacherId}' was not found.");
         }
+
+        if (!teacher.UserRoles.Any(ur => ur.Role.Name == RoleType.Teacher))
+        {
+            throw new BadRequestException("The selected user does not have the Teacher role.");
+        }
+
+        var teacherAssignment = new TeacherAssignment
+        {
+            TeacherId = teacher.Id,
+            ClassSubjectId = classSubject.Id,
+            IsPrimary = true
+        };
+        _context.TeacherAssignments.Add(teacherAssignment);
+        await _context.SaveChangesAsync(cancellationToken);
+        string assignedTeacherName = $"{teacher.FirstName} {teacher.LastName}";
 
         return new SubjectDto(
             subject.Id,
+            classSubject.Id,
             academicClass.Id,
             academicClass.Name,
             subject.Name,

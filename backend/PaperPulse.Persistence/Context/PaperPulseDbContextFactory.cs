@@ -19,8 +19,12 @@ public class PaperPulseDbContextFactory : IDesignTimeDbContextFactory<PaperPulse
             DotNetEnv.Env.Load(envPath);
         }
 
-        var rawConnection = Environment.GetEnvironmentVariable("DB_URI")
-                            ?? "postgresql://postgres:PaperPulse@123@db.pdabvjfvwugrhlpbvmyh.supabase.co:5432/postgres";
+        var rawConnection = Environment.GetEnvironmentVariable("DB_URI");
+
+        if (string.IsNullOrWhiteSpace(rawConnection))
+        {
+            throw new InvalidOperationException("DB_URI environment variable is not set. Ensure it is configured in your .env file.");
+        }
 
         var connectionString = DependencyInjection.ParseConnectionString(rawConnection);
 

@@ -16,7 +16,7 @@ const subjectSchema = z.object({
   code: z.string().min(2, "Subject code must be at least 2 characters"),
   description: z.string().optional(),
   passMarks: z.number().min(0, "Pass marks cannot be negative"),
-  teacherId: z.string().optional(),
+  teacherId: z.string().min(1, "Please select a teacher for this subject"),
 });
 
 type SubjectFormValues = z.infer<typeof subjectSchema>;
@@ -88,7 +88,7 @@ export function CreateSubjectModal({
         code: values.code,
         description: values.description,
         passMarks: values.passMarks,
-        teacherId: values.teacherId || null,
+        teacherId: values.teacherId,
       });
       toast.success(`Subject "${values.name}" assigned to class successfully!`);
       onSuccess();
@@ -103,7 +103,7 @@ export function CreateSubjectModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Subject to Independent Class" className="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Add Subject" className="max-w-lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
         {/* Class Selector */}
         <div className="space-y-1.5">
@@ -154,19 +154,20 @@ export function CreateSubjectModal({
           {/* Primary Teacher Selector */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-              Primary Teacher
+              Primary Teacher <span className="text-rose-500">*</span>
             </label>
             <select
               {...register("teacherId")}
               className="w-full h-10 px-3 rounded-lg border border-[var(--border-subtle)] bg-white text-xs font-medium text-[var(--text-primary)] focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             >
-              <option value="">Default System Teacher</option>
+              <option value="">Select a teacher...</option>
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
                 </option>
               ))}
             </select>
+            {errors.teacherId && <p className="text-[11px] text-rose-500 font-medium">{errors.teacherId.message}</p>}
           </div>
         </div>
 
@@ -183,10 +184,15 @@ export function CreateSubjectModal({
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
+          {teachers.length === 0 && (
+            <p className="text-[11px] text-amber-600 font-medium sm:mr-auto">
+              No teachers available. Create a teacher user first.
+            </p>
+          )}
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" isLoading={isLoading} disabled={classes.length === 0}>
+          <Button type="submit" variant="primary" isLoading={isLoading} disabled={classes.length === 0 || teachers.length === 0}>
             Assign Subject to Class
           </Button>
         </div>

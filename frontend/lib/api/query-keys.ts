@@ -7,6 +7,13 @@ export const queryKeys = {
     all: (filters?: Record<string, unknown>) => ["users", filters] as const,
     detail: (id: string) => ["users", "detail", id] as const,
   },
+  academic: {
+    classes: () => ["academic", "classes"] as const,
+    subjects: () => ["academic", "subjects"] as const,
+    teacherAssignmentsMe: () => ["academic", "teacher-assignments", "me"] as const,
+    classStudents: (classId: string) => ["academic", "class-students", classId] as const,
+    availableStudents: (classId: string) => ["academic", "available-students", classId] as const,
+  },
   assignments: {
     all: (filters?: Record<string, unknown>) => ["assignments", filters] as const,
     detail: (id: string) => ["assignments", "detail", id] as const,

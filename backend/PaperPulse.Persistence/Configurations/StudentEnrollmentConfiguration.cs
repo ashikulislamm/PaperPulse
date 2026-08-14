@@ -58,15 +58,15 @@ public class StudentEnrollmentConfiguration : IEntityTypeConfiguration<StudentEn
             .HasForeignKey(se => se.ClassId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Indexes (Business Rule: Student can belong to only ONE active Class)
+        // Indexes (Business Rule: Student can belong to multiple active Classes)
         builder.HasIndex(se => se.StudentId)
-            .IsUnique()
-            .HasDatabaseName("idx_student_single_active_enrollment")
-            .HasFilter("is_active = true AND is_deleted = false");
-
-        builder.HasIndex(se => se.ClassId)
-            .HasDatabaseName("idx_student_enrollments_class_id")
+            .HasDatabaseName("idx_student_enrollments_student_id")
             .HasFilter("is_deleted = false");
+
+        builder.HasIndex(se => new { se.StudentId, se.ClassId })
+            .IsUnique()
+            .HasDatabaseName("idx_student_class_active_enrollment")
+            .HasFilter("is_active = true AND is_deleted = false");
 
         builder.HasQueryFilter(se => !se.IsDeleted);
     }

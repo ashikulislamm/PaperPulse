@@ -31,7 +31,7 @@ public class GetClassesQueryHandler : IRequestHandler<GetClassesQuery, List<Clas
             c.Code,
             c.MaxCapacity,
             c.ClassSubjects.Count,
-            c.StudentEnrollments.Count,
+            c.StudentEnrollments.Count(se => se.IsActive),
             c.CreatedAt
         )).ToList();
     }

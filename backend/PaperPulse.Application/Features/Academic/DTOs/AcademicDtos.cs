@@ -12,6 +12,7 @@ public record ClassDto(
 
 public record SubjectDto(
     Guid Id,
+    Guid ClassSubjectId,
     Guid ClassId,
     string ClassName,
     string Name,
@@ -20,4 +21,24 @@ public record SubjectDto(
     decimal PassMarks,
     string? AssignedTeacherName,
     DateTimeOffset CreatedAt
+);
+
+public record StudentEnrollmentDto(
+    Guid EnrollmentId,
+    Guid StudentId,
+    string StudentName,
+    string Email,
+    string? RollNumber,
+    DateTimeOffset EnrollmentDate,
+    bool IsActive
+);
+
+public record TeacherAllocationDto(
+    Guid TeacherAssignmentId,
+    Guid ClassSubjectId,
+    Guid ClassId,
+    Guid SubjectId,
+    string ClassName,
+    string SubjectName,
+    bool IsPrimary
 );

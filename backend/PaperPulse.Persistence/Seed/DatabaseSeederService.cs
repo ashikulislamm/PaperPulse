@@ -170,7 +170,12 @@ public class DatabaseSeederService : IDatabaseSeeder
 
         // 4. Upsert Default System Admin Account
         var adminEmail = Environment.GetEnvironmentVariable("SEED_ADMIN_EMAIL") ?? "admin@paperpulse.com";
-        var adminPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD") ?? "AdminPass123!";
+        var adminPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD");
+
+        if (string.IsNullOrWhiteSpace(adminPassword))
+        {
+            throw new InvalidOperationException("SEED_ADMIN_PASSWORD environment variable is not set. Ensure it is configured in your .env file.");
+        }
 
         var existingAdminUser = await _context.Users
             .IgnoreQueryFilters()
@@ -231,6 +236,12 @@ public class DatabaseSeederService : IDatabaseSeeder
         var studentRole = await _context.Roles.FirstAsync(r => r.Name == RoleType.Student, cancellationToken);
 
         var teacherEmail = "teacher@paperpulse.com";
+        var teacherPassword = Environment.GetEnvironmentVariable("SEED_TEACHER_PASSWORD");
+        if (string.IsNullOrWhiteSpace(teacherPassword))
+        {
+            throw new InvalidOperationException("SEED_TEACHER_PASSWORD environment variable is not set. Ensure it is configured in your .env file.");
+        }
+
         var teacher = await _context.Users
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(u => u.Email == teacherEmail, cancellationToken);
@@ -240,7 +251,7 @@ public class DatabaseSeederService : IDatabaseSeeder
             teacher = new User
             {
                 Email = teacherEmail,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("TeacherPass123!"),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(teacherPassword),
                 FirstName = "Sarah",
                 LastName = "Conner",
                 Status = UserStatus.Active
@@ -253,6 +264,12 @@ public class DatabaseSeederService : IDatabaseSeeder
         }
 
         var studentEmail = "student@paperpulse.com";
+        var studentPassword = Environment.GetEnvironmentVariable("SEED_STUDENT_PASSWORD");
+        if (string.IsNullOrWhiteSpace(studentPassword))
+        {
+            throw new InvalidOperationException("SEED_STUDENT_PASSWORD environment variable is not set. Ensure it is configured in your .env file.");
+        }
+
         var student = await _context.Users
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(u => u.Email == studentEmail, cancellationToken);
@@ -262,7 +279,7 @@ public class DatabaseSeederService : IDatabaseSeeder
             student = new User
             {
                 Email = studentEmail,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("StudentPass123!"),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(studentPassword),
                 FirstName = "John",
                 LastName = "Doe",
                 Status = UserStatus.Active

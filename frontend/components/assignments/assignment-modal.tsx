@@ -81,7 +81,7 @@ export function AssignmentModal({
     defaultValues: {
       title: "",
       description: "",
-      teacherAssignmentId: "018f4a2b-8910-7400-8000-000000000001",
+      teacherAssignmentId: "",
       maxMarks: 100,
       passMarks: 40,
       dueDate: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 16),
@@ -92,50 +92,29 @@ export function AssignmentModal({
 
   const allowLate = watch("allowLateSubmissions");
 
-  // Fetch existing assignments to extract unique teacherAllocation options
-  const { data: allocationsData } = useQuery({
-    queryKey: queryKeys.assignments.all({ _allocations: true }),
+  // Fetch the current teacher's subject allocations (class + subject)
+  const { data: allocationOptions = [], isLoading: isLoadingAllocations } = useQuery({
+    queryKey: queryKeys.academic.teacherAssignmentsMe(),
     queryFn: async () => {
-      try {
-        const response = await apiClient.get("/assignments", {
-          params: { pageNumber: 1, pageSize: 100 },
-        });
-        const items = response.data?.data?.items as Array<{
-          teacherAssignmentId: string;
-          className: string;
-          subjectName: string;
-        }>;
-        // Extract unique teacherAssignmentId + class/subject combos
-        const seen = new Map<string, { label: string; value: string }>();
-        items?.forEach((item) => {
-          if (!seen.has(item.teacherAssignmentId)) {
-            seen.set(item.teacherAssignmentId, {
-              label: `${item.className} — ${item.subjectName}`,
-              value: item.teacherAssignmentId,
-            });
-          }
-        });
-        return Array.from(seen.values());
-      } catch {
-        return [];
-      }
+      const response = await apiClient.get("/academic/teacher-assignments/me");
+      const items = (response.data?.data || []) as Array<{
+        teacherAssignmentId: string;
+        className: string;
+        subjectName: string;
+      }>;
+      return items.map((item) => ({
+        label: `${item.className} — ${item.subjectName}`,
+        value: item.teacherAssignmentId,
+      }));
     },
   });
-
-  const allocationOptions = allocationsData?.length
-    ? allocationsData
-    : [
-        { label: "Grade 10-A — Mathematics", value: "018f4a2b-8910-7400-8000-000000000001" },
-        { label: "Grade 11-B — Physics Lab", value: "018f4a2b-8910-7400-8000-000000000002" },
-        { label: "Grade 12-A — Organic Chemistry", value: "018f4a2b-8910-7400-8000-000000000003" },
-      ];
 
   React.useEffect(() => {
     if (assignmentToEdit) {
       reset({
         title: assignmentToEdit.title,
         description: assignmentToEdit.description,
-        teacherAssignmentId: assignmentToEdit.teacherAssignmentId || "018f4a2b-8910-7400-8000-000000000001",
+        teacherAssignmentId: assignmentToEdit.teacherAssignmentId || "",
         maxMarks: assignmentToEdit.maxMarks,
         passMarks: assignmentToEdit.passMarks,
         dueDate: assignmentToEdit.dueDate
@@ -149,7 +128,7 @@ export function AssignmentModal({
       reset({
         title: "",
         description: "",
-        teacherAssignmentId: "018f4a2b-8910-7400-8000-000000000001",
+        teacherAssignmentId: "",
         maxMarks: 100,
         passMarks: 40,
         dueDate: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 16),
@@ -266,7 +245,21 @@ export function AssignmentModal({
           error={errors.teacherAssignmentId?.message}
           {...register("teacherAssignmentId")}
           options={allocationOptions}
-        />
+          disabled={isLoadingAllocations || allocationOptions.length === 0}
+        >
+          <option value="">
+            {isLoadingAllocations
+              ? "Loading your allocations..."
+              : allocationOptions.length === 0
+                ? "No subject allocations assigned to you yet"
+                : "Select a class and subject allocation"}
+          </option>
+          {allocationOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
 
         <Textarea
           label="Instructions & Evaluation Criteria"

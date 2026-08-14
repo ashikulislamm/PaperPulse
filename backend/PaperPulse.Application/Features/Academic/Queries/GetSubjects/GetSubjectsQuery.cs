@@ -30,11 +30,12 @@ public class GetSubjectsQueryHandler : IRequestHandler<GetSubjectsQuery, List<Su
 
         return classSubjects.Select(cs =>
         {
-            var primaryTeacher = cs.TeacherAssignments.FirstOrDefault()?.Teacher;
+            var primaryTeacher = cs.TeacherAssignments.FirstOrDefault(ta => ta.IsPrimary)?.Teacher;
             var teacherName = primaryTeacher != null ? $"{primaryTeacher.FirstName} {primaryTeacher.LastName}" : "Unassigned";
 
             return new SubjectDto(
                 cs.Subject.Id,
+                cs.Id,
                 cs.Class.Id,
                 cs.Class.Name,
                 cs.Subject.Name,

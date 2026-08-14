@@ -19,7 +19,14 @@ const userSchema = z.object({
   phoneNumber: z.string().optional(),
   password: z.string().optional(),
   roles: z.array(z.string()).min(1, "At least one role must be selected"),
-});
+}).refine(
+  (data) => {
+    // Password is required when creating a new user
+    if (!data.password || data.password.length < 8) return false;
+    return true;
+  },
+  { message: "Password must be at least 8 characters long", path: ["password"] }
+);
 
 export type UserFormValues = z.infer<typeof userSchema>;
 
@@ -83,10 +90,10 @@ export function UserModal({ isOpen, onClose, onSuccess, userToEdit }: UserModalP
         lastName: "",
         email: "",
         phoneNumber: "",
-        password: "InitialPassword123!",
+        password: "",
         roles: ["Student"],
       });
-      setPasswordValue("InitialPassword123!");
+      setPasswordValue("");
     }
   }, [userToEdit, reset]);
 
@@ -122,7 +129,7 @@ export function UserModal({ isOpen, onClose, onSuccess, userToEdit }: UserModalP
       } else {
         await apiClient.post("/users", {
           email: values.email,
-          password: values.password || "InitialPassword123!",
+          password: values.password,
           firstName: values.firstName,
           lastName: values.lastName,
           phoneNumber: values.phoneNumber || undefined,
@@ -200,7 +207,7 @@ export function UserModal({ isOpen, onClose, onSuccess, userToEdit }: UserModalP
             <Input
               label="Initial Password"
               type="password"
-              placeholder="InitialPassword123!"
+              placeholder="Enter a secure password"
               error={errors.password?.message}
               {...register("password", {
                 onChange: (e) => setPasswordValue(e.target.value),

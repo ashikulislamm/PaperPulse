@@ -9,21 +9,22 @@ import {
   Plus,
   Search,
   Users,
-  Award,
   Layers,
-  Sparkles,
   Building2,
   Trash2,
+  UserCog,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { PageBanner } from "@/components/common/page-banner";
 import { apiClient } from "@/lib/api/client";
 import { CreateClassModal } from "@/components/academic/create-class-modal";
 import { CreateSubjectModal } from "@/components/academic/create-subject-modal";
+import { ManageStudentsModal } from "@/components/academic/manage-students-modal";
+import { ChangeTeacherModal, ChangeTeacherTarget } from "@/components/academic/change-teacher-modal";
 
 interface ClassItem {
   id: string;
@@ -37,6 +38,7 @@ interface ClassItem {
 
 interface SubjectItem {
   id: string;
+  classSubjectId?: string;
   classId: string;
   className: string;
   name: string;
@@ -61,6 +63,8 @@ export default function AcademicManagementPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isAddClassOpen, setIsAddClassOpen] = React.useState(false);
   const [isAddSubjectOpen, setIsAddSubjectOpen] = React.useState(false);
+  const [manageStudentsFor, setManageStudentsFor] = React.useState<ClassItem | null>(null);
+  const [changeTeacherFor, setChangeTeacherFor] = React.useState<ChangeTeacherTarget | null>(null);
   const [confirmState, setConfirmState] = React.useState<{
     isOpen: boolean;
     title: string;
@@ -161,6 +165,16 @@ export default function AcademicManagementPage() {
         setConfirmState((s) => ({ ...s, isOpen: false }));
         deleteSubjectMutation.mutate(sub.id);
       },
+    });
+  };
+
+  const handleChangeTeacher = (sub: SubjectItem) => {
+    setChangeTeacherFor({
+      id: sub.id,
+      classSubjectId: sub.classSubjectId || sub.id,
+      subjectName: sub.name,
+      className: sub.className,
+      currentTeacherName: sub.assignedTeacherName || "Unassigned",
     });
   };
 
@@ -288,7 +302,7 @@ export default function AcademicManagementPage() {
           </div>
         </div>
 
-        {/* Tab 1: Independent Classes */}
+        {/* Tab 1: Classes Table */}
         {activeTab === "classes" && (
           <div>
             {isLoadingClasses ? (
@@ -300,7 +314,7 @@ export default function AcademicManagementPage() {
                 <GraduationCap className="h-10 w-10 text-slate-300 mx-auto" />
                 <p className="text-sm font-bold text-slate-700">No Academic Classes Found</p>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Create an class first (e.g. Grade 10 - Section A), then assign subjects to it.
+                  Create a class first (e.g. Grade 10 - Section A), then assign subjects and enroll students.
                 </p>
                 <Button
                   variant="primary"
@@ -311,65 +325,84 @@ export default function AcademicManagementPage() {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredClasses.map((cls) => (
-                  <div
-                    key={cls.id}
-                    className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-white hover:border-indigo-300 hover:shadow-md transition-all space-y-4"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 font-mono font-bold text-xs shrink-0">
-                          {cls.code}
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="text-base font-extrabold text-slate-900 truncate">{cls.name}</h3>
-                          <span className="text-[10px] text-slate-500 font-medium">Class</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100 text-xs">
-                      <div className="flex items-center gap-2 text-slate-600">
-                        <BookOpen className="h-4 w-4 text-indigo-500" />
-                        <span>
-                          <strong className="text-slate-900">{cls.assignedSubjectsCount}</strong> Subjects
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-slate-600">
-                        <Users className="h-4 w-4 text-emerald-500" />
-                        <span>
-                          <strong className="text-slate-900">{cls.enrolledStudentsCount}</strong> / {cls.maxCapacity} Seats
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono text-slate-400">
-                        Created {new Date(cls.createdAt).toLocaleDateString()}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsAddSubjectOpen(true)}
-                          className="text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 border-indigo-200"
-                        >
-                          + Add Subject
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteClass(cls)}
-                          disabled={deleteClassMutation.isPending}
-                          className="text-[11px] font-bold text-rose-600 hover:bg-rose-50 border-rose-200 gap-1"
-                        >
-                          <Trash2 className="h-3 w-3" /> Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto rounded-xl border border-[var(--border-subtle)]">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-[var(--border-subtle)]">
+                      <th className="p-4">Code</th>
+                      <th className="p-4">Class Name</th>
+                      <th className="p-4 text-center">Subjects</th>
+                      <th className="p-4 text-center">Enrolled</th>
+                      <th className="p-4 hidden md:table-cell text-center">Capacity</th>
+                      <th className="p-4 hidden lg:table-cell">Created</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border-subtle)] text-xs font-medium text-slate-800">
+                    {filteredClasses.map((cls) => {
+                      const isFull = cls.enrolledStudentsCount >= cls.maxCapacity;
+                      const seatsLeft = cls.maxCapacity - cls.enrolledStudentsCount;
+                      return (
+                        <tr key={cls.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="p-4">
+                            <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600 font-mono font-bold text-xs inline-block">
+                              {cls.code}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className="font-extrabold text-slate-900">{cls.name}</span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className="font-mono font-bold text-slate-900">{cls.assignedSubjectsCount}</span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className={`font-mono font-bold ${isFull ? "text-rose-600" : "text-slate-900"}`}>
+                              {cls.enrolledStudentsCount}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center hidden md:table-cell">
+                            <span className="text-slate-500">
+                              {cls.maxCapacity}
+                              {isFull && <span className="ml-1 text-rose-500 font-bold">(full)</span>}
+                              {!isFull && seatsLeft <= 5 && <span className="ml-1 text-amber-500">({seatsLeft} left)</span>}
+                            </span>
+                          </td>
+                          <td className="p-4 hidden lg:table-cell">
+                            <span className="text-[11px] font-mono text-slate-400">
+                              {new Date(cls.createdAt).toLocaleDateString()}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => setManageStudentsFor(cls)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 border border-emerald-200 transition-colors cursor-pointer"
+                                title="Manage Students"
+                              >
+                                <UserPlus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Manage Students</span>
+                              </button>
+                              <button
+                                onClick={() => setIsAddSubjectOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 border border-indigo-200 transition-colors cursor-pointer"
+                                title="Add Subject"
+                              >
+                                <Plus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Subject</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClass(cls)}
+                                disabled={deleteClassMutation.isPending}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer disabled:opacity-50"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -438,14 +471,23 @@ export default function AcademicManagementPage() {
                           <span className="font-bold text-slate-800">{sub.assignedTeacherName}</span>
                         </td>
                         <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleDeleteSubject(sub)}
-                            disabled={deleteSubjectMutation.isPending}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
-                            title="Delete Subject"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => handleChangeTeacher(sub)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                              title="Change Teacher"
+                            >
+                              <UserCog className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSubject(sub)}
+                              disabled={deleteSubjectMutation.isPending}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
+                              title="Delete Subject"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -472,6 +514,31 @@ export default function AcademicManagementPage() {
         classes={classesData.map((c) => ({ id: c.id, name: c.name, code: c.code }))}
         teachers={teachersData}
       />
+
+      {/* Manage Students Modal */}
+      {manageStudentsFor && (
+        <ManageStudentsModal
+          isOpen={!!manageStudentsFor}
+          onClose={() => setManageStudentsFor(null)}
+          classId={manageStudentsFor.id}
+          className={manageStudentsFor.name}
+          classCode={manageStudentsFor.code}
+          maxCapacity={manageStudentsFor.maxCapacity}
+          enrolledCount={manageStudentsFor.enrolledStudentsCount}
+          onSuccess={handleRefresh}
+        />
+      )}
+
+      {/* Change Teacher Modal */}
+      {changeTeacherFor && (
+        <ChangeTeacherModal
+          isOpen={!!changeTeacherFor}
+          onClose={() => setChangeTeacherFor(null)}
+          target={changeTeacherFor}
+          teachers={teachersData}
+          onSuccess={handleRefresh}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal

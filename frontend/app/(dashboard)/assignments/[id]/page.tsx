@@ -52,28 +52,19 @@ export default function AssignmentDetailPage() {
   // Mock Fallback
   const mockDetail: AssignmentItem = {
     id: assignmentId,
-    title: "Calculus Problem Set #4 — Derivatives & Optimization",
-    description:
-      "Complete all assigned exercises in Chapter 4 covering implicit differentiation, chain rule applications, and optimization models in engineering. Ensure all mathematical steps are written clearly on standard A4 paper or typed using LaTeX.",
-    status: "Published",
-    maxMarks: 100,
-    passMarks: 40,
-    dueDate: new Date(Date.now() + 86400000 * 3).toISOString(),
-    allowLateSubmissions: true,
-    latePenaltyPercentage: 10,
-    teacherAssignmentId: "018f4a2b-8910-7400-8000-000000000001",
-    className: "Grade 10-A",
-    subjectName: "Mathematics",
-    teacherName: "Unassigned",
-    attachments: [
-      {
-        id: "att-1",
-        fileName: "Calculus_Problem_Set_4_Specifications.pdf",
-        fileUrl: "#",
-        fileSize: 2450000,
-        contentType: "application/pdf",
-      },
-    ],
+    title: "Loading assignment...",
+    description: "Fetching assignment details from the server.",
+    status: "Draft",
+    maxMarks: 0,
+    passMarks: 0,
+    dueDate: new Date().toISOString(),
+    allowLateSubmissions: false,
+    latePenaltyPercentage: 0,
+    teacherAssignmentId: "",
+    className: "",
+    subjectName: "",
+    teacherName: "",
+    attachments: [],
   };
 
   const item = assignment || mockDetail;
@@ -308,7 +299,7 @@ export default function AssignmentDetailPage() {
                   att.fileUrl || att.filePath
                     ? (att.fileUrl || att.filePath).startsWith("http")
                       ? att.fileUrl || att.filePath
-                      : `${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:5109"}${
+                      : `${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}${
                           (att.fileUrl || att.filePath).startsWith("/") ? "" : "/"
                         }${att.fileUrl || att.filePath}`
                     : "#"

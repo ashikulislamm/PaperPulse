@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 const registerSchema = z
   .object({
@@ -36,6 +37,8 @@ export default function RegisterPage() {
   const { setAuth } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   const {
     register,
@@ -145,21 +148,49 @@ export default function RegisterPage() {
             {...register("phoneNumber")}
           />
 
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••••••"
-            error={errors.password?.message}
-            {...register("password")}
-          />
+          <div className="space-y-1">
+            <label className="text-xs font-semibold tracking-wide text-[var(--text-secondary)] uppercase">
+              Password
+            </label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••••••"
+                error={errors.password?.message}
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
-          <Input
-            label="Confirm Password"
-            type="password"
-            placeholder="••••••••••••"
-            error={errors.confirmPassword?.message}
-            {...register("confirmPassword")}
-          />
+          <div className="space-y-1">
+            <label className="text-xs font-semibold tracking-wide text-[var(--text-secondary)] uppercase">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="••••••••••••"
+                error={errors.confirmPassword?.message}
+                {...register("confirmPassword")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
           <Button
             type="submit"

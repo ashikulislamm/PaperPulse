@@ -5,9 +5,17 @@ using PaperPulse.Application.Features.Academic.Commands.CreateClass;
 using PaperPulse.Application.Features.Academic.Commands.CreateSubject;
 using PaperPulse.Application.Features.Academic.Commands.DeleteClass;
 using PaperPulse.Application.Features.Academic.Commands.DeleteSubject;
+using PaperPulse.Application.Features.Academic.Commands.EnrollStudents;
+using PaperPulse.Application.Features.Academic.Commands.ReassignTeacher;
+using PaperPulse.Application.Features.Academic.Commands.UnenrollStudents;
 using PaperPulse.Application.Features.Academic.DTOs;
+using PaperPulse.Application.Features.Academic.Queries.GetAvailableStudents;
 using PaperPulse.Application.Features.Academic.Queries.GetClasses;
+using PaperPulse.Application.Features.Academic.Queries.GetClassStudents;
+using PaperPulse.Application.Features.Academic.Queries.GetMyTeacherAssignments;
 using PaperPulse.Application.Features.Academic.Queries.GetSubjects;
+using PaperPulse.Domain.Constants;
+using PaperPulse.Infrastructure.Authorization;
 
 namespace PaperPuls.API.Controllers;
 
@@ -96,5 +104,115 @@ public class AcademicController : ApiControllerBase
     {
         await Mediator.Send(new DeleteSubjectCommand(id), cancellationToken);
         return NoContentResponse("Subject deleted successfully.");
+    }
+
+    /// <summary>
+    /// Fetch students enrolled in a class
+    /// </summary>
+    [HttpGet("classes/{id:guid}/students")]
+    [HasPermission(Permissions.StudentEnrollments.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<StudentEnrollmentDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<List<StudentEnrollmentDto>>>> GetClassStudents(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new GetClassStudentsQuery(id), cancellationToken);
+        return OkResponse(result, "Class students retrieved successfully.");
+    }
+
+    /// <summary>
+    /// Fetch students (with the Student role) not yet enrolled in a class
+    /// </summary>
+    [HttpGet("classes/{id:guid}/available-students")]
+    [HasPermission(Permissions.StudentEnrollments.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<StudentEnrollmentDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<List<StudentEnrollmentDto>>>> GetAvailableStudents(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new GetAvailableStudentsQuery(id), cancellationToken);
+        return OkResponse(result, "Available students retrieved successfully.");
+    }
+
+    /// <summary>
+    /// Enroll students into a class (Admin only) with seat capacity enforcement
+    /// </summary>
+    [HttpPost("classes/{id:guid}/students")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ApiResponse<int>>> EnrollStudents(
+        [FromRoute] Guid id,
+        [FromBody] EnrollStudentsCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.ClassId)
+        {
+            return BadRequest(ApiResponse<int>.FailureResponse("Route ID does not match payload body ID.", StatusCodes.Status400BadRequest));
+        }
+
+        var result = await Mediator.Send(command, cancellationToken);
+        return OkResponse(result, $"{result} student(s) enrolled successfully.");
+    }
+
+    /// <summary>
+    /// Unenroll students from a class (Admin only)
+    /// </summary>
+    [HttpDelete("classes/{id:guid}/students")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<int>>> UnenrollStudents(
+        [FromRoute] Guid id,
+        [FromBody] UnenrollStudentsCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.ClassId)
+        {
+            return BadRequest(ApiResponse<int>.FailureResponse("Route ID does not match payload body ID.", StatusCodes.Status400BadRequest));
+        }
+
+        var result = await Mediator.Send(command, cancellationToken);
+        return OkResponse(result, $"{result} student(s) unenrolled successfully.");
+    }
+
+    /// <summary>
+    /// Change the assigned teacher for a class subject (Admin only). Blocked while active assignments exist; history preserved.
+    /// </summary>
+    [HttpPut("subjects/{classSubjectId:guid}/teacher")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<SubjectDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ApiResponse<SubjectDto>>> ReassignTeacher(
+        [FromRoute] Guid classSubjectId,
+        [FromBody] ReassignTeacherCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (classSubjectId != command.ClassSubjectId)
+        {
+            return BadRequest(ApiResponse<SubjectDto>.FailureResponse("Route ID does not match payload body ID.", StatusCodes.Status400BadRequest));
+        }
+
+        var result = await Mediator.Send(command, cancellationToken);
+        return OkResponse(result, "Subject teacher reassigned successfully.");
+    }
+
+    /// <summary>
+    /// Fetch the current teacher's primary subject allocations (class + subject)
+    /// </summary>
+    [HttpGet("teacher-assignments/me")]
+    [Authorize(Roles = "Teacher,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<List<TeacherAllocationDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<TeacherAllocationDto>>>> GetMyTeacherAssignments(CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new GetMyTeacherAssignmentsQuery(), cancellationToken);
+        return OkResponse(result, "Teacher assignments retrieved successfully.");
     }
 }

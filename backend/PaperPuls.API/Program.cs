@@ -43,9 +43,13 @@ builder.Services.AddCors(options =>
 });
 
 // Configure JWT Authentication
-var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
-                   ?? builder.Configuration["JwtSettings:SecretKey"] 
-                   ?? "PaperPulse_Super_Secret_JWT_Key_2026_Must_Be_At_Least_32_Bytes_Long!";
+var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET")
+                   ?? builder.Configuration["JwtSettings:SecretKey"];
+
+if (string.IsNullOrWhiteSpace(jwtSecretKey))
+{
+    throw new InvalidOperationException("JWT_SECRET environment variable is not set. Ensure JWT_SECRET is configured in your .env file.");
+}
 
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "PaperPulse.API";
 var jwtAudience = builder.Configuration["JwtSettings:Audience"] ?? "PaperPulse.Client";

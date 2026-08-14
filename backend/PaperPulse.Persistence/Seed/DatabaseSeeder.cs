@@ -11,8 +11,6 @@ public static class DatabaseSeeder
     public static readonly Guid TeacherRoleId = Guid.Parse("018f4a2b-8910-7000-8000-000000000002");
     public static readonly Guid StudentRoleId = Guid.Parse("018f4a2b-8910-7000-8000-000000000003");
 
-    public static readonly Guid DefaultAdminId = Guid.Parse("018f4a2b-8910-7000-9000-000000000001");
-
     public static void SeedInitialData(ModelBuilder modelBuilder)
     {
         // 1. Seed Roles
@@ -85,35 +83,5 @@ public static class DatabaseSeeder
         }).ToList();
 
         modelBuilder.Entity<RolePermission>().HasData(rolePermissions);
-
-        // 4. Seed Default System Admin User
-        var adminUser = new User
-        {
-            Id = DefaultAdminId,
-            Email = "admin@paperpulse.com",
-            // Pre-hashed BCrypt hash for "AdminPass123!"
-            PasswordHash = "$2a$12$K890V.3Jj.g5Mh9qG9f7d.2Y7vA0lZ3F4g5h6i7j8k9l0m1n2o3p4",
-            FirstName = "System",
-            LastName = "Administrator",
-            Status = UserStatus.Active,
-            CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            UpdatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            IsDeleted = false
-        };
-
-        modelBuilder.Entity<User>().HasData(adminUser);
-
-        // 5. Seed Admin User Role Assignment
-        var adminUserRole = new UserRole
-        {
-            Id = Guid.Parse("018f4a2b-8910-7300-8000-000000000001"),
-            UserId = DefaultAdminId,
-            RoleId = AdminRoleId,
-            CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            UpdatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            IsDeleted = false
-        };
-
-        modelBuilder.Entity<UserRole>().HasData(adminUserRole);
     }
 }
