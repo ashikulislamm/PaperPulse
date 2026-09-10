@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { toast } from "sonner";
 import { useAuthStore } from "./auth-store";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5109/api/v1";
+const API_BASE_URL = process.env.API_URL || "http://localhost:5109/api/v1";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
