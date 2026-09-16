@@ -7,8 +7,6 @@ import {
   GraduationCap,
   BookOpen,
   Plus,
-  Search,
-  Users,
   Layers,
   Building2,
   Trash2,
@@ -16,11 +14,12 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { PageBanner } from "@/components/common/page-banner";
+import { PageHeader } from "@/components/common/page-header";
+import { ControlBar } from "@/components/common/control-bar";
+import { StatCard } from "@/components/common/stat-card";
+import { DataTable, Column } from "@/components/common/data-table";
 import { apiClient } from "@/lib/api/client";
 import { CreateClassModal } from "@/components/academic/create-class-modal";
 import { CreateSubjectModal } from "@/components/academic/create-subject-modal";
@@ -144,9 +143,9 @@ export default function AcademicManagementPage() {
     const hasSubjects = cls.assignedSubjectsCount > 0;
     setConfirmState({
       isOpen: true,
-      title: hasSubjects ? `Delete "${cls.name}"?` : `Delete "${cls.name}"?`,
+      title: `Delete "${cls.name}"?`,
       description: hasSubjects
-        ? `"${cls.name}" has ${cls.assignedSubjectsCount} subject(s) assigned. Deleting it will also remove all assigned subjects. This action cannot be undone.`
+        ? `"${cls.name}" has ${cls.assignedSubjectsCount} subject(s) assigned. Deleting it will remove all assigned subjects. This action cannot be undone.`
         : `Are you sure you want to delete this class? This action cannot be undone.`,
       variant: hasSubjects ? "warning" : "danger",
       onConfirm: () => {
@@ -192,331 +191,258 @@ export default function AcademicManagementPage() {
       s.className.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Class Columns for DataTable
+  const classColumns: Column<ClassItem>[] = [
+    {
+      header: "Code",
+      cell: (row) => (
+        <span className="font-mono font-bold text-[var(--color-primary)]">
+          {row.code}
+        </span>
+      ),
+    },
+    {
+      header: "Class Name",
+      cell: (row) => (
+        <span className="font-semibold text-[var(--text-primary)]">{row.name}</span>
+      ),
+    },
+    {
+      header: "Subjects",
+      className: "text-center",
+      cell: (row) => (
+        <span className="font-mono font-medium">{row.assignedSubjectsCount}</span>
+      ),
+    },
+    {
+      header: "Enrolled",
+      className: "text-center",
+      cell: (row) => {
+        const isFull = row.enrolledStudentsCount >= row.maxCapacity;
+        return (
+          <span className={`font-mono font-semibold ${isFull ? "text-rose-600" : ""}`}>
+            {row.enrolledStudentsCount}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Capacity",
+      className: "text-center",
+      cell: (row) => (
+        <span className="text-[var(--text-muted)] font-mono">{row.maxCapacity}</span>
+      ),
+    },
+    {
+      header: "Created",
+      cell: (row) => (
+        <span className="text-[11px] font-mono text-[var(--text-muted)]">
+          {new Date(row.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      header: "Actions",
+      className: "text-right",
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 text-emerald-600 hover:text-emerald-700"
+            onClick={() => setManageStudentsFor(row)}
+            title="Manage Students"
+          >
+            <UserPlus className="h-3 w-3" /> <span className="hidden sm:inline">Students</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 text-indigo-600 hover:text-indigo-700"
+            onClick={() => setIsAddSubjectOpen(true)}
+            title="Add Subject"
+          >
+            <Plus className="h-3 w-3" /> <span className="hidden sm:inline">Subject</span>
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+            onClick={() => handleDeleteClass(row)}
+            disabled={deleteClassMutation.isPending}
+            title="Delete Class"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  // Subject Columns for DataTable
+  const subjectColumns: Column<SubjectItem>[] = [
+    {
+      header: "Subject & Code",
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            {row.code}
+          </span>
+          <div className="min-w-0">
+            <div className="font-semibold text-[var(--text-primary)] truncate">{row.name}</div>
+            {row.description && (
+              <div className="text-[10px] text-[var(--text-muted)] truncate max-w-xs">{row.description}</div>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "Assigned Class",
+      cell: (row) => (
+        <Badge variant="primary">{row.className}</Badge>
+      ),
+    },
+    {
+      header: "Pass Marks",
+      cell: (row) => (
+        <span className="font-mono text-xs font-medium">{row.passMarks} pts</span>
+      ),
+    },
+    {
+      header: "Teacher",
+      cell: (row) => (
+        <span className="text-xs font-medium text-[var(--text-secondary)]">{row.assignedTeacherName}</span>
+      ),
+    },
+    {
+      header: "Actions",
+      className: "text-right",
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => handleChangeTeacher(row)}
+            title="Reassign Teacher"
+          >
+            <UserCog className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+            onClick={() => handleDeleteSubject(row)}
+            disabled={deleteSubjectMutation.isPending}
+            title="Delete Subject"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      {/* Header Banner */}
-      <PageBanner
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="Academic Curricula"
+        description="Configure academic classes, assign subject courses, and enroll students."
         badge="Academics"
-        heading="Classes & Subjects Management"
-        description="Create independent academic classes and configure subject curricula assigned to each class."
-        icon={<Building2 className="h-5 w-5" />}
+        icon={<Building2 className="h-4 w-4" />}
         actions={
           <>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setIsAddClassOpen(true)}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold gap-2"
+              className="gap-1.5"
             >
-              <Plus className="h-4 w-4" /> Add Class
+              <Plus className="h-3.5 w-3.5" /> Add Class
             </Button>
             <Button
               variant="primary"
+              size="sm"
               onClick={() => setIsAddSubjectOpen(true)}
-              className="shadow-lg shadow-indigo-500/25 text-xs font-bold gap-2"
+              className="gap-1.5"
             >
-              <Plus className="h-4 w-4" /> Add Subject
+              <Plus className="h-3.5 w-3.5" /> Add Subject
             </Button>
           </>
         }
       />
 
-      {/* Analytics Counter Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="p-6 glass-card flex items-center gap-4 border-indigo-200/50">
-          <div className="p-3.5 rounded-xl bg-indigo-50 text-indigo-600">
-            <GraduationCap className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Total Classes
-            </span>
-            <div className="text-2xl font-extrabold font-mono text-slate-900">
-              {classesData.length}
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 glass-card flex items-center gap-4 border-indigo-200/50">
-          <div className="p-3.5 rounded-xl bg-emerald-50 text-emerald-600">
-            <BookOpen className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Assigned Subjects
-            </span>
-            <div className="text-2xl font-extrabold font-mono text-slate-900">
-              {subjectsData.length}
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 glass-card flex items-center gap-4 border-indigo-200/50">
-          <div className="p-3.5 rounded-xl bg-amber-50 text-amber-600">
-            <Layers className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Active Structure
-            </span>
-            <div className="text-xs font-bold text-slate-900 mt-1">
-              Class &rarr; Subject Mapping Active
-            </div>
-          </div>
-        </Card>
+      {/* Summary Metrics Row with StatCard */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          title="Active Classes"
+          value={classesData.length}
+          subtext="Configured academic cohorts"
+          icon={<GraduationCap className="h-4 w-4" />}
+        />
+        <StatCard
+          title="Curriculum Subjects"
+          value={subjectsData.length}
+          subtext="Assigned course offerings"
+          icon={<BookOpen className="h-4 w-4" />}
+        />
+        <StatCard
+          title="Structure Status"
+          value="Synchronized"
+          subtext="Class to subject mapping active"
+          icon={<Layers className="h-4 w-4" />}
+        />
       </div>
 
-      {/* Main Studio Tabs & Controls */}
-      <Card className="p-6 glass-card space-y-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-[var(--border-subtle)] pb-4">
-          <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-100/80 border border-slate-200/80 overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => setActiveTab("classes")}
-              className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
-                activeTab === "classes"
-                  ? "bg-white text-indigo-600 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Classes ({classesData.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("subjects")}
-              className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
-                activeTab === "subjects"
-                  ? "bg-white text-indigo-600 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-             Subjects ({subjectsData.length})
-            </button>
-          </div>
-
-          <div className="relative w-full sm:w-72">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder={`Search ${activeTab}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="text-xs pl-9"
-            />
-          </div>
+      {/* Control Bar */}
+      <ControlBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={`Search ${activeTab}...`}
+      >
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant={activeTab === "classes" ? "primary" : "ghost"}
+            onClick={() => setActiveTab("classes")}
+          >
+            Classes ({classesData.length})
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTab === "subjects" ? "primary" : "ghost"}
+            onClick={() => setActiveTab("subjects")}
+          >
+            Subjects ({subjectsData.length})
+          </Button>
         </div>
+      </ControlBar>
 
-        {/* Tab 1: Classes Table */}
-        {activeTab === "classes" && (
-          <div>
-            {isLoadingClasses ? (
-              <div className="p-8 sm:p-12 text-center text-xs font-semibold text-slate-400">
-                Loading academic classes...
-              </div>
-            ) : filteredClasses.length === 0 ? (
-              <div className="p-8 sm:p-12 text-center space-y-3">
-                <GraduationCap className="h-10 w-10 text-slate-300 mx-auto" />
-                <p className="text-sm font-bold text-slate-700">No Academic Classes Found</p>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Create a class first (e.g. Grade 10 - Section A), then assign subjects and enroll students.
-                </p>
-                <Button
-                  variant="primary"
-                  onClick={() => setIsAddClassOpen(true)}
-                  className="text-xs font-bold gap-2"
-                >
-                  <Plus className="h-4 w-4" /> Add First Class
-                </Button>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-[var(--border-subtle)]">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-[var(--border-subtle)]">
-                      <th className="p-4">Code</th>
-                      <th className="p-4">Class Name</th>
-                      <th className="p-4 text-center">Subjects</th>
-                      <th className="p-4 text-center">Enrolled</th>
-                      <th className="p-4 hidden md:table-cell text-center">Capacity</th>
-                      <th className="p-4 hidden lg:table-cell">Created</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-subtle)] text-xs font-medium text-slate-800">
-                    {filteredClasses.map((cls) => {
-                      const isFull = cls.enrolledStudentsCount >= cls.maxCapacity;
-                      const seatsLeft = cls.maxCapacity - cls.enrolledStudentsCount;
-                      return (
-                        <tr key={cls.id} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="p-4">
-                            <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600 font-mono font-bold text-xs inline-block">
-                              {cls.code}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className="font-extrabold text-slate-900">{cls.name}</span>
-                          </td>
-                          <td className="p-4 text-center">
-                            <span className="font-mono font-bold text-slate-900">{cls.assignedSubjectsCount}</span>
-                          </td>
-                          <td className="p-4 text-center">
-                            <span className={`font-mono font-bold ${isFull ? "text-rose-600" : "text-slate-900"}`}>
-                              {cls.enrolledStudentsCount}
-                            </span>
-                          </td>
-                          <td className="p-4 text-center hidden md:table-cell">
-                            <span className="text-slate-500">
-                              {cls.maxCapacity}
-                              {isFull && <span className="ml-1 text-rose-500 font-bold">(full)</span>}
-                              {!isFull && seatsLeft <= 5 && <span className="ml-1 text-amber-500">({seatsLeft} left)</span>}
-                            </span>
-                          </td>
-                          <td className="p-4 hidden lg:table-cell">
-                            <span className="text-[11px] font-mono text-slate-400">
-                              {new Date(cls.createdAt).toLocaleDateString()}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="gap-1.5 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-                                onClick={() => setManageStudentsFor(cls)}
-                                title="Manage Students"
-                              >
-                                <UserPlus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Manage Students</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="gap-1.5 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                                onClick={() => setIsAddSubjectOpen(true)}
-                                title="Add Subject"
-                              >
-                                <Plus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Subject</span>
-                              </Button>
-                              <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                className="text-rose-600 hover:bg-rose-50"
-                                onClick={() => handleDeleteClass(cls)}
-                                disabled={deleteClassMutation.isPending}
-                                title="Delete"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+      {/* Reusable DataTable Component */}
+      {activeTab === "classes" ? (
+        <DataTable
+          columns={classColumns}
+          data={filteredClasses}
+          isLoading={isLoadingClasses}
+          emptyMessage="No academic classes configured yet. Click 'Add Class' to create one."
+        />
+      ) : (
+        <DataTable
+          columns={subjectColumns}
+          data={filteredSubjects}
+          isLoading={isLoadingSubjects}
+          emptyMessage="No subjects assigned yet. Click 'Add Subject' to map a subject to a class."
+        />
+      )}
 
-        {/* Tab 2: Class Subjects Catalog */}
-        {activeTab === "subjects" && (
-          <div>
-            {isLoadingSubjects ? (
-              <div className="p-8 sm:p-12 text-center text-xs font-semibold text-slate-400">
-                Loading class subjects...
-              </div>
-            ) : filteredSubjects.length === 0 ? (
-              <div className="p-8 sm:p-12 text-center space-y-3">
-                <BookOpen className="h-10 w-10 text-slate-300 mx-auto" />
-                <p className="text-sm font-bold text-slate-700">No Subjects Assigned</p>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Assign subjects to an existing independent class to start authoring assignments.
-                </p>
-                <Button
-                  variant="primary"
-                  onClick={() => setIsAddSubjectOpen(true)}
-                  className="text-xs font-bold gap-2"
-                >
-                  <Plus className="h-4 w-4" /> Add Subject to Class
-                </Button>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-[var(--border-subtle)]">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-[var(--border-subtle)]">
-                      <th className="p-4">Subject Name &amp; Code</th>
-                      <th className="p-4 hidden sm:table-cell">Assigned Class</th>
-                      <th className="p-4 hidden md:table-cell">Pass Marks</th>
-                      <th className="p-4 hidden lg:table-cell">Primary Teacher</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-subtle)] text-xs font-medium text-slate-800">
-                    {filteredSubjects.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 font-mono font-bold text-xs shrink-0">
-                              {sub.code}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-extrabold text-slate-900 truncate">{sub.name}</div>
-                              {sub.description && (
-                                <div className="text-[10px] text-slate-500 line-clamp-1">{sub.description}</div>
-                              )}
-                              <div className="sm:hidden text-[10px] text-slate-500 mt-0.5">{sub.className}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4 hidden sm:table-cell">
-                          <Badge variant="primary" className="bg-indigo-50 text-indigo-700 border-indigo-200">
-                            {sub.className}
-                          </Badge>
-                        </td>
-                        <td className="p-4 hidden md:table-cell">
-                          <span className="font-mono font-bold text-slate-900">{sub.passMarks} Points</span>
-                        </td>
-                        <td className="p-4 hidden lg:table-cell">
-                          <span className="font-bold text-slate-800">{sub.assignedTeacherName}</span>
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
-                              onClick={() => handleChangeTeacher(sub)}
-                              title="Change Teacher"
-                            >
-                              <UserCog className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                              onClick={() => handleDeleteSubject(sub)}
-                              disabled={deleteSubjectMutation.isPending}
-                              title="Delete Subject"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-      </Card>
-
-      {/* Add Class Modal */}
+      {/* Modals */}
       <CreateClassModal
         isOpen={isAddClassOpen}
         onClose={() => setIsAddClassOpen(false)}
         onSuccess={handleRefresh}
       />
 
-      {/* Add Subject Modal */}
       <CreateSubjectModal
         isOpen={isAddSubjectOpen}
         onClose={() => setIsAddSubjectOpen(false)}
@@ -525,7 +451,6 @@ export default function AcademicManagementPage() {
         teachers={teachersData}
       />
 
-      {/* Manage Students Modal */}
       {manageStudentsFor && (
         <ManageStudentsModal
           isOpen={!!manageStudentsFor}
@@ -539,7 +464,6 @@ export default function AcademicManagementPage() {
         />
       )}
 
-      {/* Change Teacher Modal */}
       {changeTeacherFor && (
         <ChangeTeacherModal
           isOpen={!!changeTeacherFor}
@@ -550,7 +474,6 @@ export default function AcademicManagementPage() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmState.isOpen}
         onClose={() => setConfirmState((s) => ({ ...s, isOpen: false }))}

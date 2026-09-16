@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { PageBanner } from "@/components/common/page-banner";
+import { PageHeader } from "@/components/common/page-header";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
   Settings,
@@ -110,7 +110,7 @@ export default function SettingsPage() {
       try {
         const res = await apiClient.get("/health");
         return res.data?.data as HealthCheckResult;
-      } catch (err: any) {
+      } catch {
         return { canConnectDb: false } as HealthCheckResult;
       }
     },
@@ -139,9 +139,9 @@ export default function SettingsPage() {
     },
     onSuccess: (count) => {
       setJobResults((prev) => ({ ...prev, "cleanup-tokens": `Purged ${count} tokens` }));
-      toast.success(`Purged ${count} expired refresh tokens.`);
+      toast.success(`Purged ${count} stale refresh tokens.`);
     },
-    onError: () => toast.error("Failed to execute token cleanup."),
+    onError: () => toast.error("Failed to cleanup tokens."),
   });
 
   const cleanupNotificationsMutation = useMutation({
@@ -176,7 +176,7 @@ export default function SettingsPage() {
   const handleSaveAcademic = (e: React.FormEvent) => {
     e.preventDefault();
     updateAcademicSettings(academicForm);
-    toast.success("Academic & Submission policies updated!");
+    toast.success("Academic & Assignment governance rules updated!");
   };
 
   const handleSaveSecurity = (e: React.FormEvent) => {
@@ -200,21 +200,21 @@ export default function SettingsPage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
-      {/* Page Header Banner */}
-      <PageBanner
-        badge="Admin Controls"
-        heading="System Settings & Governance"
+    <div className="space-y-6 max-w-6xl mx-auto">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="System Settings &amp; Governance"
         description="Configure academic submission rules, security controls, notification lead times, and monitor platform health."
-        icon={<Settings className="h-5 w-5" />}
+        badge="Governance"
+        icon={<Settings className="h-4 w-4" />}
         actions={
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsResetModalOpen(true)}
-            className="gap-2 bg-white border-slate-300 text-slate-800 hover:bg-slate-50"
+            className="gap-1.5 text-xs"
           >
-            <RotateCcw className="h-4 w-4" /> Reset Defaults
+            <RotateCcw className="h-3.5 w-3.5" /> Reset Defaults
           </Button>
         }
       />
@@ -222,57 +222,47 @@ export default function SettingsPage() {
       {/* Top Quick Status Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* DB Connection Status */}
-        <Card className="p-4 glass-card flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Database Node</p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-extrabold text-slate-900">Supabase PostgreSQL</span>
-            </div>
+        <Card className="p-4 flex items-center justify-between">
+          <div className="space-y-0.5">
+            <p className="text-[11px] text-[var(--text-muted)] font-medium">Database Node</p>
+            <p className="text-xs font-semibold text-[var(--text-primary)]">Supabase PostgreSQL</p>
           </div>
           {isHealthLoading ? (
-            <Badge variant="default" className="animate-pulse">Checking...</Badge>
+            <Badge variant="default">Checking...</Badge>
           ) : healthData?.canConnectDb ? (
-            <Badge variant="success" className="gap-1 font-bold">
-              <CheckCircle2 className="h-3 w-3" /> Healthy
-            </Badge>
+            <Badge variant="success" dot>Healthy</Badge>
           ) : (
-            <Badge variant="danger" className="gap-1 font-bold">
-              <XCircle className="h-3 w-3" /> Offline
-            </Badge>
+            <Badge variant="danger" dot>Offline</Badge>
           )}
         </Card>
 
         {/* Storage Engine */}
-        <Card className="p-4 glass-card flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Storage Engine</p>
-            <p className="text-sm font-extrabold text-slate-900">Supabase Storage</p>
+        <Card className="p-4 flex items-center justify-between">
+          <div className="space-y-0.5">
+            <p className="text-[11px] text-[var(--text-muted)] font-medium">Storage Engine</p>
+            <p className="text-xs font-semibold text-[var(--text-primary)]">Supabase Storage</p>
           </div>
-          <Badge variant="primary" className="gap-1 font-bold">
-            <FileCheck className="h-3 w-3" /> Active
-          </Badge>
+          <Badge variant="primary" dot>Active</Badge>
         </Card>
 
         {/* Security Policy */}
-        <Card className="p-4 glass-card flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Security Guard</p>
-            <p className="text-sm font-extrabold text-slate-900">JWT + Tokens</p>
+        <Card className="p-4 flex items-center justify-between">
+          <div className="space-y-0.5">
+            <p className="text-[11px] text-[var(--text-muted)] font-medium">Security Guard</p>
+            <p className="text-xs font-semibold text-[var(--text-primary)]">JWT + Tokens</p>
           </div>
-          <Badge variant="primary" className="gap-1 font-bold">
-            <Lock className="h-3 w-3" /> Enforced
-          </Badge>
+          <Badge variant="success" dot>Secured</Badge>
         </Card>
 
-        {/* Background Cron Workers */}
-        <Card className="p-4 glass-card flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Background Jobs</p>
-            <p className="text-sm font-extrabold text-slate-900">Auto-Scheduled</p>
+        {/* Latency */}
+        <Card className="p-4 flex items-center justify-between">
+          <div className="space-y-0.5">
+            <p className="text-[11px] text-[var(--text-muted)] font-medium">Response Latency</p>
+            <p className="text-xs font-mono font-semibold text-[var(--text-primary)]">
+              {healthData?.dbLatencyMs !== undefined ? `${healthData.dbLatencyMs}ms` : "Active"}
+            </p>
           </div>
-          <Badge variant="success" className="gap-1 font-bold">
-            <Clock className="h-3 w-3" /> Active
-          </Badge>
+          <Badge variant="default">Live</Badge>
         </Card>
       </div>
 

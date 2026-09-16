@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import {
   BookOpen,
   Calendar,
   FileCheck,
-  TrendingUp,
 } from "lucide-react";
 
 interface UpcomingDeadlineDto {
@@ -63,92 +63,87 @@ export function StudentDashboard({ userName }: { userName: string }) {
   const perf = d?.gradePerformance;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Student Dashboard</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Welcome back, {userName}. Track your assignments, deadlines, and grades.
-          </p>
-        </div>
-        <Link href="/student-assignments">
-          <Button variant="primary" className="gap-2 shadow-sm">
-            <BookOpen className="h-4 w-4" /> My Assignments
-          </Button>
-        </Link>
-      </div>
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="Student Workspace"
+        description={`Enrolled course overview for ${userName}. Track assignment deadlines and review your grades.`}
+        badge="Student"
+        actions={
+          <Link href="/student-assignments">
+            <Button variant="primary" size="sm" className="gap-1.5">
+              <BookOpen className="h-3.5 w-3.5" /> My Assignments
+            </Button>
+          </Link>
+        }
+      />
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Visual Hierarchy: Hero Metric + Secondary Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Primary Hero Metric: Pending tasks requiring action */}
         <StatCard
-          title="Pending Tasks"
+          title="Assignments Pending Turn-In"
           value={d?.pendingAssignmentsCount ?? 0}
-          subtext="Requires submission"
-          accentColor="indigo"
-          icon={<Clock className="h-5 w-5" />}
+          subtext="Coursework requiring submission prior to due dates"
+          icon={<Clock className="h-4 w-4 text-amber-500" />}
+          className="md:col-span-2"
+          isHero
         />
+
         <StatCard
-          title="Submitted"
+          title="Turned In Work"
           value={d?.submittedAssignmentsCount ?? 0}
-          subtext="Awaiting teacher review"
-          accentColor="sky"
-          icon={<CheckCircle2 className="h-5 w-5" />}
+          subtext="Under teacher evaluation"
+          icon={<CheckCircle2 className="h-4 w-4" />}
         />
+
         <StatCard
-          title="Graded"
-          value={perf?.totalGraded ?? 0}
-          subtext={`${perf?.passedCount ?? 0} passed, ${perf?.failedCount ?? 0} failed`}
-          accentColor="emerald"
-          icon={<FileCheck className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Average Score"
+          title="Cumulative Grade Average"
           value={`${(perf?.averagePercentage ?? 0).toFixed(1)}%`}
-          subtext="Across graded work"
-          accentColor="amber"
-          icon={<TrendingUp className="h-5 w-5" />}
+          subtext={`${perf?.passedCount ?? 0} passed, ${perf?.failedCount ?? 0} failed`}
+          icon={<FileCheck className="h-4 w-4" />}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Upcoming Deadlines */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-8 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-indigo-600" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-slate-400" />
               Upcoming Deadlines
             </h2>
-            <Link href="/student-assignments" className="text-xs font-bold text-indigo-600 hover:underline">
-              View All
+            <Link href="/student-assignments" className="text-xs font-medium text-[var(--color-primary)] hover:underline">
+              View All Coursework
             </Link>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {deadlines.length === 0 ? (
-              <Card className="p-6 text-center text-xs text-slate-500">
-                No upcoming assignment deadlines.
+              <Card className="p-8 text-center text-xs text-[var(--text-muted)]">
+                No upcoming assignment deadlines scheduled.
               </Card>
             ) : (
               deadlines.map((dl) => (
-                <Card key={dl.assignmentId} className="p-5 glass-card">
+                <Card key={dl.assignmentId} className="p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <Badge variant="primary">{dl.subjectName}</Badge>
                         <Badge variant="default">{dl.className}</Badge>
-                        {dl.isOverdue && <Badge variant="danger">Overdue</Badge>}
+                        {dl.isOverdue && <Badge variant="danger" dot>Overdue</Badge>}
                       </div>
-                      <h3 className="text-sm font-bold text-slate-900">{dl.title}</h3>
-                      <p className="text-xs text-[var(--text-muted)] font-mono">
-                        {new Date(dl.dueDate).toLocaleDateString()} at{" "}
+                      <h3 className="text-xs font-semibold text-[var(--text-primary)]">{dl.title}</h3>
+                      <p className="text-[11px] text-[var(--text-muted)] font-mono">
+                        Due: {new Date(dl.dueDate).toLocaleDateString()} at{" "}
                         {new Date(dl.dueDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 shrink-0">
                       <CountdownWidget dueDate={dl.dueDate} />
                       <Link href={`/student-assignments/${dl.assignmentId}`}>
                         <Button size="sm" variant="outline" className="gap-1 text-xs">
-                          Open <ChevronRight className="h-3.5 w-3.5" />
+                          Submit Work <ChevronRight className="h-3 w-3" />
                         </Button>
                       </Link>
                     </div>
@@ -159,46 +154,47 @@ export function StudentDashboard({ userName }: { userName: string }) {
           </div>
         </div>
 
-        {/* Grade Performance */}
-        <div className="lg:col-span-4 space-y-4">
-          <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            Grade Performance
+        {/* Grade Summary Card */}
+        <div className="lg:col-span-4 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+            <Trophy className="h-3.5 w-3.5 text-slate-400" />
+            Academic Standing
           </h2>
 
           {perf ? (
-            <Card className="p-6 glass-card space-y-4">
-              <div className="text-center space-y-1">
-                <p className="text-3xl font-extrabold text-slate-900">
+            <Card className="p-5 space-y-4">
+              <div className="text-center pb-3 border-b border-[var(--border-subtle)] space-y-0.5">
+                <p className="text-3xl font-bold font-mono font-mono-numeric text-[var(--text-primary)]">
                   {perf.averagePercentage.toFixed(1)}%
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">Average Score</p>
+                <p className="text-[11px] text-[var(--text-muted)]">Overall Course Score</p>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">Total Graded</span>
-                  <span className="font-bold">{perf.totalGraded}</span>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">Total Evaluated</span>
+                  <span className="font-mono font-bold">{perf.totalGraded}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">Passed</span>
-                  <span className="font-bold text-emerald-600">{perf.passedCount}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">Passing Grades</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{perf.passedCount}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">Failed</span>
-                  <span className="font-bold text-rose-600">{perf.failedCount}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">Unsatisfactory</span>
+                  <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{perf.failedCount}</span>
                 </div>
               </div>
 
               <Link href="/grades">
-                <Button variant="outline" className="w-full gap-2">
-                  View Detailed Grades <ChevronRight className="h-4 w-4" />
+                <Button variant="outline" size="sm" className="w-full justify-between">
+                  <span>View Gradebook</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>
             </Card>
           ) : (
-            <Card className="p-6 glass-card text-center text-xs text-slate-500">
-              No grade data available yet.
+            <Card className="p-6 text-center text-xs text-[var(--text-muted)]">
+              No evaluation data published yet.
             </Card>
           )}
         </div>

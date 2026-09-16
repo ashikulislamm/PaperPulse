@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -38,23 +39,23 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {/* Translucent Backdrop */}
+      {/* Crisp Backdrop Overlay */}
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity animate-in fade-in"
         onClick={onClose}
       />
 
-      {/* Glassmorphic Modal Dialog Surface */}
+      {/* Elevated Modal Dialog Surface */}
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-2xl border border-slate-200/90 glass-panel bg-white/95 p-6 shadow-2xl transition-all animate-in fade-in zoom-in-95",
+          "relative z-10 w-full max-w-lg rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-xl transition-all animate-in fade-in zoom-in-95",
           className
         )}
       >
         {/* Header & Close Button */}
         <div className="flex items-start justify-between pb-3 border-b border-[var(--border-subtle)]">
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+          <div className="space-y-0.5">
+            <h2 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
               {title}
             </h2>
             {description && (
@@ -65,9 +66,9 @@ export function Modal({
           </div>
           <button
             onClick={onClose}
-            className="h-8 w-8 rounded-lg border border-[var(--border-subtle)] bg-slate-100/70 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors cursor-pointer text-sm font-bold shrink-0"
+            className="h-7 w-7 rounded-md border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer shrink-0"
           >
-            ✕
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
 

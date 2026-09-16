@@ -6,21 +6,17 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Users,
   GraduationCap,
   BookOpen,
-  FileText,
   ShieldCheck,
   Building2,
   ChevronRight,
   UserPlus,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
 } from "lucide-react";
 
 interface AdminSubmissionStatsDto {
@@ -40,7 +36,7 @@ interface AdminDashboardDto {
 }
 
 export function AdminDashboard({ userName }: { userName: string }) {
-  const { data: dashboardData, isLoading } = useQuery<AdminDashboardDto | null>({
+  const { data: dashboardData } = useQuery<AdminDashboardDto | null>({
     queryKey: queryKeys.dashboard.admin(),
     queryFn: async () => {
       try {
@@ -56,147 +52,130 @@ export function AdminDashboard({ userName }: { userName: string }) {
   const stats = d?.submissionStatistics;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">System Administration</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Welcome back, {userName}. Manage users, roles, and review platform health.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/users">
-            <Button variant="primary" className="gap-2 shadow-sm">
-              <UserPlus className="h-4 w-4" /> Manage Users
-            </Button>
-          </Link>
-          <Link href="/audit-logs">
-            <Button variant="outline" className="gap-2">
-              <ShieldCheck className="h-4 w-4" /> Audit Logs
-            </Button>
-          </Link>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="System Administration"
+        description={`Academic operations overview for ${userName}. Manage accounts, curricula, and system integrity.`}
+        badge="Admin"
+        actions={
+          <>
+            <Link href="/users">
+              <Button variant="primary" size="sm" className="gap-1.5">
+                <UserPlus className="h-3.5 w-3.5" /> Manage Users
+              </Button>
+            </Link>
+            <Link href="/audit-logs">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5" /> Audit Logs
+              </Button>
+            </Link>
+          </>
+        }
+      />
 
-      {/* Core Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Primary Hero Metric + Secondary Metrics with Visual Hierarchy */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Primary Hero Metric: Total Students (takes 2 columns) */}
         <StatCard
-          title="Total Students"
+          title="Enrolled Students"
           value={d?.totalStudents ?? 0}
-          subtext="Enrolled across all classes"
-          accentColor="indigo"
-          icon={<GraduationCap className="h-5 w-5" />}
+          subtext="Active student accounts across all classes"
+          icon={<GraduationCap className="h-4 w-4" />}
+          className="md:col-span-2"
+          isHero
         />
+
+        {/* Secondary Metrics (1 column each) */}
         <StatCard
-          title="Total Teachers"
+          title="Teaching Staff"
           value={d?.totalTeachers ?? 0}
-          subtext="Active staff members"
-          accentColor="sky"
-          icon={<Users className="h-5 w-5" />}
+          subtext="Active faculty members"
+          icon={<Users className="h-4 w-4" />}
         />
+
         <StatCard
-          title="Classes"
+          title="Active Classes"
           value={d?.totalClasses ?? 0}
-          subtext="Active class sections"
-          accentColor="emerald"
-          icon={<Building2 className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Assignments"
-          value={d?.totalAssignments ?? 0}
-          subtext="Created across platform"
-          accentColor="amber"
-          icon={<BookOpen className="h-5 w-5" />}
+          subtext="Configured sections"
+          icon={<Building2 className="h-4 w-4" />}
         />
       </div>
 
-      {/* Submission Statistics */}
+      {/* Submission Performance & Platform Summary */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          <Card className="p-4 glass-card flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-slate-100 text-slate-600">
-              <FileText className="h-4 w-4" />
-            </div>
+        <Card className="p-4 sm:p-5">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
             <div>
-              <p className="text-xs text-[var(--text-muted)]">Total Submissions</p>
-              <p className="text-lg font-bold">{stats.totalSubmissions}</p>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                Platform Submission Metrics
+              </h3>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                Aggregate submission volume across all published assignments
+              </p>
             </div>
-          </Card>
-          <Card className="p-4 glass-card flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-xs text-[var(--text-muted)]">Graded</p>
-              <p className="text-lg font-bold">{stats.gradedSubmissions}</p>
-            </div>
-          </Card>
-          <Card className="p-4 glass-card flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
-              <Clock className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-xs text-[var(--text-muted)]">Pending</p>
-              <p className="text-lg font-bold">{stats.pendingSubmissions}</p>
-            </div>
-          </Card>
-          <Card className="p-4 glass-card flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-rose-100 text-rose-600">
-              <AlertTriangle className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-xs text-[var(--text-muted)]">Late</p>
-              <p className="text-lg font-bold">{stats.lateSubmissions}</p>
-            </div>
-          </Card>
-          <Card className="p-4 glass-card flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-100 text-indigo-600">
-              <FileText className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-xs text-[var(--text-muted)]">Submission Rate</p>
-              <p className="text-lg font-bold">{stats.submissionRatePercentage.toFixed(1)}%</p>
-            </div>
-          </Card>
-        </div>
-      )}
+            <span className="font-mono text-xs font-bold text-[var(--color-primary)]">
+              {stats.submissionRatePercentage.toFixed(1)}% Turn-in Rate
+            </span>
+          </div>
 
-      {/* Management Shortcuts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8">
-        <Card className="p-6 glass-card space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-indigo-100/80 text-indigo-600">
-              <Users className="h-6 w-6" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+            <div>
+              <span className="text-[11px] text-[var(--text-muted)]">Total Submissions</span>
+              <p className="text-xl font-bold font-mono font-mono-numeric text-[var(--text-primary)] mt-0.5">
+                {stats.totalSubmissions}
+              </p>
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-slate-900">User Directory</h3>
-              <p className="text-xs text-slate-500">
-                Provision accounts, assign roles, and manage active status.
+              <span className="text-[11px] text-[var(--text-muted)]">Graded</span>
+              <p className="text-xl font-bold font-mono font-mono-numeric text-emerald-600 mt-0.5">
+                {stats.gradedSubmissions}
+              </p>
+            </div>
+            <div>
+              <span className="text-[11px] text-[var(--text-muted)]">Pending Evaluation</span>
+              <p className="text-xl font-bold font-mono font-mono-numeric text-amber-600 mt-0.5">
+                {stats.pendingSubmissions}
+              </p>
+            </div>
+            <div>
+              <span className="text-[11px] text-[var(--text-muted)]">Late Turn-ins</span>
+              <p className="text-xl font-bold font-mono font-mono-numeric text-rose-600 mt-0.5">
+                {stats.lateSubmissions}
               </p>
             </div>
           </div>
+        </Card>
+      )}
+
+      {/* Quick Navigation Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-5 flex flex-col justify-between space-y-3">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">User &amp; Role Directory</h3>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              Provision accounts, assign academic roles (Teacher, Student, Admin), and configure access states.
+            </p>
+          </div>
           <Link href="/users">
-            <Button variant="primary" className="w-full gap-2">
-              Manage Users <ChevronRight className="h-4 w-4" />
+            <Button variant="outline" size="sm" className="w-full gap-1.5 justify-between">
+              <span>Open User Management</span>
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
         </Card>
 
-        <Card className="p-6 glass-card space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-slate-100 text-slate-700">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900">Audit Trail</h3>
-              <p className="text-xs text-slate-500">
-                Review authentication attempts, role changes, and system activity.
-              </p>
-            </div>
+        <Card className="p-5 flex flex-col justify-between space-y-3">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Security Audit Trail</h3>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              Inspect authentication events, authorization checks, and record mutation timestamps.
+            </p>
           </div>
           <Link href="/audit-logs">
-            <Button variant="outline" className="w-full gap-2">
-              Open Audit Logs <ChevronRight className="h-4 w-4" />
+            <Button variant="outline" size="sm" className="w-full gap-1.5 justify-between">
+              <span>View Audit Logs</span>
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
         </Card>

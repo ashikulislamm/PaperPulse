@@ -3,13 +3,12 @@ import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { glass?: boolean }
->(({ className, glass = true, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-[var(--border-subtle)] text-[var(--text-primary)] transition-all duration-300",
-      glass ? "glass-card" : "bg-[var(--bg-surface)] shadow-sm",
+      "rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-none transition-colors",
       className
     )}
     {...props}
@@ -23,7 +22,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6 pb-4", className)}
+    className={cn("flex flex-col space-y-1 p-5 pb-3", className)}
     {...props}
   />
 ));
@@ -36,7 +35,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-lg font-bold tracking-tight text-[var(--text-primary)]",
+      "text-base font-semibold tracking-tight text-[var(--text-primary)]",
       className
     )}
     {...props}
@@ -50,7 +49,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-[var(--text-secondary)] leading-relaxed", className)}
+    className={cn("text-xs text-[var(--text-secondary)] leading-relaxed", className)}
     {...props}
   />
 ));
@@ -60,7 +59,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-5 pt-0", className)} {...props} />
 ));
 CardContent.displayName = "CardContent";
 
@@ -70,7 +69,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0 border-t border-[var(--border-subtle)]/50 mt-4", className)}
+    className={cn("flex items-center p-5 pt-0 border-t border-[var(--border-subtle)] mt-3", className)}
     {...props}
   />
 ));

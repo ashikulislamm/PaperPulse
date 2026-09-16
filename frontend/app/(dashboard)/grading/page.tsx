@@ -7,15 +7,14 @@ import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { DataTable, Column } from "@/components/common/data-table";
 import { PaginationControl } from "@/components/common/pagination-control";
-import { Card, CardHeader } from "@/components/ui/card";
-import { PageBanner } from "@/components/common/page-banner";
+import { PageHeader } from "@/components/common/page-header";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { ScoreIndicator } from "@/components/ui/score-indicator";
-import { GraduationCap, Eye } from "lucide-react";
+import { GraduationCap, Eye, Search } from "lucide-react";
 
 interface Assignment {
   id: string;
@@ -68,13 +67,11 @@ export default function GradingPage() {
   const [pageNumber, setPageNumber] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
 
-  // Debounce search
   React.useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 350);
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Fetch teacher's assignments for the dropdown
   const { data: assignmentsData } = useQuery({
     queryKey: queryKeys.assignments.all({}),
     queryFn: async () => {
@@ -85,7 +82,6 @@ export default function GradingPage() {
     },
   });
 
-  // Fetch submissions for selected assignment
   const { data: submissionsData, isLoading } = useQuery({
     queryKey: queryKeys.grading.submissions(selectedAssignmentId),
     enabled: !!selectedAssignmentId,
@@ -105,17 +101,15 @@ export default function GradingPage() {
     },
   });
 
-  const selectedAssignment = assignmentsData?.find((a) => a.id === selectedAssignmentId);
-
   const columns: Column<SubmissionItem>[] = [
     {
       header: "Student",
       cell: (row) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Avatar name={row.studentName} size="sm" />
           <div className="flex flex-col">
-            <span className="font-bold text-[var(--text-primary)]">{row.studentName}</span>
-            <span className="text-xs text-[var(--text-secondary)] font-mono">{row.studentEmail}</span>
+            <span className="font-semibold text-[var(--text-primary)]">{row.studentName}</span>
+            <span className="text-[11px] text-[var(--text-muted)] font-mono">{row.studentEmail}</span>
           </div>
         </div>
       ),
@@ -131,9 +125,7 @@ export default function GradingPage() {
               ? "submitted"
               : row.status === "LateSubmitted"
               ? "overdue"
-              : row.status === "Returned"
-              ? "warning"
-              : "default"
+              : "draft"
           }
           dot
         >
@@ -142,50 +134,48 @@ export default function GradingPage() {
       ),
     },
     {
-      header: "Submitted",
+      header: "Attempt",
       cell: (row) => (
-        <span className="text-xs font-mono text-slate-600">
-          {new Date(row.submittedAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+        <span className="font-mono text-xs text-[var(--text-muted)]">v{row.attemptCount || 1}</span>
+      ),
+    },
+    {
+      header: "Turned In",
+      cell: (row) => (
+        <span className="font-mono text-[11px] text-[var(--text-muted)]">
+          {new Date(row.submittedAt).toLocaleDateString()}
         </span>
       ),
     },
     {
-      header: "Attempts",
-      cell: (row) => (
-        <span className="text-xs font-mono font-bold text-slate-700">
-          {row.attemptCount}
-        </span>
-      ),
-    },
-    {
-      header: "Score",
+      header: "Evaluation Result",
       cell: (row) => {
-        const score = row.mark ? row.mark.scoreObtained : row.scoreObtained;
-        const passed = row.mark ? row.mark.isPassed : row.isPassed;
-        return (
-          <ScoreIndicator
-            scoreObtained={score !== undefined ? score : null}
-            maxMarks={row.maxMarks}
-            passMarks={row.passMarks}
-            isPassed={passed !== undefined ? passed : null}
-            showBar={false}
-          />
-        );
+        const score = row.mark?.scoreObtained ?? row.scoreObtained;
+        const max = row.mark?.maxMarks ?? row.maxMarks;
+        const pass = row.mark?.passMarks ?? row.passMarks;
+        if (score !== undefined && score !== null) {
+          return (
+            <ScoreIndicator
+              scoreObtained={score}
+              maxMarks={max}
+              passMarks={pass}
+              isPassed={row.isPassed}
+              showBar={false}
+            />
+          );
+        }
+        return <span className="text-[11px] text-[var(--text-muted)]">Unscored</span>;
       },
     },
     {
       header: "Actions",
+      className: "text-right",
       cell: (row) => {
         const targetId = row.id || row.submissionId;
         return (
           <Link href={`/grading/${targetId}`}>
-            <Button size="sm" variant="outline" className="gap-1.5">
-              <Eye className="h-3.5 w-3.5" /> Grade
+            <Button size="sm" variant="outline" className="gap-1 text-xs">
+              <Eye className="h-3 w-3" /> Evaluate
             </Button>
           </Link>
         );
@@ -194,118 +184,107 @@ export default function GradingPage() {
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Page Banner */}
-      <PageBanner
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="Submission Evaluation Studio"
+        description="Review student work, grade against assignment rubrics, and deliver actionable feedback."
         badge="Grading"
-        heading="Grading & Evaluations"
-        description="Review student submissions, assign grades, and provide feedback."
-        icon={<GraduationCap className="h-5 w-5" />}
+        icon={<GraduationCap className="h-4 w-4" />}
       />
 
-      {/* Assignment Selector & Filters */}
-      <Card>
-        <CardHeader className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-            {/* Assignment Dropdown */}
-            <div className="flex-1">
-              <Select
-                label="Select Assignment"
-                value={selectedAssignmentId}
-                onChange={(e) => {
-                  setSelectedAssignmentId(e.target.value);
-                  setPageNumber(1);
-                }}
-                options={[
-                  { label: "— Choose an assignment —", value: "" },
-                  ...(assignmentsData || []).map((a) => ({
-                    label: `${a.title} (${a.className})`,
-                    value: a.id,
-                  })),
-                ]}
-              />
-            </div>
-
-            {/* Status Filter */}
-            {selectedAssignmentId && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">
-                  Status:
-                </span>
-                <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
-                  {["All", "Submitted", "LateSubmitted", "Graded", "Returned"].map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => {
-                        setStatusFilter(status);
-                        setPageNumber(1);
-                      }}
-                      className={`px-2.5 py-2 rounded-lg text-[11px] font-semibold transition-all cursor-pointer min-h-[40px] ${
-                        statusFilter === status
-                          ? "bg-white text-indigo-600 shadow-xs"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                    >
-                      {status === "LateSubmitted" ? "Late" : status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+      {/* Assignment Selector & Filters Card */}
+      <Card className="p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="flex-1">
+            <Select
+              label="Select Assignment Specification"
+              value={selectedAssignmentId}
+              onChange={(e) => {
+                setSelectedAssignmentId(e.target.value);
+                setPageNumber(1);
+              }}
+              options={[
+                { label: "— Choose an authored assignment —", value: "" },
+                ...(assignmentsData || []).map((a) => ({
+                  label: `${a.title} (${a.className})`,
+                  value: a.id,
+                })),
+              ]}
+            />
           </div>
 
-          {/* Search */}
           {selectedAssignmentId && (
-            <div className="flex items-center gap-3 pt-3 border-t border-[var(--border-subtle)]">
-              <div className="w-full sm:w-72">
-                <Input
-                  placeholder="Search by student name..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              {submissionsData && (
-                <span className="text-xs font-mono text-[var(--text-muted)]">
-                  {submissionsData.totalCount} submission{submissionsData.totalCount !== 1 ? "s" : ""}
-                </span>
-              )}
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+              {["All", "Submitted", "LateSubmitted", "Graded", "Returned"].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter(status);
+                    setPageNumber(1);
+                  }}
+                  className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                    statusFilter === status
+                      ? "bg-indigo-600 text-white font-semibold shadow-2xs"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {status === "LateSubmitted" ? "Late" : status}
+                </button>
+              ))}
             </div>
           )}
-        </CardHeader>
+        </div>
 
-        {/* Submissions Table */}
-        {selectedAssignmentId ? (
-          <div className="p-6 pt-0 space-y-4">
-            <DataTable
-              columns={columns}
-              data={submissionsData?.items || []}
-              isLoading={isLoading}
-              emptyMessage="No submissions found for this assignment."
-            />
-            {submissionsData && submissionsData.totalPages > 1 && (
-              <PaginationControl
-                currentPage={submissionsData.pageNumber || pageNumber}
-                totalPages={submissionsData.totalPages || 1}
-                totalItems={submissionsData.totalCount || 0}
-                pageSize={pageSize}
-                onPageChange={setPageNumber}
-                onPageSizeChange={setPageSize}
+        {selectedAssignmentId && (
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-[var(--border-subtle)]">
+            <div className="relative w-full sm:w-72">
+              <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by student name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex h-8 w-full rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] pl-8 pr-3 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:outline-none focus-visible:border-[var(--border-focused)] focus-visible:ring-1 focus-visible:ring-[var(--border-focused)]"
               />
-            )}
-          </div>
-        ) : (
-          <div className="p-8 sm:p-12 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
-              <GraduationCap className="h-7 w-7" />
             </div>
-            <h4 className="text-sm font-bold text-slate-800">Select an Assignment</h4>
-            <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-sm mx-auto">
-              Choose an assignment from the dropdown above to view and grade student submissions.
-            </p>
+            {submissionsData && (
+              <span className="text-[11px] font-mono text-[var(--text-muted)]">
+                {submissionsData.totalCount} submission{submissionsData.totalCount !== 1 ? "s" : ""}
+              </span>
+            )}
           </div>
         )}
       </Card>
+
+      {/* Submissions Table */}
+      {selectedAssignmentId ? (
+        <div className="space-y-3">
+          <DataTable
+            columns={columns}
+            data={submissionsData?.items || []}
+            isLoading={isLoading}
+            emptyMessage="No submissions found for this assignment."
+          />
+          {submissionsData && submissionsData.totalPages > 1 && (
+            <PaginationControl
+              currentPage={submissionsData.pageNumber || pageNumber}
+              totalPages={submissionsData.totalPages || 1}
+              totalItems={submissionsData.totalCount || 0}
+              pageSize={pageSize}
+              onPageChange={setPageNumber}
+              onPageSizeChange={setPageSize}
+            />
+          )}
+        </div>
+      ) : (
+        <Card className="p-12 text-center text-xs text-[var(--text-muted)] space-y-1.5">
+          <GraduationCap className="h-6 w-6 mx-auto text-slate-400" />
+          <p className="font-medium text-[var(--text-primary)]">Select an Assignment to Begin Grading</p>
+          <p className="text-[11px]">Choose an assignment from the selector above to inspect and evaluate turn-ins.</p>
+        </Card>
+      )}
     </div>
   );
 }

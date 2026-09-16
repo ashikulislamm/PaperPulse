@@ -7,20 +7,18 @@ import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { DataTable, type Column } from "@/components/common/data-table";
 import { PaginationControl } from "@/components/common/pagination-control";
-import { Card } from "@/components/ui/card";
+import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
+import { ControlBar } from "@/components/common/control-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { StatCard } from "@/components/common/stat-card";
-import { PageBanner } from "@/components/common/page-banner";
 import {
   Trophy,
   CheckCircle2,
   XCircle,
   TrendingUp,
   ArrowRight,
-  Search,
   Award,
 } from "lucide-react";
 
@@ -81,7 +79,6 @@ export default function GradesPage() {
     },
   });
 
-  // Fetch all grades once (first page, large size) to extract unique class/subject options
   const { data: allGradesData } = useQuery({
     queryKey: queryKeys.studentAssignments.grades({ _filterOptions: true }),
     queryFn: async () => {
@@ -132,7 +129,7 @@ export default function GradesPage() {
 
   const columns: Column<StudentGradeSummary>[] = [
     {
-      header: "Assignment",
+      header: "Assignment Title",
       accessorKey: "assignmentTitle",
       sortable: true,
       cell: (row) => (
@@ -140,7 +137,7 @@ export default function GradesPage() {
           <span className="font-semibold text-[var(--text-primary)] line-clamp-1">
             {row.assignmentTitle}
           </span>
-          <span className="text-xs text-[var(--text-secondary)]">{row.subjectName}</span>
+          <span className="text-[11px] text-[var(--text-muted)]">{row.subjectName}</span>
         </div>
       ),
     },
@@ -148,16 +145,19 @@ export default function GradesPage() {
       header: "Class",
       accessorKey: "className",
       sortable: true,
+      cell: (row) => (
+        <Badge variant="default">{row.className}</Badge>
+      ),
     },
     {
       header: "Score",
       sortable: true,
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <span className="font-mono font-bold text-sm">
+        <div className="flex items-center gap-1.5 font-mono">
+          <span className="font-bold text-xs">
             {row.scoreObtained}/{row.maxMarks}
           </span>
-          <span className="text-xs text-[var(--text-secondary)]">
+          <span className="text-[10px] text-[var(--text-muted)]">
             ({Math.round((row.scoreObtained / row.maxMarks) * 100)}%)
           </span>
         </div>
@@ -177,18 +177,17 @@ export default function GradesPage() {
       header: "Teacher",
       accessorKey: "teacherName",
       sortable: true,
+      cell: (row) => (
+        <span className="text-xs text-[var(--text-secondary)]">{row.teacherName}</span>
+      ),
     },
     {
-      header: "Graded",
+      header: "Graded On",
       accessorKey: "gradedAt",
       sortable: true,
       cell: (row) => (
-        <span className="text-xs text-[var(--text-secondary)]">
-          {new Date(row.gradedAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
+        <span className="text-[11px] font-mono text-[var(--text-muted)]">
+          {new Date(row.gradedAt).toLocaleDateString()}
         </span>
       ),
     },
@@ -196,13 +195,14 @@ export default function GradesPage() {
       header: "Feedback",
       cell: (row) =>
         row.feedbackComments.length > 0 ? (
-          <Badge variant="info">{row.feedbackComments.length} note{row.feedbackComments.length !== 1 ? "s" : ""}</Badge>
+          <Badge variant="primary">{row.feedbackComments.length} note{row.feedbackComments.length !== 1 ? "s" : ""}</Badge>
         ) : (
-          <span className="text-xs text-[var(--text-secondary)]">—</span>
+          <span className="text-[11px] text-[var(--text-muted)]">—</span>
         ),
     },
     {
-      header: "",
+      header: "Actions",
+      className: "text-right",
       cell: (row) => (
         <Link
           href={{
@@ -211,7 +211,7 @@ export default function GradesPage() {
           }}
         >
           <Button size="sm" variant="ghost" className="gap-1 text-xs">
-            Details <ArrowRight className="h-3 w-3" />
+            Report <ArrowRight className="h-3 w-3" />
           </Button>
         </Link>
       ),
@@ -219,117 +219,91 @@ export default function GradesPage() {
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Page Banner */}
-      <PageBanner
-        badge="Grades"
-        heading="My Grades"
-        description="View your scores, pass/fail status, and teacher feedback for all graded assignments."
-        icon={<Award className="h-5 w-5" />}
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="Academic Gradebook"
+        description="Inspect evaluation results, pass/fail thresholds, and faculty feedback notes."
+        badge="Gradebook"
+        icon={<Award className="h-4 w-4" />}
       />
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+      {/* Stat Cards with Visual Hierarchy */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
-          title="Total Graded"
-          value={totalCount}
-          subtext="Assignments evaluated"
-          accentColor="indigo"
-          icon={<Trophy className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Passed"
-          value={passedCount}
-          subtext="Above pass marks"
-          accentColor="emerald"
-          icon={<CheckCircle2 className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Failed"
-          value={failedCount}
-          subtext="Below pass marks"
-          accentColor="rose"
-          icon={<XCircle className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Average Score"
+          title="Overall Average Score"
           value={`${avgScore}%`}
-          subtext="Across all graded"
-          accentColor="sky"
-          icon={<TrendingUp className="h-5 w-5" />}
+          subtext="Cumulative performance across all graded submissions"
+          icon={<TrendingUp className="h-4 w-4" />}
+          className="md:col-span-2"
+          isHero
+        />
+        <StatCard
+          title="Passing Assessments"
+          value={passedCount}
+          subtext="Above minimum mark requirement"
+          icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+        />
+        <StatCard
+          title="Unsatisfactory"
+          value={failedCount}
+          subtext="Below required passing mark"
+          icon={<XCircle className="h-4 w-4 text-rose-600" />}
         />
       </div>
 
-      {/* Filter Bar */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="w-full md:w-80 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Search by assignment, subject, or teacher..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-600">Class:</span>
-              <Select
-                value={selectedClass}
-                onChange={(e) => {
-                  setSelectedClass(e.target.value);
-                  setPageNumber(1);
-                }}
-                options={[
-                  { label: "All Classes", value: "All" },
-                  ...classOptions.map((c) => ({ label: c, value: c })),
-                ]}
-                className="h-auto py-1.5 text-xs font-semibold w-auto"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-600">Subject:</span>
-              <Select
-                value={selectedSubject}
-                onChange={(e) => {
-                  setSelectedSubject(e.target.value);
-                  setPageNumber(1);
-                }}
-                options={[
-                  { label: "All Subjects", value: "All" },
-                  ...subjectOptions.map((s) => ({ label: s, value: s })),
-                ]}
-                className="h-auto py-1.5 text-xs font-semibold w-auto"
-              />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Grades Table */}
-      <Card>
-        <div className="p-6 space-y-4">
-          <DataTable
-            columns={columns}
-            data={filteredItems}
-            isLoading={isLoading}
-            emptyMessage="No grades found. Your graded assignments will appear here."
+      {/* Unified Control Bar */}
+      <ControlBar
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search assignment, subject, or teacher..."
+      >
+        <div className="flex items-center gap-2">
+          <Select
+            value={selectedClass}
+            onChange={(e) => {
+              setSelectedClass(e.target.value);
+              setPageNumber(1);
+            }}
+            options={[
+              { label: "All Classes", value: "All" },
+              ...classOptions.map((c) => ({ label: c, value: c })),
+            ]}
           />
-
-          {totalPages > 1 && (
-            <PaginationControl
-              currentPage={pageNumber}
-              totalPages={totalPages}
-              totalItems={totalCount}
-              pageSize={pageSize}
-              onPageChange={setPageNumber}
-              onPageSizeChange={setPageSize}
-            />
-          )}
+          <Select
+            value={selectedSubject}
+            onChange={(e) => {
+              setSelectedSubject(e.target.value);
+              setPageNumber(1);
+            }}
+            options={[
+              { label: "All Subjects", value: "All" },
+              ...subjectOptions.map((s) => ({ label: s, value: s })),
+            ]}
+          />
         </div>
-      </Card>
+      </ControlBar>
+
+      {/* Table & Pagination */}
+      <div className="space-y-3">
+        <DataTable
+          columns={columns}
+          data={filteredItems}
+          isLoading={isLoading}
+          emptyMessage="No evaluation records found matching this criteria."
+        />
+
+        {totalPages > 1 && (
+          <PaginationControl
+            currentPage={pageNumber}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            pageSize={pageSize}
+            onPageChange={setPageNumber}
+            onPageSizeChange={setPageSize}
+          />
+        )}
+      </div>
     </div>
   );
 }

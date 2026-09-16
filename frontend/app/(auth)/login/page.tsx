@@ -75,11 +75,11 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="glass-card p-6 border border-slate-200/90 shadow-xl">
-      <CardHeader className="p-0 pb-6 text-center space-y-1">
-        <CardTitle className="text-xl font-bold">Sign In to Your Workspace</CardTitle>
+    <Card className="p-6 border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm">
+      <CardHeader className="p-0 pb-5 text-center space-y-1">
+        <CardTitle className="text-lg font-bold">Sign In to Workspace</CardTitle>
         <CardDescription>
-          Enter your credentials to access your dashboard.
+          Enter your institutional credentials to proceed.
         </CardDescription>
       </CardHeader>
 

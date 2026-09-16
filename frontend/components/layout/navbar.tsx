@@ -7,7 +7,6 @@ import { apiClient } from "@/lib/api/client";
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
-import { Input } from "@/components/ui/input";
 import { Search, User, KeyRound, Settings, LogOut, Menu } from "lucide-react";
 
 export function Navbar() {
@@ -41,42 +40,42 @@ export function Navbar() {
   const userRoleText = user?.roles?.join(", ") || "Student";
 
   return (
-    <header className="sticky top-0 z-30 h-16 glass-panel border-b border-[var(--border-subtle)]/80 px-4 md:px-6 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 h-14 bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] px-4 md:px-6 flex items-center justify-between gap-4">
       {/* Mobile Hamburger + Search */}
-      <div className="flex items-center gap-3 flex-1 max-w-md">
+      <div className="flex items-center gap-2.5 flex-1 max-w-md">
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("open-mobile-sidebar"))}
-          className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 md:hidden cursor-pointer"
+          className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 md:hidden cursor-pointer transition-colors"
           aria-label="Toggle sidebar"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-4 w-4" />
         </button>
         <form onSubmit={handleSearch} className="relative w-full">
-          <Input
+          <input
             placeholder="Search assignments..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="h-9 pl-9 pr-4 text-xs bg-slate-100/80"
+            className="h-8 pl-8 pr-3 text-xs w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:outline-none focus-visible:border-[var(--border-focused)] focus-visible:ring-1 focus-visible:ring-[var(--border-focused)]"
           />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4 pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 h-3.5 w-3.5 pointer-events-none" />
         </form>
       </div>
 
       {/* Quick Actions & User Menu */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Notification Dropdown */}
         <NotificationDropdown />
 
         {/* User Profile Avatar Dropdown */}
         <DropdownMenu
           trigger={
-            <button className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100/80 transition-colors cursor-pointer select-none">
+            <button className="flex items-center gap-2 p-1 rounded-md hover:bg-slate-100 transition-colors cursor-pointer select-none">
               <Avatar src={user?.avatarUrl} name={userDisplayName} size="sm" />
               <div className="hidden md:flex flex-col text-left">
-                <span className="text-xs font-bold leading-tight text-[var(--text-primary)]">
+                <span className="text-xs font-semibold leading-tight text-[var(--text-primary)]">
                   {userDisplayName}
                 </span>
-                <span className="text-[10px] font-medium text-[var(--text-secondary)]">
+                <span className="text-[10px] text-[var(--text-muted)]">
                   {userRoleText}
                 </span>
               </div>
@@ -85,22 +84,22 @@ export function Navbar() {
           items={[
             {
               label: "My Profile",
-              icon: <User className="h-4 w-4 text-slate-500" />,
+              icon: <User className="h-3.5 w-3.5" />,
               onClick: () => router.push("/profile"),
             },
             {
               label: "Change Password",
-              icon: <KeyRound className="h-4 w-4 text-slate-500" />,
+              icon: <KeyRound className="h-3.5 w-3.5" />,
               onClick: () => router.push("/profile"),
             },
             {
               label: "Settings",
-              icon: <Settings className="h-4 w-4 text-slate-500" />,
+              icon: <Settings className="h-3.5 w-3.5" />,
               onClick: () => router.push("/settings"),
             },
             {
-              label: "Log Out",
-              icon: <LogOut className="h-4 w-4 text-rose-600" />,
+              label: "Sign Out",
+              icon: <LogOut className="h-3.5 w-3.5 text-rose-600" />,
               danger: true,
               onClick: handleLogout,
             },

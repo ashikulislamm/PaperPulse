@@ -8,27 +8,26 @@ import { Construction, ArrowLeft } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   return (
-    <Card className="glass-card p-6 border border-slate-200/90 shadow-xl">
-      <CardHeader className="p-0 pb-6 text-center space-y-1">
-        <div className="mx-auto h-14 w-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mb-2">
-          <Construction className="h-7 w-7" />
+    <Card className="p-6 border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm">
+      <CardHeader className="p-0 pb-5 text-center space-y-1">
+        <div className="mx-auto h-10 w-10 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-amber-600 dark:text-amber-400 flex items-center justify-center mb-2">
+          <Construction className="h-5 w-5" />
         </div>
-        <CardTitle className="text-xl font-bold">Password Reset</CardTitle>
+        <CardTitle className="text-lg font-bold">Password Recovery</CardTitle>
         <CardDescription>
-          This feature is currently under development and will be available in a future release.
+          Contact institution administrators to recover credentials.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="space-y-4 text-center py-4">
-          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold leading-relaxed">
-            Password reset functionality requires a backend email service integration that is not yet configured.
-            Please contact your system administrator to reset your password.
+        <div className="space-y-4 text-center py-2">
+          <div className="p-3 rounded-md border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 text-xs font-medium leading-relaxed">
+            Institutional accounts are centrally managed. Please contact your campus system administrator or faculty desk to request an account password reset.
           </div>
 
           <Link href="/login">
-            <Button variant="primary" size="lg" className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" /> Back to Sign In
+            <Button variant="outline" size="md" className="w-full gap-1.5 text-xs">
+              <ArrowLeft className="h-3.5 w-3.5" /> Return to Sign In
             </Button>
           </Link>
         </div>

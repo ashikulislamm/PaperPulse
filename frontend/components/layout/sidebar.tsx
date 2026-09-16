@@ -29,12 +29,10 @@ interface NavItem {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, isSidebarOpen, toggleSidebar, setSidebarOpen } = useAuthStore();
+  const { user, isSidebarOpen, toggleSidebar } = useAuthStore();
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
 
-  // Sync mobile open state with sidebar state
   React.useEffect(() => {
-    // On desktop, follow isSidebarOpen. On mobile, close by default.
     const handleResize = () => {
       if (window.innerWidth >= 768) {
         setIsMobileOpen(false);
@@ -44,7 +42,6 @@ export function Sidebar() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Close mobile sidebar on route change
   React.useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname]);
@@ -76,39 +73,40 @@ export function Sidebar() {
   const sidebarContent = (
     <aside
       className={cn(
-        "sticky top-0 h-screen glass-panel border-r border-[var(--border-subtle)] flex flex-col justify-between transition-all duration-300 z-40 select-none",
-        isSidebarOpen ? "w-64" : "w-20"
+        "sticky top-0 h-screen bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col justify-between transition-all duration-200 z-40 select-none",
+        isSidebarOpen ? "w-60" : "w-16"
       )}
     >
       {/* Brand Header */}
       <div>
-        <div className="flex items-center justify-between h-16 px-4 border-b border-[var(--border-subtle)]/60">
-          <Link href="/dashboard" className="flex items-center gap-3 overflow-hidden">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-indigo-500/20 shrink-0">
+        <div className="flex items-center justify-between h-14 px-3.5 border-b border-[var(--border-subtle)]">
+          <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
+            <div className="h-7 w-7 rounded-md bg-[var(--color-primary)] flex items-center justify-center text-white font-bold text-xs shrink-0">
               P
             </div>
             {isSidebarOpen && (
               <div className="flex flex-col truncate">
-                <span className="text-base font-extrabold tracking-tight text-[var(--text-primary)]">
+                <span className="text-xs font-bold tracking-tight text-[var(--text-primary)]">
                   PaperPulse
                 </span>
-                <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
-                  Academic Platform
+                <span className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  Workspace
                 </span>
               </div>
             )}
           </Link>
+
           {/* Mobile close button */}
           <button
             onClick={() => setIsMobileOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 md:hidden cursor-pointer"
+            className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 md:hidden cursor-pointer transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Navigation Items */}
-        <nav className="p-3 space-y-1.5">
+        <nav className="p-2 space-y-1">
           {filteredNavItems.map((item) => {
             const IconComponent = item.icon;
             const isActive =
@@ -119,17 +117,17 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3.5 px-3 py-2.5 rounded-xl font-medium text-xs transition-all duration-150 group cursor-pointer",
+                  "flex items-center gap-2.5 px-2.5 py-2 rounded-md font-medium text-xs transition-colors group cursor-pointer",
                   isActive
-                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/30"
-                    : "text-[var(--text-secondary)] hover:bg-slate-100 hover:text-[var(--text-primary)]"
+                    ? "bg-[var(--color-primary)] text-white font-semibold shadow-xs"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 )}
                 title={!isSidebarOpen ? item.label : undefined}
               >
                 <IconComponent
                   className={cn(
-                    "h-5 w-5 shrink-0 transition-colors",
-                    isActive ? "text-white" : "text-slate-400 group-hover:text-indigo-600"
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"
                   )}
                 />
                 {isSidebarOpen && <span className="truncate">{item.label}</span>}
@@ -140,18 +138,18 @@ export function Sidebar() {
       </div>
 
       {/* Sidebar Collapse Toggle (desktop only) */}
-      <div className="p-3 border-t border-[var(--border-subtle)]/60">
+      <div className="p-2 border-t border-[var(--border-subtle)]">
         <button
           onClick={toggleSidebar}
-          className="w-full hidden md:flex items-center justify-center gap-2 p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors text-xs font-semibold cursor-pointer"
+          className="w-full hidden md:flex items-center justify-center gap-2 p-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors text-xs font-medium cursor-pointer"
         >
           {isSidebarOpen ? (
             <>
-              <ChevronLeft className="h-4 w-4" />
-              <span>Collapse Sidebar</span>
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>Collapse</span>
             </>
           ) : (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           )}
         </button>
       </div>
@@ -167,10 +165,10 @@ export function Sidebar() {
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/50 backdrop-blur-xs"
             onClick={() => setIsMobileOpen(false)}
           />
-          <div className="relative h-full w-64 shadow-2xl">
+          <div className="relative h-full w-60 shadow-xl">
             {sidebarContent}
           </div>
         </div>
@@ -183,8 +181,6 @@ export function Sidebar() {
 }
 
 function MobileSidebarTrigger({ onOpen }: { onOpen: () => void }) {
-  // This is rendered inside Sidebar but the actual hamburger button is in Navbar.
-  // We expose a global function via a custom event so Navbar can trigger it.
   React.useEffect(() => {
     const handler = () => onOpen();
     window.addEventListener("open-mobile-sidebar", handler);

@@ -8,16 +8,15 @@ import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { DataTable, Column } from "@/components/common/data-table";
 import { PaginationControl } from "@/components/common/pagination-control";
+import { PageHeader } from "@/components/common/page-header";
+import { ControlBar } from "@/components/common/control-bar";
 import { StatCard } from "@/components/common/stat-card";
-import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { UserModal, UserItem } from "@/components/users/user-modal";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { PageBanner } from "@/components/common/page-banner";
 import {
   Users as UsersIcon,
   CheckCircle2,
@@ -82,13 +81,12 @@ export default function UsersPage() {
     },
   });
 
-  // Action Handlers
   const handleActivate = async (userId: string) => {
     try {
       await apiClient.patch(`/users/${userId}/activate`);
-      toast.success("User account activated successfully.");
+      toast.success("User account activated.");
       refetch();
-    } catch (err) {
+    } catch {
       toast.error("Failed to activate user.");
     }
   };
@@ -98,7 +96,7 @@ export default function UsersPage() {
       await apiClient.patch(`/users/${userId}/deactivate`);
       toast.warning("User account deactivated.");
       refetch();
-    } catch (err) {
+    } catch {
       toast.error("Failed to deactivate user.");
     }
   };
@@ -106,9 +104,9 @@ export default function UsersPage() {
   const handleBan = async (userId: string) => {
     try {
       await apiClient.patch(`/users/${userId}/ban`);
-      toast.error("User account suspended / banned.");
+      toast.error("User account suspended.");
       refetch();
-    } catch (err) {
+    } catch {
       toast.error("Failed to suspend user.");
     }
   };
@@ -120,7 +118,7 @@ export default function UsersPage() {
       toast.success("User deleted.");
       setDeleteTarget(null);
       refetch();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete user.");
     }
   };
@@ -131,24 +129,33 @@ export default function UsersPage() {
       cell: (row) => (
         <a
           href={`/users/${row.id}`}
-          className="flex items-center gap-3 hover:bg-slate-50 rounded-lg p-1 -m-1 transition-colors"
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
         >
-          <Avatar name={`${row.firstName} ${row.lastName}`} size="md" />
+          <Avatar name={`${row.firstName} ${row.lastName}`} size="sm" />
           <div className="flex flex-col">
-            <span className="font-bold text-[var(--text-primary)] hover:text-indigo-600 transition-colors">
+            <span className="font-semibold text-[var(--text-primary)]">
               {row.firstName} {row.lastName}
             </span>
-            <span className="text-xs text-[var(--text-secondary)] font-mono">{row.email}</span>
+            <span className="text-[11px] text-[var(--text-muted)] font-mono">{row.email}</span>
           </div>
         </a>
       ),
     },
     {
-      header: "Assigned Roles",
+      header: "Roles",
       cell: (row) => (
         <div className="flex flex-wrap gap-1">
           {row.roles?.map((role) => (
-            <Badge key={role} variant={role === "Admin" ? "primary" : role === "Teacher" ? "published" : "default"}>
+            <Badge
+              key={role}
+              variant={
+                role === "Admin"
+                  ? "primary"
+                  : role === "Teacher"
+                  ? "info"
+                  : "default"
+              }
+            >
               {role}
             </Badge>
           ))}
@@ -156,7 +163,7 @@ export default function UsersPage() {
       ),
     },
     {
-      header: "Account Status",
+      header: "Status",
       cell: (row) => (
         <Badge
           variant={
@@ -164,7 +171,7 @@ export default function UsersPage() {
               ? "success"
               : row.status === "Suspended"
               ? "danger"
-              : "closed"
+              : "draft"
           }
           dot
         >
@@ -173,50 +180,65 @@ export default function UsersPage() {
       ),
     },
     {
-      header: "Phone Number",
+      header: "Last Active",
       cell: (row) => (
-        <span className="font-mono text-xs text-slate-600">
-          {row.phoneNumber || "N/A"}
+        <span className="text-[11px] font-mono text-[var(--text-muted)]">
+          {row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleDateString() : "Never"}
         </span>
       ),
     },
     {
       header: "Actions",
+      className: "text-right",
       cell: (row) => (
         <DropdownMenu
           trigger={
-            <Button size="sm" variant="outline" className="gap-1.5">
-              <Settings2 className="h-3.5 w-3.5" /> Manage
+            <Button size="sm" variant="outline" className="gap-1 text-xs">
+              <Settings2 className="h-3.5 w-3.5" /> Options
             </Button>
           }
           items={[
             {
               label: "View Profile",
-              icon: <Eye className="h-4 w-4 text-slate-500" />,
+              icon: <Eye className="h-3.5 w-3.5" />,
               onClick: () => router.push(`/users/${row.id}`),
             },
             {
-              label: "Edit Profile",
-              icon: <Pencil className="h-4 w-4 text-slate-500" />,
+              label: "Edit User",
+              icon: <Pencil className="h-3.5 w-3.5" />,
               onClick: () => {
                 setEditingUser(row);
                 setIsModalOpen(true);
               },
             },
-            {
-              label: row.status === "Active" ? "Deactivate Account" : "Activate Account",
-              icon: row.status === "Active" ? <Pause className="h-4 w-4 text-amber-600" /> : <Play className="h-4 w-4 text-emerald-600" />,
-              onClick: () => (row.status === "Active" ? handleDeactivate(row.id) : handleActivate(row.id)),
-            },
-            {
-              label: "Ban / Suspend User",
-              icon: <Ban className="h-4 w-4 text-rose-600" />,
-              danger: true,
-              onClick: () => handleBan(row.id),
-            },
+            ...(row.status !== "Active"
+              ? [
+                  {
+                    label: "Activate Account",
+                    icon: <Play className="h-3.5 w-3.5 text-emerald-600" />,
+                    onClick: () => handleActivate(row.id),
+                  },
+                ]
+              : [
+                  {
+                    label: "Deactivate Account",
+                    icon: <Pause className="h-3.5 w-3.5 text-amber-600" />,
+                    onClick: () => handleDeactivate(row.id),
+                  },
+                ]),
+            ...(row.status !== "Suspended"
+              ? [
+                  {
+                    label: "Suspend User",
+                    icon: <Ban className="h-3.5 w-3.5 text-rose-600" />,
+                    danger: true,
+                    onClick: () => handleBan(row.id),
+                  },
+                ]
+              : []),
             {
               label: "Delete User",
-              icon: <Trash2 className="h-4 w-4 text-rose-600" />,
+              icon: <Trash2 className="h-3.5 w-3.5 text-rose-600" />,
               danger: true,
               onClick: () => setDeleteTarget(row),
             },
@@ -227,149 +249,96 @@ export default function UsersPage() {
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Page Banner */}
-      <PageBanner
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="User Accounts &amp; Access"
+        description="Provision institution accounts, manage role permissions, and track active statuses."
         badge="Users"
-        heading="System User Administration"
-        description="Manage system users, role claims, status enforcement, and account provisioning."
-        icon={<UsersIcon className="h-5 w-5" />}
+        icon={<UsersIcon className="h-4 w-4" />}
         actions={
           <Button
             variant="primary"
-            className="gap-2"
+            size="sm"
+            className="gap-1.5"
             onClick={() => {
               setEditingUser(null);
               setIsModalOpen(true);
             }}
           >
-            <Plus className="h-4 w-4" /> Add New User
+            <Plus className="h-3.5 w-3.5" /> Add User
           </Button>
         }
       />
 
       {/* User Stats Quick View */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title="Total Registered Users"
+          title="Total Registered Accounts"
           value={data?.totalCount || 0}
-          accentColor="indigo"
-          icon={<UsersIcon className="h-5 w-5" />}
+          subtext="Configured users across institution"
+          icon={<UsersIcon className="h-4 w-4" />}
         />
         <StatCard
           title="Active Accounts"
           value={data?.items?.filter((u) => u.status === "Active").length || 0}
-          accentColor="emerald"
-          icon={<CheckCircle2 className="h-5 w-5" />}
+          subtext="Eligible to sign in and submit"
+          icon={<CheckCircle2 className="h-4 w-4" />}
         />
         <StatCard
-          title="Suspended / Banned"
+          title="Suspended Accounts"
           value={data?.items?.filter((u) => u.status === "Suspended").length || 0}
-          accentColor="rose"
-          icon={<Ban className="h-5 w-5" />}
+          subtext="Access temporarily restricted"
+          icon={<Ban className="h-4 w-4" />}
         />
       </div>
 
-      {/* Filter & Table Container */}
-      <Card>
-        <CardHeader className="space-y-4">
-          <div className="space-y-4">
-            {/* Top Bar: Search Input & Reset Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="w-full sm:w-80">
-                <Input
-                  placeholder="Search by name or email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              {(search || selectedRole !== "All" || selectedStatus !== "All") && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSearch("");
-                    setSelectedRole("All");
-                    setSelectedStatus("All");
-                  }}
-                  className="text-xs font-semibold text-slate-500 hover:text-indigo-600 self-start sm:self-auto"
-                >
-                  Reset Filters
-                </Button>
-              )}
-            </div>
-
-            {/* Filter Pills Bar */}
-            <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-[var(--border-subtle)]">
-              {/* Role Filter Group */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Role:
-                </span>
-                <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
-                  {["All", "Admin", "Teacher", "Student"].map((role) => (
-                    <button
-                      key={role}
-                      type="button"
-                      onClick={() => setSelectedRole(role)}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[40px] ${
-                        selectedRole === role
-                          ? "bg-white text-indigo-600 shadow-xs font-bold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                      }`}
-                    >
-                      {role}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="h-6 w-px bg-slate-200 hidden sm:block" />
-
-              {/* Status Filter Group */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Status:
-                </span>
-                <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
-                  {["All", "Active", "Inactive", "Suspended"].map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => setSelectedStatus(status)}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[40px] ${
-                        selectedStatus === status
-                          ? "bg-white text-indigo-600 shadow-xs font-bold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-
-        <div className="p-6 pt-0 space-y-4">
-          <DataTable
-            columns={columns}
-            data={data?.items || []}
-            isLoading={isLoading}
-            emptyMessage="No matching system users found."
-          />
-
-          <PaginationControl
-            currentPage={data?.pageNumber || pageNumber}
-            totalPages={data?.totalPages || 1}
-            totalItems={data?.totalCount || 0}
-            pageSize={pageSize}
-            onPageChange={setPageNumber}
-            onPageSizeChange={setPageSize}
-          />
+      {/* Unified Control Bar */}
+      <ControlBar
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by name or email..."
+        statusFilters={["All", "Active", "Inactive", "Suspended"]}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+      >
+        <div className="flex items-center gap-1">
+          <span className="text-[11px] text-[var(--text-muted)] font-medium">Role:</span>
+          {["All", "Admin", "Teacher", "Student"].map((role) => (
+            <button
+              key={role}
+              type="button"
+              onClick={() => setSelectedRole(role)}
+              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                selectedRole === role
+                  ? "bg-indigo-600 text-white font-semibold shadow-2xs"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+            >
+              {role}
+            </button>
+          ))}
         </div>
-      </Card>
+      </ControlBar>
+
+      {/* Table & Pagination */}
+      <div className="space-y-3">
+        <DataTable
+          columns={columns}
+          data={data?.items || []}
+          isLoading={isLoading}
+          emptyMessage="No matching user accounts found."
+        />
+
+        <PaginationControl
+          currentPage={data?.pageNumber || pageNumber}
+          totalPages={data?.totalPages || 1}
+          totalItems={data?.totalCount || 0}
+          pageSize={pageSize}
+          onPageChange={setPageNumber}
+          onPageSizeChange={setPageSize}
+        />
+      </div>
 
       {/* Add / Edit User Modal */}
       <UserModal
@@ -385,7 +354,7 @@ export default function UsersPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         title={`Delete "${deleteTarget?.firstName} ${deleteTarget?.lastName}"?`}
-        description="This user will be soft-deleted and will no longer be able to log in. An administrator can reverse this action later."
+        description="This user will be soft-deleted and will no longer be able to log in."
         confirmLabel="Delete User"
         variant="danger"
       />

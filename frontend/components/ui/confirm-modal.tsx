@@ -20,24 +20,18 @@ interface ConfirmModalProps {
 const variantConfig = {
   danger: {
     icon: Trash2,
-    iconBg: "bg-rose-100",
-    iconText: "text-rose-600",
+    iconText: "text-rose-600 dark:text-rose-400",
     buttonVariant: "danger" as const,
-    accentRing: "ring-rose-500/10",
   },
   warning: {
     icon: AlertTriangle,
-    iconBg: "bg-amber-100",
-    iconText: "text-amber-600",
+    iconText: "text-amber-600 dark:text-amber-400",
     buttonVariant: "primary" as const,
-    accentRing: "ring-amber-500/10",
   },
   info: {
     icon: Info,
-    iconBg: "bg-sky-100",
-    iconText: "text-sky-600",
+    iconText: "text-indigo-600 dark:text-indigo-400",
     buttonVariant: "primary" as const,
-    accentRing: "ring-sky-500/10",
   },
 };
 
@@ -57,20 +51,18 @@ export function ConfirmModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="">
-      <div className="space-y-5">
+      <div className="space-y-4">
         {/* Icon & Message */}
-        <div className="flex items-start gap-4">
-          <div
-            className={`p-3 rounded-2xl shrink-0 ring-1 ${config.iconBg} ${config.iconText} ${config.accentRing}`}
-          >
-            <IconComponent className="h-6 w-6" />
+        <div className="flex items-start gap-3">
+          <div className={`p-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] shrink-0 ${config.iconText}`}>
+            <IconComponent className="h-5 w-5" />
           </div>
-          <div className="space-y-1.5 pt-0.5">
-            <h3 className="text-sm font-bold text-slate-900 leading-snug">
+          <div className="space-y-1 pt-0.5">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] leading-snug">
               {title}
             </h3>
             {description && (
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 {description}
               </p>
             )}
@@ -78,7 +70,7 @@ export function ConfirmModal({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2 pt-3 border-t border-[var(--border-subtle)]">
           <Button
             variant="outline"
             size="sm"

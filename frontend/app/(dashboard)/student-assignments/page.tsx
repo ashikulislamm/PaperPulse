@@ -8,10 +8,10 @@ import { queryKeys } from "@/lib/api/query-keys";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CountdownWidget } from "@/components/ui/countdown";
 import { StatCard } from "@/components/common/stat-card";
-import { PageBanner } from "@/components/common/page-banner";
+import { PageHeader } from "@/components/common/page-header";
+import { ControlBar } from "@/components/common/control-bar";
 import {
   Clock,
   CheckCircle2,
@@ -50,7 +50,6 @@ export default function StudentAssignmentsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Query Fetch Student Assignments from DB
   const { data: assignmentsData } = useQuery({
     queryKey: queryKeys.studentAssignments.feed(selectedStatus),
     queryFn: async () => {
@@ -62,7 +61,7 @@ export default function StudentAssignmentsPage() {
           },
         });
         return response.data?.data?.items as StudentAssignmentFeedItem[];
-      } catch (e) {
+      } catch {
         return [];
       }
     },
@@ -76,91 +75,61 @@ export default function StudentAssignmentsPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Page Banner */}
-      <PageBanner
-        badge="Assignments"
-        heading="My Assignments"
-        description="Track deadlines, submit solution files, view evaluations, and manage submission revisions."
-        icon={<BookOpen className="h-5 w-5" />}
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="My Coursework &amp; Submissions"
+        description="Track active deadlines, submit solution artifacts, and review teacher assessments."
+        badge="Coursework"
+        icon={<BookOpen className="h-4 w-4" />}
       />
 
-      {/* Analytics Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+      {/* Analytics Metric Cards with Visual Hierarchy */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
-          title="Pending Tasks"
+          title="Pending Turn-In"
           value={itemsList.filter((i: StudentAssignmentFeedItem) => i.submissionStatus === "Pending").length}
-          subtext="Requires your action"
-          accentColor="indigo"
-          icon={<Clock className="h-5 w-5" />}
+          subtext="Requires submission prior to deadline"
+          icon={<Clock className="h-4 w-4 text-amber-500" />}
+          className="md:col-span-2"
+          isHero
         />
         <StatCard
-          title="Submitted Work"
+          title="Turned In"
           value={itemsList.filter((i: StudentAssignmentFeedItem) => i.submissionStatus === "Submitted").length}
-          subtext="Awaiting teacher review"
-          accentColor="sky"
-          icon={<CheckCircle2 className="h-5 w-5" />}
+          subtext="Awaiting evaluation"
+          icon={<CheckCircle2 className="h-4 w-4" />}
         />
         <StatCard
-          title="Graded Assessments"
+          title="Graded"
           value={itemsList.filter((i: StudentAssignmentFeedItem) => i.submissionStatus === "Graded").length}
           subtext="Evaluated & scored"
-          accentColor="emerald"
-          icon={<Trophy className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Overdue Tasks"
-          value={itemsList.filter((i: StudentAssignmentFeedItem) => i.submissionStatus === "Overdue").length}
-          subtext="Past deadline"
-          accentColor="rose"
-          icon={<AlertTriangle className="h-5 w-5" />}
+          icon={<Trophy className="h-4 w-4" />}
         />
       </div>
 
       {/* Filter & Control Bar */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="w-full md:w-80 relative">
-            <Input
-              placeholder="Search assignment by title..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      <ControlBar
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search assignment title..."
+        statusFilters={["All", "Pending", "Submitted", "Graded", "Overdue"]}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+      />
 
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            {["All", "Pending", "Submitted", "Graded", "Overdue"].map((status) => (
-              <button
-                key={status}
-                onClick={() => setSelectedStatus(status)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  selectedStatus === status
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      {/* Cards Grid Feed */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.length === 0 ? (
-          <div className="col-span-full p-6 sm:p-8 text-center glass-card border border-dashed border-slate-200 rounded-2xl">
-            <p className="text-sm font-bold text-slate-700">No assignments found matching &ldquo;{selectedStatus}&rdquo; filter.</p>
-          </div>
-        ) : (
-          filteredItems.map((item: StudentAssignmentFeedItem) => {
-            const targetId = item.assignmentId || item.id;
-            const isOverdue = new Date(item.dueDate).getTime() < Date.now() && item.submissionStatus !== "Submitted" && item.submissionStatus !== "Graded";
-
+      {/* Grid Content */}
+      {filteredItems.length === 0 ? (
+        <Card className="p-10 text-center text-xs text-[var(--text-muted)]">
+          No assignments match this criteria.
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredItems.map((item) => {
+            const assignmentId = item.assignmentId || item.id;
             return (
-              <Card key={targetId} className="glass-card p-6 flex flex-col justify-between space-y-4">
-                <div className="space-y-3">
+              <Card key={assignmentId} className="p-4 flex flex-col justify-between space-y-3">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <Badge
                       variant={
@@ -168,64 +137,66 @@ export default function StudentAssignmentsPage() {
                           ? "graded"
                           : item.submissionStatus === "Submitted"
                           ? "submitted"
-                          : isOverdue
+                          : item.submissionStatus === "Overdue"
                           ? "overdue"
                           : "warning"
                       }
                       dot
                     >
-                      {item.submissionStatus === "Graded" && item.gradeObtained !== undefined && item.gradeObtained !== null
-                        ? `Graded (${item.gradeObtained}/${item.maxMarks})`
-                        : item.submissionStatus}
+                      {item.submissionStatus}
                     </Badge>
-                    <span className="text-xs font-mono font-bold text-slate-600">
-                      {item.maxMarks} Points
+                    <span className="font-mono text-xs font-semibold">
+                      {item.maxMarks} Marks
                     </span>
                   </div>
 
                   <div>
                     <Link
-                      href={`/student-assignments/${targetId}`}
-                      className="text-lg font-extrabold text-[var(--text-primary)] hover:text-indigo-600 transition-colors line-clamp-1"
+                      href={`/student-assignments/${assignmentId}`}
+                      className="text-sm font-semibold text-[var(--text-primary)] hover:text-[var(--color-primary)] transition-colors line-clamp-1"
                     >
                       {item.title}
                     </Link>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
+                    <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-2 leading-relaxed">
                       {item.description}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <Badge variant="primary">{item.subjectName}</Badge>
-                    <Badge variant="default">{item.className}</Badge>
-                    {item.allowLateSubmissions && (
-                      <Badge variant="warning" className="text-[10px]">
-                        Late Allowed (-{item.latePenaltyPercentage}%)
-                      </Badge>
-                    )}
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-1">
+                      <Badge variant="primary">{item.subjectName}</Badge>
+                      <Badge variant="default">{item.className}</Badge>
+                    </div>
                   </div>
                 </div>
 
-                {/* Deadline Timer & CTA */}
-                <div className="space-y-3 pt-3 border-t border-[var(--border-subtle)]">
+                <div className="space-y-2.5 pt-2.5 border-t border-[var(--border-subtle)]">
                   <CountdownWidget dueDate={item.dueDate} />
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] font-mono text-slate-500">
-                      {item.hasSubmission ? "Version History Available" : "No Submission Yet"}
-                    </span>
-                    <Link href={`/student-assignments/${targetId}`}>
-                      <Button size="sm" variant="primary" className="gap-1 text-xs">
-                        Submission Studio <ChevronRight className="h-3.5 w-3.5" />
+                    {item.gradeObtained !== undefined ? (
+                      <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        Score: {item.gradeObtained} / {item.maxMarks}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-[var(--text-muted)]">
+                        Pass: {item.passMarks} pts
+                      </span>
+                    )}
+
+                    <Link href={`/student-assignments/${assignmentId}`}>
+                      <Button size="sm" variant="outline" className="gap-1 text-xs">
+                        {item.submissionStatus === "Pending" ? "Turn In" : "View Work"}
+                        <ChevronRight className="h-3 w-3" />
                       </Button>
                     </Link>
                   </div>
                 </div>
               </Card>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }

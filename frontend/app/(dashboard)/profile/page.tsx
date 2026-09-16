@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/common/page-header";
 import { User, KeyRound, Save } from "lucide-react";
-import { PageBanner } from "@/components/common/page-banner";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -45,7 +45,6 @@ export default function ProfilePage() {
   const [isUpdatingProfile, setIsUpdatingProfile] = React.useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
 
-  // Live DB Fetch for User Profile
   useQuery({
     queryKey: ["auth", "profile"],
     queryFn: async () => {
@@ -55,13 +54,12 @@ export default function ProfilePage() {
           updateUser(response.data.data);
         }
         return response.data?.data;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
   });
 
-  // Profile Form Hook
   const {
     register: registerProfile,
     handleSubmit: handleSubmitProfile,
@@ -76,7 +74,6 @@ export default function ProfilePage() {
     },
   });
 
-  // Password Form Hook
   const {
     register: registerPassword,
     handleSubmit: handleSubmitPassword,
@@ -100,7 +97,7 @@ export default function ProfilePage() {
         updateUser(response.data.data);
       }
       toast.success("Profile details updated successfully!");
-    } catch (err: any) {
+    } catch {
       toast.error("Failed to update profile.");
     } finally {
       setIsUpdatingProfile(false);
@@ -116,7 +113,7 @@ export default function ProfilePage() {
       });
       toast.success("Password changed successfully!");
       resetPasswordForm();
-    } catch (err: any) {
+    } catch {
       toast.error("Failed to change password.");
     } finally {
       setIsUpdatingPassword(false);
@@ -127,30 +124,30 @@ export default function ProfilePage() {
   const userName = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "User";
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      {/* Page Banner */}
-      <PageBanner
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="Account &amp; Security Settings"
+        description="Manage your profile information, contact points, and authentication credentials."
         badge="Profile"
-        heading="Account Settings & Profile"
-        description="Manage your personal information, contact details, and account password."
-        icon={<User className="h-5 w-5" />}
+        icon={<User className="h-4 w-4" />}
       />
 
       {/* Profile Overview Card */}
-      <Card className="p-6 glass-card flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
+      <Card className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <Avatar
             src={user?.avatarUrl}
             name={userName}
-            size="xl"
-            className="border-2 border-indigo-600 shadow-md"
+            size="lg"
+            className="border border-[var(--border-subtle)]"
           />
-          <div className="space-y-1 text-center sm:text-left">
-            <h2 className="text-xl font-extrabold text-[var(--text-primary)]">
+          <div className="space-y-0.5 text-center sm:text-left">
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">
               {user?.firstName} {user?.lastName}
             </h2>
-            <p className="text-xs font-mono text-[var(--text-secondary)]">{user?.email}</p>
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 pt-1">
+            <p className="text-xs font-mono text-[var(--text-muted)]">{user?.email}</p>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1 pt-1">
               {userRoles.map((role) => (
                 <Badge key={role} variant="primary">
                   {role}
@@ -169,21 +166,21 @@ export default function ProfilePage() {
           {
             id: "info",
             label: "Personal Details",
-            icon: <User className="h-4 w-4" />,
+            icon: <User className="h-3.5 w-3.5" />,
           },
           {
             id: "security",
             label: "Password & Security",
-            icon: <KeyRound className="h-4 w-4" />,
+            icon: <KeyRound className="h-3.5 w-3.5" />,
           },
         ]}
       />
 
       {/* Tab Body */}
       {activeTab === "info" ? (
-        <Card className="p-6 space-y-6">
-          <form onSubmit={handleSubmitProfile(onUpdateProfile)} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card className="p-5 space-y-4">
+          <form onSubmit={handleSubmitProfile(onUpdateProfile)} className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label="First Name"
                 error={profileErrors.firstName?.message}
@@ -211,15 +208,15 @@ export default function ProfilePage() {
             />
 
             <div className="flex justify-end pt-2">
-              <Button type="submit" variant="primary" isLoading={isUpdatingProfile} className="gap-2">
-                <Save className="h-4 w-4" /> Save Changes
+              <Button type="submit" variant="primary" size="sm" isLoading={isUpdatingProfile} className="gap-1.5">
+                <Save className="h-3.5 w-3.5" /> Save Changes
               </Button>
             </div>
           </form>
         </Card>
       ) : (
-        <Card className="p-6 space-y-6">
-          <form onSubmit={handleSubmitPassword(onChangePassword)} className="space-y-4 max-w-md">
+        <Card className="p-5 space-y-4">
+          <form onSubmit={handleSubmitPassword(onChangePassword)} className="space-y-3 max-w-md">
             <Input
               type="password"
               label="Current Password"
@@ -240,8 +237,8 @@ export default function ProfilePage() {
             />
 
             <div className="flex justify-end pt-2">
-              <Button type="submit" variant="primary" isLoading={isUpdatingPassword} className="gap-2">
-                <KeyRound className="h-4 w-4" /> Update Password
+              <Button type="submit" variant="primary" size="sm" isLoading={isUpdatingPassword} className="gap-1.5">
+                <KeyRound className="h-3.5 w-3.5" /> Update Password
               </Button>
             </div>
           </form>

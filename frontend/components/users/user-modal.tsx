@@ -38,6 +38,8 @@ export interface UserItem {
   phoneNumber?: string;
   status: string;
   roles: string[];
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 interface UserModalProps {

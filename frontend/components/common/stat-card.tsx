@@ -11,8 +11,8 @@ interface StatCardProps {
     value: string;
     isPositive: boolean;
   };
-  accentColor?: "indigo" | "emerald" | "amber" | "rose" | "sky";
   className?: string;
+  isHero?: boolean;
 }
 
 export function StatCard({
@@ -21,43 +21,39 @@ export function StatCard({
   subtext,
   icon,
   trend,
-  accentColor = "indigo",
   className,
+  isHero = false,
 }: StatCardProps) {
-  const accentGradients = {
-    indigo: "from-indigo-500/10 to-indigo-500/0 text-indigo-600 border-indigo-200/60",
-    emerald: "from-emerald-500/10 to-emerald-500/0 text-emerald-600 border-emerald-200/60",
-    amber: "from-amber-500/10 to-amber-500/0 text-amber-600 border-amber-200/60",
-    rose: "from-rose-500/10 to-rose-500/0 text-rose-600 border-rose-200/60",
-    sky: "from-sky-500/10 to-sky-500/0 text-sky-600 border-sky-200/60",
-  };
-
   return (
-    <Card className={cn("p-4 md:p-6 relative overflow-hidden glass-card", className)}>
-      {/* Accent Gradient Blur */}
-      <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br blur-2xl pointer-events-none -z-10", accentGradients[accentColor])} />
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+    <Card className={cn("p-4 sm:p-5 flex flex-col justify-between", className)}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-[var(--text-secondary)]">
           {title}
         </span>
         {icon && (
-          <div className={cn("h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center border shrink-0", accentGradients[accentColor])}>
+          <span className="text-slate-400 dark:text-slate-500 shrink-0">
             {icon}
-          </div>
+          </span>
         )}
       </div>
 
-      <div className="mt-4 flex items-baseline justify-between gap-2">
-        <div className="text-2xl md:text-3xl font-extrabold tracking-tight text-[var(--text-primary)] font-mono font-mono-numeric">
+      <div className="mt-3 flex items-baseline justify-between gap-2">
+        <div
+          className={cn(
+            "font-bold tracking-tight text-[var(--text-primary)] font-mono font-mono-numeric",
+            isHero ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"
+          )}
+        >
           {value}
         </div>
 
         {trend && (
           <span
             className={cn(
-              "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold font-mono",
-              trend.isPositive ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"
+              "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium font-mono border",
+              trend.isPositive
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200/60"
+                : "bg-rose-50 text-rose-700 border-rose-200/60"
             )}
           >
             {trend.isPositive ? "↑" : "↓"} {trend.value}
@@ -66,7 +62,7 @@ export function StatCard({
       </div>
 
       {subtext && (
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-1 text-[11px] text-[var(--text-muted)]">
           {subtext}
         </p>
       )}

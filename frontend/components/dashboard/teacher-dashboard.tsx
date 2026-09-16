@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { StatCard } from "@/components/common/stat-card";
+import { PageHeader } from "@/components/common/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,8 @@ import {
   GraduationCap,
   Plus,
   ChevronRight,
-  CheckCircle2,
   Clock,
-  FileText,
+  CheckCircle2,
 } from "lucide-react";
 
 interface TeacherPendingReviewDto {
@@ -60,100 +60,92 @@ export function TeacherDashboard({ userName }: { userName: string }) {
   const reviews = d?.recentPendingReviews ?? [];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Teacher Dashboard</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Welcome back, {userName}. Manage assignments and review student submissions.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/assignments">
-            <Button variant="primary" className="gap-2 shadow-sm">
-              <Plus className="h-4 w-4" /> New Assignment
-            </Button>
-          </Link>
-          <Link href="/grading">
-            <Button variant="outline" className="gap-2">
-              <GraduationCap className="h-4 w-4" /> Review Submissions
-            </Button>
-          </Link>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="Teacher Workspace"
+        description={`Active instruction portal for ${userName}. Review incoming student work and publish assignments.`}
+        badge="Teacher"
+        actions={
+          <>
+            <Link href="/assignments">
+              <Button variant="primary" size="sm" className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> New Assignment
+              </Button>
+            </Link>
+            <Link href="/grading">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <GraduationCap className="h-3.5 w-3.5" /> Review Submissions
+              </Button>
+            </Link>
+          </>
+        }
+      />
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Metric Row with Visual Hierarchy */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Primary Hero Metric: Pending Reviews needing teacher action */}
         <StatCard
-          title="My Assignments"
-          value={d?.myAssignmentsCount ?? 0}
-          subtext="Authored assignments"
-          accentColor="indigo"
-          icon={<BookOpen className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Pending Reviews"
+          title="Submissions Awaiting Grading"
           value={d?.pendingReviewsCount ?? 0}
-          subtext="Awaiting your grading"
-          accentColor="amber"
-          icon={<Clock className="h-5 w-5" />}
+          subtext="Unscored student submissions requiring evaluation"
+          icon={<Clock className="h-4 w-4 text-amber-500" />}
+          className="md:col-span-2"
+          isHero
         />
+
         <StatCard
-          title="Graded"
-          value={stats?.gradedCount ?? 0}
-          subtext={`of ${stats?.totalReceived ?? 0} total submissions`}
-          accentColor="emerald"
-          icon={<CheckCircle2 className="h-5 w-5" />}
+          title="Active Assignments"
+          value={d?.myAssignmentsCount ?? 0}
+          subtext="Authored by your faculty profile"
+          icon={<BookOpen className="h-4 w-4" />}
         />
+
         <StatCard
-          title="Avg. Score"
+          title="Average Class Score"
           value={`${(stats?.averageScorePercentage ?? 0).toFixed(1)}%`}
-          subtext="Across graded submissions"
-          accentColor="sky"
-          icon={<FileText className="h-5 w-5" />}
+          subtext={`Across ${stats?.gradedCount ?? 0} graded turn-ins`}
+          icon={<CheckCircle2 className="h-4 w-4" />}
         />
       </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8">
-        {/* Pending Reviews */}
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Pending Reviews Queue */}
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-amber-500" />
-              Recent Pending Reviews
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+              Pending Evaluation Queue
             </h2>
-            <Link href="/grading" className="text-xs font-bold text-indigo-600 hover:underline">
-              View All
+            <Link href="/grading" className="text-xs font-medium text-[var(--color-primary)] hover:underline">
+              View All Queue
             </Link>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {reviews.length === 0 ? (
-              <Card className="p-6 text-center text-xs text-slate-500">
-                No pending reviews.
+              <Card className="p-8 text-center text-xs text-[var(--text-muted)]">
+                No submissions currently awaiting grading.
               </Card>
             ) : (
               reviews.map((review) => (
-                <Card key={review.submissionId} className="p-4 glass-card">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {review.assignmentTitle}
-                      </p>
-                      <p className="text-xs text-[var(--text-muted)]">
-                        by {review.studentName}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {review.isLate && (
-                        <Badge variant="danger">Late</Badge>
-                      )}
-                      <Link href={`/grading/${review.submissionId}`}>
-                        <Button size="sm" variant="outline" className="gap-1 text-xs">
-                          Review <ChevronRight className="h-3 w-3" />
-                        </Button>
-                      </Link>
-                    </div>
+                <Card key={review.submissionId} className="p-3 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-semibold text-[var(--text-primary)]">
+                      {review.assignmentTitle}
+                    </p>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      Turned in by {review.studentName}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {review.isLate && (
+                      <Badge variant="danger" dot>Late</Badge>
+                    )}
+                    <Link href={`/grading/${review.submissionId}`}>
+                      <Button size="sm" variant="outline" className="text-xs gap-1">
+                        Evaluate <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </Link>
                   </div>
                 </Card>
               ))
@@ -162,46 +154,42 @@ export function TeacherDashboard({ userName }: { userName: string }) {
         </div>
 
         {/* Quick Actions */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-extrabold text-slate-900">Quick Actions</h2>
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+            Course Management
+          </h2>
 
-          <Card className="p-6 glass-card space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-indigo-100/80 text-indigo-600">
-                <BookOpen className="h-6 w-6" />
-              </div>
+          <div className="space-y-2">
+            <Card className="p-4 flex flex-col justify-between space-y-2">
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">Assignment Studio</h3>
-                <p className="text-xs text-slate-500">
-                  Create, edit, and manage your assignments.
+                <h3 className="text-xs font-semibold text-[var(--text-primary)]">Assignment Authoring Studio</h3>
+                <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                  Publish new problem sets, set deadlines, and upload attachments.
                 </p>
               </div>
-            </div>
-            <Link href="/assignments">
-              <Button variant="primary" className="w-full gap-2">
-                Manage Assignments ({d?.myAssignmentsCount ?? 0}) <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </Card>
+              <Link href="/assignments">
+                <Button variant="outline" size="sm" className="w-full justify-between">
+                  <span>Manage Authored Assignments</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </Card>
 
-          <Card className="p-6 glass-card space-y-4 border-emerald-200/80">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-emerald-100/80 text-emerald-600">
-                <GraduationCap className="h-6 w-6" />
-              </div>
+            <Card className="p-4 flex flex-col justify-between space-y-2">
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">Evaluation Center</h3>
-                <p className="text-xs text-slate-500">
-                  Score submissions, provide feedback, and issue grades.
+                <h3 className="text-xs font-semibold text-[var(--text-primary)]">Evaluation &amp; Feedback Center</h3>
+                <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                  Input scores, annotate submissions, and release marks to students.
                 </p>
               </div>
-            </div>
-            <Link href="/grading">
-              <Button variant="outline" className="w-full gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
-                Open Evaluation Center <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </Card>
+              <Link href="/grading">
+                <Button variant="outline" size="sm" className="w-full justify-between">
+                  <span>Open Evaluation Center</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

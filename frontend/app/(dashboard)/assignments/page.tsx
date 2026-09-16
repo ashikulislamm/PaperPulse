@@ -10,20 +10,18 @@ import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import { DataTable, Column } from "@/components/common/data-table";
 import { PaginationControl } from "@/components/common/pagination-control";
+import { PageHeader } from "@/components/common/page-header";
+import { ControlBar } from "@/components/common/control-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CountdownWidget } from "@/components/ui/countdown";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { AssignmentModal, AssignmentItem } from "@/components/assignments/assignment-modal";
 import { AssignmentActionDialog, ActionType } from "@/components/assignments/assignment-actions";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { PageBanner } from "@/components/common/page-banner";
 import {
   Plus,
-  LayoutGrid,
-  List,
   Pencil,
   CheckCircle2,
   ArrowLeftRight,
@@ -104,7 +102,6 @@ export default function AssignmentsPage() {
     },
   });
 
-  // Use real DB data returned by API query
   const assignmentsList = data?.items ?? [];
 
   const handleExecuteAction = async () => {
@@ -124,7 +121,7 @@ export default function AssignmentsPage() {
       }
       refetch();
       queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all() });
-    } catch (err) {
+    } catch {
       toast.error("Failed to perform action.");
     } finally {
       setIsActionLoading(false);
@@ -140,7 +137,7 @@ export default function AssignmentsPage() {
       toast.success("Assignment deleted.");
       setDeleteTarget(null);
       refetch();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete assignment.");
     }
   };
@@ -152,21 +149,21 @@ export default function AssignmentsPage() {
         <div className="flex flex-col">
           <Link
             href={`/assignments/${row.id}`}
-            className="font-bold text-[var(--text-primary)] hover:text-indigo-600 transition-colors"
+            className="font-semibold text-[var(--text-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
             {row.title}
           </Link>
-          <span className="text-xs text-[var(--text-secondary)] line-clamp-1">
+          <span className="text-[11px] text-[var(--text-secondary)] line-clamp-1">
             {row.description}
           </span>
         </div>
       ),
     },
     {
-      header: "Author Teacher",
+      header: "Teacher",
       cell: (row) => (
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-          <UserCheck className="h-3.5 w-3.5 text-indigo-600" />
+        <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+          <UserCheck className="h-3.5 w-3.5 text-slate-400" />
           <span>{row.teacherName || "Unassigned"}</span>
         </div>
       ),
@@ -202,31 +199,32 @@ export default function AssignmentsPage() {
     {
       header: "Max Marks",
       cell: (row) => (
-        <span className="font-mono text-xs font-bold text-slate-800">
+        <span className="font-mono text-xs font-semibold">
           {row.maxMarks} pts
         </span>
       ),
     },
     {
       header: "Actions",
+      className: "text-right",
       cell: (row) => (
         <DropdownMenu
           trigger={
-            <Button size="sm" variant="outline" className="gap-1.5">
+            <Button size="sm" variant="outline" className="gap-1 text-xs">
               <Settings2 className="h-3.5 w-3.5" /> Options
             </Button>
           }
           items={[
             {
               label: "View Specification",
-              icon: <Eye className="h-4 w-4 text-slate-500" />,
+              icon: <Eye className="h-3.5 w-3.5" />,
               onClick: () => router.push(`/assignments/${row.id}`),
             },
             ...(canManage
               ? [
                   {
                     label: "Edit Specification",
-                    icon: <Pencil className="h-4 w-4 text-slate-500" />,
+                    icon: <Pencil className="h-3.5 w-3.5" />,
                     onClick: () => {
                       setEditingAssignment(row);
                       setIsModalOpen(true);
@@ -235,7 +233,7 @@ export default function AssignmentsPage() {
                   ...(row.status === "Draft"
                     ? [{
                         label: "Publish Assignment",
-                        icon: <CheckCircle2 className="h-4 w-4 text-indigo-600" />,
+                        icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />,
                         onClick: () => {
                           setActionTarget(row);
                           setActionType("publish");
@@ -244,7 +242,7 @@ export default function AssignmentsPage() {
                     : row.status === "Published"
                     ? [{
                         label: "Close Submissions",
-                        icon: <Lock className="h-4 w-4 text-rose-600" />,
+                        icon: <Lock className="h-3.5 w-3.5 text-rose-600" />,
                         danger: true,
                         onClick: () => {
                           setActionTarget(row);
@@ -254,7 +252,7 @@ export default function AssignmentsPage() {
                     : row.status === "Closed"
                     ? [{
                         label: "Archive Assignment",
-                        icon: <ArrowLeftRight className="h-4 w-4 text-amber-600" />,
+                        icon: <ArrowLeftRight className="h-3.5 w-3.5 text-amber-600" />,
                         onClick: () => {
                           setActionTarget(row);
                           setActionType("archive");
@@ -263,7 +261,7 @@ export default function AssignmentsPage() {
                     : []),
                   {
                     label: "Delete Assignment",
-                    icon: <Trash2 className="h-4 w-4 text-rose-600" />,
+                    icon: <Trash2 className="h-3.5 w-3.5 text-rose-600" />,
                     danger: true,
                     onClick: () => setDeleteTarget(row),
                   },
@@ -280,83 +278,48 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Page Banner */}
-      <PageBanner
+    <div className="space-y-6">
+      {/* Universal Page Header */}
+      <PageHeader
+        heading="Assignments Studio"
+        description="Author, publish specifications, configure mark weights, and manage turn-in schedules."
         badge="Assignments"
-        heading="Assignment Authoring Studio"
-        description="Author, publish, edit specifications, and manage due dates for your assigned classes."
-        icon={<BookOpen className="h-5 w-5" />}
+        icon={<BookOpen className="h-4 w-4" />}
         actions={
           canManage ? (
             <Button
               variant="primary"
-              className="gap-2"
+              size="sm"
+              className="gap-1.5"
               onClick={() => {
                 setEditingAssignment(null);
                 setIsModalOpen(true);
               }}
             >
-              <Plus className="h-4 w-4" /> Create Assignment
+              <Plus className="h-3.5 w-3.5" /> Create Assignment
             </Button>
           ) : undefined
         }
       />
 
-      {/* Control Bar */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="w-full md:w-80 relative">
-            <Input
-              placeholder="Search assignment title..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      {/* Unified Reusable Control Bar */}
+      <ControlBar
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search assignment title..."
+        statusFilters={["All", "Draft", "Published", "Closed", "Archived"]}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
 
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            {["All", "Draft", "Published", "Closed", "Archived"].map((status) => (
-              <button
-                key={status}
-                onClick={() => setSelectedStatus(status)}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[40px] ${
-                  selectedStatus === status
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-1 bg-slate-50">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === "grid" ? "bg-white text-indigo-600 shadow-2xs" : "text-slate-500"
-              }`}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode("table")}
-              className={`p-1.5 rounded-md transition-colors ${
-                viewMode === "table" ? "bg-white text-indigo-600 shadow-2xs" : "text-slate-500"
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Content */}
+      {/* Content Rendering */}
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {assignmentsList.map((item) => (
-            <Card key={item.id} className="glass-card p-6 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
+            <Card key={item.id} className="p-4 flex flex-col justify-between space-y-3">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <Badge
                     variant={
@@ -372,7 +335,7 @@ export default function AssignmentsPage() {
                   >
                     {item.status}
                   </Badge>
-                  <span className="text-xs font-mono font-bold text-slate-600">
+                  <span className="text-[11px] font-mono font-semibold text-[var(--text-muted)]">
                     {item.maxMarks} Marks
                   </span>
                 </div>
@@ -380,33 +343,33 @@ export default function AssignmentsPage() {
                 <div>
                   <Link
                     href={`/assignments/${item.id}`}
-                    className="text-lg font-extrabold text-[var(--text-primary)] hover:text-indigo-600 transition-colors line-clamp-1"
+                    className="text-sm font-semibold text-[var(--text-primary)] hover:text-[var(--color-primary)] transition-colors line-clamp-1"
                   >
                     {item.title}
                   </Link>
-                  <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-2 leading-relaxed">
                     {item.description}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="primary">{item.subjectName || "Mathematics"}</Badge>
-                    <Badge variant="default">{item.className || "Grade 10-A"}</Badge>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="primary">{item.subjectName || "Subject"}</Badge>
+                    <Badge variant="default">{item.className || "Class"}</Badge>
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                    <UserCheck className="h-3 w-3 text-indigo-600" /> {item.teacherName || "Unassigned"}
+                  <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-1">
+                    <UserCheck className="h-3 w-3" /> {item.teacherName || "Unassigned"}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-3 border-t border-[var(--border-subtle)]">
+              <div className="space-y-2.5 pt-2.5 border-t border-[var(--border-subtle)]">
                 <CountdownWidget dueDate={item.dueDate} />
 
                 <div className="flex items-center justify-between pt-1">
                   <Link href={`/assignments/${item.id}`}>
                     <Button size="sm" variant="outline" className="text-xs">
-                      View Details
+                      Specification
                     </Button>
                   </Link>
 
@@ -414,13 +377,13 @@ export default function AssignmentsPage() {
                     <DropdownMenu
                       trigger={
                         <Button size="sm" variant="ghost">
-                          <Settings2 className="h-4 w-4" />
+                          <Settings2 className="h-3.5 w-3.5" />
                         </Button>
                       }
                       items={[
                         {
                           label: "Edit Specification",
-                          icon: <Pencil className="h-4 w-4 text-slate-500" />,
+                          icon: <Pencil className="h-3.5 w-3.5" />,
                           onClick: () => {
                             setEditingAssignment(item);
                             setIsModalOpen(true);
@@ -429,16 +392,17 @@ export default function AssignmentsPage() {
                         ...(item.status === "Draft"
                           ? [{
                               label: "Publish Assignment",
-                              icon: <CheckCircle2 className="h-4 w-4 text-indigo-600" />,
+                              icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />,
                               onClick: () => {
                                 setActionTarget(item);
+                                ActionType: "publish";
                                 setActionType("publish");
                               },
                             }]
                           : item.status === "Published"
                           ? [{
                               label: "Close Submissions",
-                              icon: <Lock className="h-4 w-4 text-rose-600" />,
+                              icon: <Lock className="h-3.5 w-3.5 text-rose-600" />,
                               danger: true,
                               onClick: () => {
                                 setActionTarget(item);
@@ -448,7 +412,7 @@ export default function AssignmentsPage() {
                           : item.status === "Closed"
                           ? [{
                               label: "Archive Assignment",
-                              icon: <ArrowLeftRight className="h-4 w-4 text-amber-600" />,
+                              icon: <ArrowLeftRight className="h-3.5 w-3.5 text-amber-600" />,
                               onClick: () => {
                                 setActionTarget(item);
                                 setActionType("archive");
@@ -457,7 +421,7 @@ export default function AssignmentsPage() {
                           : []),
                         {
                           label: "Delete Assignment",
-                          icon: <Trash2 className="h-4 w-4 text-rose-600" />,
+                          icon: <Trash2 className="h-3.5 w-3.5 text-rose-600" />,
                           danger: true,
                           onClick: () => setDeleteTarget(item),
                         },
@@ -470,7 +434,7 @@ export default function AssignmentsPage() {
           ))}
         </div>
       ) : (
-        <Card className="p-4">
+        <div className="space-y-3">
           <DataTable
             columns={columns}
             data={assignmentsList}
@@ -485,7 +449,7 @@ export default function AssignmentsPage() {
             onPageChange={setPageNumber}
             onPageSizeChange={setPageSize}
           />
-        </Card>
+        </div>
       )}
 
       {/* Authoring Studio Modal */}

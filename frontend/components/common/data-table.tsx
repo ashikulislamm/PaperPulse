@@ -45,25 +45,25 @@ export function DataTable<T extends object>({
   };
 
   return (
-    <div className={cn("w-full overflow-hidden rounded-xl border border-[var(--border-subtle)] glass-panel shadow-sm", className)}>
+    <div className={cn("w-full overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)]", className)}>
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-[var(--text-primary)]">
-          <thead className="bg-slate-100/70 border-b border-[var(--border-subtle)] text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] select-none">
+        <table className="w-full text-left text-xs text-slate-800">
+          <thead className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500 select-none">
             <tr>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
                   onClick={() => handleSort(col)}
                   className={cn(
-                    "px-4 py-3.5",
+                    "px-3.5 py-2.5",
                     col.sortable && "cursor-pointer hover:text-indigo-600 transition-colors",
                     col.className
                   )}
                 >
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <span>{col.header}</span>
                     {col.sortable && (
-                      <span className="text-slate-400">
+                      <span className="text-slate-400 text-[10px]">
                         {sortKey === col.accessorKey ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
                       </span>
                     )}
@@ -72,33 +72,31 @@ export function DataTable<T extends object>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border-subtle)]/60 bg-white/60">
+          <tbody className="divide-y divide-[var(--border-subtle)]">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, rIdx) => (
                 <tr key={rIdx}>
                   {columns.map((_, cIdx) => (
-                    <td key={cIdx} className="px-4 py-4">
-                      <Skeleton className="h-4 w-full max-w-[120px]" />
+                    <td key={cIdx} className="px-3.5 py-3">
+                      <Skeleton className="h-3.5 w-full max-w-[120px]" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="h-12 w-12 rounded-2xl bg-slate-100/80 flex items-center justify-center text-slate-400">
-                      <FolderOpen className="h-6 w-6" />
-                    </div>
-                    <p className="text-sm font-semibold text-[var(--text-secondary)]">{emptyMessage}</p>
+                <td colSpan={columns.length} className="px-4 py-10 text-center">
+                  <div className="flex flex-col items-center justify-center gap-1.5 text-[var(--text-muted)]">
+                    <FolderOpen className="h-5 w-5" />
+                    <p className="text-xs">{emptyMessage}</p>
                   </div>
                 </td>
               </tr>
             ) : (
               data.map((row, rIdx) => (
-                <tr key={rIdx} className="hover:bg-indigo-50/30 transition-colors">
+                <tr key={rIdx} className="hover:bg-slate-50/80 transition-colors">
                   {columns.map((col, cIdx) => (
-                    <td key={cIdx} className={cn("px-4 py-3.5 text-sm", col.className)}>
+                    <td key={cIdx} className={cn("px-3.5 py-3", col.className)}>
                       {col.cell
                         ? col.cell(row)
                         : col.accessorKey

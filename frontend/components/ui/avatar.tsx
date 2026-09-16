@@ -29,7 +29,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 font-bold text-white shadow-sm overflow-hidden shrink-0 border border-white/20 select-none",
+        "relative inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200/90 overflow-hidden shrink-0 select-none shadow-none",
         sizeClasses[size],
         className
       )}

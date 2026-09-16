@@ -90,9 +90,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card className="glass-card p-6 border border-slate-200/90 shadow-xl">
-      <CardHeader className="p-0 pb-6 text-center space-y-1">
-        <CardTitle className="text-xl font-bold">Create Your Account</CardTitle>
+    <Card className="p-6 border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm">
+      <CardHeader className="p-0 pb-5 text-center space-y-1">
+        <CardTitle className="text-lg font-bold">Create Account</CardTitle>
         <CardDescription>
           Register as a Student or Teacher to join PaperPulse.
         </CardDescription>
