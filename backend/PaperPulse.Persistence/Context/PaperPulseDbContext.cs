@@ -8,9 +8,14 @@ namespace PaperPulse.Persistence.Context;
 
 public class PaperPulseDbContext : DbContext, IApplicationDbContext
 {
-    public PaperPulseDbContext(DbContextOptions<PaperPulseDbContext> options)
+    private readonly ICurrentUserService? _currentUserService;
+
+    public PaperPulseDbContext(
+        DbContextOptions<PaperPulseDbContext> options,
+        ICurrentUserService? currentUserService = null)
         : base(options)
     {
+        _currentUserService = currentUserService;
     }
 
     public DbSet<AcademicTerm> AcademicTerms => Set<AcademicTerm>();
@@ -59,6 +64,7 @@ public class PaperPulseDbContext : DbContext, IApplicationDbContext
     {
         var entries = ChangeTracker.Entries<BaseEntity>();
         var now = DateTimeOffset.UtcNow;
+        var currentUserId = _currentUserService?.UserId;
 
         foreach (var entry in entries)
         {
@@ -68,10 +74,12 @@ public class PaperPulseDbContext : DbContext, IApplicationDbContext
                     entry.Entity.CreatedAt = now;
                     entry.Entity.UpdatedAt = now;
                     entry.Entity.IsDeleted = false;
+                    if (currentUserId.HasValue) entry.Entity.CreatedBy = currentUserId.Value;
                     break;
 
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
+                    if (currentUserId.HasValue) entry.Entity.UpdatedBy = currentUserId.Value;
                     break;
 
                 case EntityState.Deleted:
@@ -80,6 +88,7 @@ public class PaperPulseDbContext : DbContext, IApplicationDbContext
                     entry.Entity.IsDeleted = true;
                     entry.Entity.DeletedAt = now;
                     entry.Entity.UpdatedAt = now;
+                    if (currentUserId.HasValue) entry.Entity.DeletedBy = currentUserId.Value;
                     break;
             }
         }

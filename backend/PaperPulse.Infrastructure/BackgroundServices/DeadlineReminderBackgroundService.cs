@@ -21,9 +21,12 @@ public class DeadlineReminderBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Allow application host and seeding to complete
+        await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
+
         using var timer = new PeriodicTimer(TimeSpan.FromHours(1));
 
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        do
         {
             try
             {
@@ -40,6 +43,6 @@ public class DeadlineReminderBackgroundService : BackgroundService
             {
                 _logger.LogError(ex, "Error occurred in DeadlineReminderBackgroundService.");
             }
-        }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 }

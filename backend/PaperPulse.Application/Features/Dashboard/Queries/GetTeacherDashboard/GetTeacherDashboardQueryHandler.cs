@@ -51,29 +51,29 @@ public class GetTeacherDashboardQueryHandler : IRequestHandler<GetTeacherDashboa
 
         var totalReceived = await submissionsQuery.CountAsync(cancellationToken);
 
-        var pendingSubmissions = await submissionsQuery
-            .Where(s => s.Status == SubmissionStatus.Submitted || s.Status == SubmissionStatus.LateSubmitted)
-            .OrderByDescending(s => s.SubmittedAt)
-            .ToListAsync(cancellationToken);
+        var pendingReviewsCount = await submissionsQuery
+            .CountAsync(s => s.Status == SubmissionStatus.Submitted || s.Status == SubmissionStatus.LateSubmitted, cancellationToken);
 
-        var pendingReviewsCount = pendingSubmissions.Count;
-
-        var gradedSubmissions = await submissionsQuery
-            .Where(s => (s.Status == SubmissionStatus.Graded || s.Status == SubmissionStatus.Returned) && s.Mark != null)
-            .ToListAsync(cancellationToken);
-
-        var gradedCount = gradedSubmissions.Count;
+        var gradedCount = await submissionsQuery
+            .CountAsync(s => (s.Status == SubmissionStatus.Graded || s.Status == SubmissionStatus.Returned) && s.Mark != null, cancellationToken);
 
         double averageScorePercentage = 0.0;
         if (gradedCount > 0)
         {
-            var percentages = gradedSubmissions
-                .Where(s => s.Assignment.MaxMarks > 0)
-                .Select(s => (double)(s.Mark!.ScoreObtained / s.Assignment.MaxMarks) * 100);
+            var hasGradedWithMarks = await submissionsQuery
+                .AnyAsync(s => (s.Status == SubmissionStatus.Graded || s.Status == SubmissionStatus.Returned) && 
+                               s.Mark != null && 
+                               s.Assignment.MaxMarks > 0, cancellationToken);
 
-            if (percentages.Any())
+            if (hasGradedWithMarks)
             {
-                averageScorePercentage = Math.Round(percentages.Average(), 1);
+                var avg = await submissionsQuery
+                    .Where(s => (s.Status == SubmissionStatus.Graded || s.Status == SubmissionStatus.Returned) && 
+                                s.Mark != null && 
+                                s.Assignment.MaxMarks > 0)
+                    .AverageAsync(s => (double)(s.Mark!.ScoreObtained / s.Assignment.MaxMarks) * 100.0, cancellationToken);
+
+                averageScorePercentage = Math.Round(avg, 1);
             }
         }
 
@@ -84,14 +84,19 @@ public class GetTeacherDashboardQueryHandler : IRequestHandler<GetTeacherDashboa
             averageScorePercentage
         );
 
-        var recentPending = pendingSubmissions.Take(5).Select(s => new TeacherPendingReviewDto(
-            s.Id,
-            s.AssignmentId,
-            s.Assignment.Title,
-            $"{s.Student.FirstName} {s.Student.LastName}",
-            s.SubmittedAt,
-            s.Status == SubmissionStatus.LateSubmitted
-        )).ToList();
+        var recentPending = await submissionsQuery
+            .Where(s => s.Status == SubmissionStatus.Submitted || s.Status == SubmissionStatus.LateSubmitted)
+            .OrderByDescending(s => s.SubmittedAt)
+            .Take(5)
+            .Select(s => new TeacherPendingReviewDto(
+                s.Id,
+                s.AssignmentId,
+                s.Assignment.Title,
+                $"{s.Student.FirstName} {s.Student.LastName}",
+                s.SubmittedAt,
+                s.Status == SubmissionStatus.LateSubmitted
+            ))
+            .ToListAsync(cancellationToken);
 
         return new TeacherDashboardDto(
             myAssignmentsCount,

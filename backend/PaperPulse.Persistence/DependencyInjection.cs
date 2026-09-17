@@ -93,7 +93,7 @@ public static class DependencyInjection
 
                 var builder = new NpgsqlConnectionStringBuilder
                 {
-                    Host = ResolveIpv4(host),
+                    Host = host,
                     Port = port,
                     Database = string.IsNullOrWhiteSpace(database) ? "postgres" : database,
                     Username = username,

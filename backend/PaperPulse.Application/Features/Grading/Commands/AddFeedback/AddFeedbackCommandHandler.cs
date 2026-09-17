@@ -54,6 +54,11 @@ public class AddFeedbackCommandHandler : IRequestHandler<AddFeedbackCommand, Fee
         var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
         var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
 
+        if (!isTeacher && !isAdmin)
+        {
+            throw new ForbiddenException("Only teachers or administrators can add feedback.");
+        }
+
         if (isTeacher && !isAdmin && submission.Assignment.TeacherAssignment.TeacherId != teacherId.Value)
         {
             throw new ForbiddenException("You can only add feedback for assignments assigned to you.");

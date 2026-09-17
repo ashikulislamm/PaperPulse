@@ -70,18 +70,24 @@ public class GetStudentGradesQueryHandler : IRequestHandler<GetStudentGradesQuer
         var dtos = submissions.Select(s =>
         {
             var mark = s.Mark!;
-            var teacherName = $"{mark.Teacher.FirstName} {mark.Teacher.LastName}";
+            var teacherName = mark.Teacher != null ? $"{mark.Teacher.FirstName} {mark.Teacher.LastName}" : "Instructor";
             var feedbackComments = s.Feedbacks.Select(f => f.Comments).ToList();
+
+            var assignmentTitle = s.Assignment?.Title ?? "Archived Assignment";
+            var className = s.Assignment?.TeacherAssignment?.ClassSubject?.Class?.Name ?? "Archived Class";
+            var subjectName = s.Assignment?.TeacherAssignment?.ClassSubject?.Subject?.Name ?? "Archived Subject";
+            var maxMarks = s.Assignment?.MaxMarks ?? 100m;
+            var passMarks = s.Assignment?.PassMarks ?? 40m;
 
             return new StudentGradeSummaryDto(
                 s.Id,
                 s.AssignmentId,
-                s.Assignment.Title,
-                s.Assignment.TeacherAssignment.ClassSubject.Class.Name,
-                s.Assignment.TeacherAssignment.ClassSubject.Subject.Name,
+                assignmentTitle,
+                className,
+                subjectName,
                 mark.ScoreObtained,
-                s.Assignment.MaxMarks,
-                s.Assignment.PassMarks,
+                maxMarks,
+                passMarks,
                 mark.IsPassed,
                 s.Status.ToString(),
                 mark.GradedAt,

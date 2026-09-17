@@ -19,7 +19,7 @@ public class AutoCloseAssignmentsCommandHandler : IRequestHandler<AutoCloseAssig
         var now = DateTimeOffset.UtcNow;
 
         var expiredAssignments = await _context.Assignments
-            .Where(a => a.Status == AssignmentStatus.Published && a.DueDate <= now)
+            .Where(a => a.Status == AssignmentStatus.Published && a.DueDate <= now && !a.AllowLateSubmission)
             .ToListAsync(cancellationToken);
 
         if (!expiredAssignments.Any()) return 0;

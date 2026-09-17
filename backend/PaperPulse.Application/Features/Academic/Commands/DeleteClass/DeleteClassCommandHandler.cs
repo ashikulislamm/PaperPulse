@@ -31,6 +31,33 @@ public class DeleteClassCommandHandler : IRequestHandler<DeleteClassCommand, Uni
                 .ThenInclude(ta => ta.Assignments)
             .ToListAsync(cancellationToken);
 
+        var assignmentIds = classSubjects
+            .SelectMany(cs => cs.TeacherAssignments)
+            .SelectMany(ta => ta.Assignments)
+            .Select(a => a.Id)
+            .ToList();
+
+        if (assignmentIds.Any())
+        {
+            var hasSubmissions = await _context.StudentSubmissions
+                .AnyAsync(s => assignmentIds.Contains(s.AssignmentId), cancellationToken);
+
+            if (hasSubmissions)
+            {
+                throw new BadRequestException("Cannot delete class because it contains assignments with student submissions.");
+            }
+        }
+
+        // Remove student enrollments for this class
+        var enrollments = await _context.StudentEnrollments
+            .Where(se => se.ClassId == request.Id)
+            .ToListAsync(cancellationToken);
+
+        if (enrollments.Any())
+        {
+            _context.StudentEnrollments.RemoveRange(enrollments);
+        }
+
         // Remove in reverse dependency order
         foreach (var cs in classSubjects)
         {

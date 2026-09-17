@@ -21,9 +21,12 @@ public class NotificationCleanupBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Allow application host and seeding to complete
+        await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+
         using var timer = new PeriodicTimer(TimeSpan.FromHours(24));
 
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        do
         {
             try
             {
@@ -40,6 +43,6 @@ public class NotificationCleanupBackgroundService : BackgroundService
             {
                 _logger.LogError(ex, "Error occurred in NotificationCleanupBackgroundService.");
             }
-        }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 }

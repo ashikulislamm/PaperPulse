@@ -53,7 +53,13 @@ public class LocalFileStorageService : IFileStorageService
         }
 
         var rootPath = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
-        var fullPath = Path.Combine(rootPath, filePath.Replace("/", "\\"));
+        var canonicalRootPath = Path.GetFullPath(rootPath);
+        var fullPath = Path.GetFullPath(Path.Combine(rootPath, filePath.Replace("/", "\\")));
+
+        if (!fullPath.StartsWith(canonicalRootPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.FromResult(false);
+        }
 
         if (File.Exists(fullPath))
         {

@@ -103,23 +103,79 @@ public class DatabaseSeederService : IDatabaseSeeder
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // 2. Upsert Permissions Catalog
+        // 2. Upsert Permissions Catalog (Synchronized with PaperPulse.Domain.Constants.Permissions)
         var permissionsToSeed = new (string Code, string Category, string Description)[]
         {
-            ("users:read", "Users", "View user profiles"),
-            ("users:write", "Users", "Create and edit users"),
-            ("users:delete", "Users", "Soft delete users"),
-            ("classes:manage", "Academic", "Manage classes and subject allocations"),
-            ("enrollments:manage", "Academic", "Manage student class enrollments"),
-            ("assignments:read", "Assignments", "View published assignments"),
-            ("assignments:create", "Assignments", "Create and publish assignments"),
-            ("assignments:update", "Assignments", "Edit assignment specifications"),
-            ("submissions:submit", "Submissions", "Submit solutions for assignments"),
-            ("submissions:grade", "Submissions", "Grade student submissions and provide feedback"),
-            ("submissions:view_all", "Submissions", "View all submissions across classes")
+            (Domain.Constants.Permissions.Dashboard.View, "Dashboard", "View dashboard analytics"),
+
+            (Domain.Constants.Permissions.Users.View, "Users", "View user accounts"),
+            (Domain.Constants.Permissions.Users.Create, "Users", "Create new users"),
+            (Domain.Constants.Permissions.Users.Update, "Users", "Update user details"),
+            (Domain.Constants.Permissions.Users.Delete, "Users", "Soft delete users"),
+            (Domain.Constants.Permissions.Users.Activate, "Users", "Activate user accounts"),
+            (Domain.Constants.Permissions.Users.Deactivate, "Users", "Deactivate user accounts"),
+
+            (Domain.Constants.Permissions.Roles.View, "Roles", "View roles"),
+            (Domain.Constants.Permissions.Roles.Assign, "Roles", "Assign roles to users"),
+
+            (Domain.Constants.Permissions.SystemPermissions.View, "Permissions", "View system permissions"),
+
+            (Domain.Constants.Permissions.Profile.View, "Profile", "View own profile"),
+            (Domain.Constants.Permissions.Profile.Update, "Profile", "Update own profile"),
+
+            (Domain.Constants.Permissions.Classes.View, "Academic", "View academic classes"),
+            (Domain.Constants.Permissions.Classes.Create, "Academic", "Create academic classes"),
+            (Domain.Constants.Permissions.Classes.Update, "Academic", "Update academic classes"),
+            (Domain.Constants.Permissions.Classes.Delete, "Academic", "Delete academic classes"),
+
+            (Domain.Constants.Permissions.Subjects.View, "Academic", "View subjects"),
+            (Domain.Constants.Permissions.Subjects.Create, "Academic", "Create subjects"),
+            (Domain.Constants.Permissions.Subjects.Update, "Academic", "Update subjects"),
+            (Domain.Constants.Permissions.Subjects.Delete, "Academic", "Delete subjects"),
+
+            (Domain.Constants.Permissions.TeacherAssignments.View, "Academic", "View teacher allocations"),
+            (Domain.Constants.Permissions.TeacherAssignments.Create, "Academic", "Allocate teachers to subjects"),
+            (Domain.Constants.Permissions.TeacherAssignments.Update, "Academic", "Update teacher allocations"),
+            (Domain.Constants.Permissions.TeacherAssignments.Delete, "Academic", "Remove teacher allocations"),
+
+            (Domain.Constants.Permissions.StudentEnrollments.View, "Academic", "View student class enrollments"),
+            (Domain.Constants.Permissions.StudentEnrollments.Create, "Academic", "Enroll students in classes"),
+            (Domain.Constants.Permissions.StudentEnrollments.Delete, "Academic", "Unenroll students from classes"),
+
+            (Domain.Constants.Permissions.Assignments.View, "Assignments", "View published assignments"),
+            (Domain.Constants.Permissions.Assignments.Details, "Assignments", "View assignment details and attachments"),
+            (Domain.Constants.Permissions.Assignments.Create, "Assignments", "Create assignments"),
+            (Domain.Constants.Permissions.Assignments.Update, "Assignments", "Edit assignments"),
+            (Domain.Constants.Permissions.Assignments.Delete, "Assignments", "Delete assignments"),
+            (Domain.Constants.Permissions.Assignments.Publish, "Assignments", "Publish assignments"),
+            (Domain.Constants.Permissions.Assignments.Archive, "Assignments", "Archive assignments"),
+
+            (Domain.Constants.Permissions.Submissions.View, "Submissions", "View submissions"),
+            (Domain.Constants.Permissions.Submissions.Create, "Submissions", "Submit work for assignments"),
+            (Domain.Constants.Permissions.Submissions.Update, "Submissions", "Resubmit work"),
+            (Domain.Constants.Permissions.Submissions.Delete, "Submissions", "Delete submissions"),
+            (Domain.Constants.Permissions.Submissions.Review, "Submissions", "Review submissions for grading"),
+
+            (Domain.Constants.Permissions.Grades.View, "Grades", "View grades and scores"),
+            (Domain.Constants.Permissions.Grades.Create, "Grades", "Assign grades to submissions"),
+            (Domain.Constants.Permissions.Grades.Update, "Grades", "Return graded submissions"),
+
+            (Domain.Constants.Permissions.Feedback.View, "Feedback", "View feedback comments"),
+            (Domain.Constants.Permissions.Feedback.Create, "Feedback", "Add feedback comments"),
+            (Domain.Constants.Permissions.Feedback.Update, "Feedback", "Edit feedback comments"),
+
+            (Domain.Constants.Permissions.Notifications.View, "Notifications", "View in-app notifications"),
+            (Domain.Constants.Permissions.Notifications.Send, "Notifications", "Trigger system notifications"),
+
+            (Domain.Constants.Permissions.AuditLogs.View, "AuditLogs", "View security audit logs"),
+
+            (Domain.Constants.Permissions.Settings.View, "Settings", "View system settings"),
+            (Domain.Constants.Permissions.Settings.Update, "Settings", "Update system settings"),
+
+            (Domain.Constants.Permissions.Reports.View, "Reports", "View institutional reports")
         };
 
-        var permissionList = new List<Permission>();
+        var permissionMap = new Dictionary<string, Permission>();
 
         foreach (var p in permissionsToSeed)
         {
@@ -143,26 +199,93 @@ public class DatabaseSeederService : IDatabaseSeeder
                 existingPerm.Description = p.Description;
             }
 
-            permissionList.Add(existingPerm);
+            permissionMap[p.Code] = existingPerm;
         }
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // 3. Upsert RolePermissions for Admin Role (100% Capabilities)
+        // 3. Upsert RolePermissions
         var adminRole = roleMap[RoleType.Admin];
-        foreach (var perm in permissionList)
+        var teacherRole = roleMap[RoleType.Teacher];
+        var studentRole = roleMap[RoleType.Student];
+
+        var teacherPermissionCodes = new HashSet<string>
         {
-            var exists = await _context.RolePermissions
+            Domain.Constants.Permissions.Dashboard.View,
+            Domain.Constants.Permissions.Profile.View,
+            Domain.Constants.Permissions.Profile.Update,
+            Domain.Constants.Permissions.Classes.View,
+            Domain.Constants.Permissions.Subjects.View,
+            Domain.Constants.Permissions.TeacherAssignments.View,
+            Domain.Constants.Permissions.StudentEnrollments.View,
+            Domain.Constants.Permissions.Assignments.View,
+            Domain.Constants.Permissions.Assignments.Details,
+            Domain.Constants.Permissions.Assignments.Create,
+            Domain.Constants.Permissions.Assignments.Update,
+            Domain.Constants.Permissions.Assignments.Delete,
+            Domain.Constants.Permissions.Assignments.Publish,
+            Domain.Constants.Permissions.Assignments.Archive,
+            Domain.Constants.Permissions.Submissions.View,
+            Domain.Constants.Permissions.Submissions.Review,
+            Domain.Constants.Permissions.Grades.View,
+            Domain.Constants.Permissions.Grades.Create,
+            Domain.Constants.Permissions.Grades.Update,
+            Domain.Constants.Permissions.Feedback.View,
+            Domain.Constants.Permissions.Feedback.Create,
+            Domain.Constants.Permissions.Feedback.Update,
+            Domain.Constants.Permissions.Notifications.View
+        };
+
+        var studentPermissionCodes = new HashSet<string>
+        {
+            Domain.Constants.Permissions.Dashboard.View,
+            Domain.Constants.Permissions.Profile.View,
+            Domain.Constants.Permissions.Profile.Update,
+            Domain.Constants.Permissions.Classes.View,
+            Domain.Constants.Permissions.Subjects.View,
+            Domain.Constants.Permissions.Assignments.View,
+            Domain.Constants.Permissions.Assignments.Details,
+            Domain.Constants.Permissions.Submissions.View,
+            Domain.Constants.Permissions.Submissions.Create,
+            Domain.Constants.Permissions.Submissions.Update,
+            Domain.Constants.Permissions.Grades.View,
+            Domain.Constants.Permissions.Feedback.View,
+            Domain.Constants.Permissions.Notifications.View
+        };
+
+        foreach (var (code, perm) in permissionMap)
+        {
+            // Admin gets 100% permissions
+            var adminHas = await _context.RolePermissions
                 .IgnoreQueryFilters()
                 .AnyAsync(rp => rp.RoleId == adminRole.Id && rp.PermissionId == perm.Id, cancellationToken);
-
-            if (!exists)
+            if (!adminHas)
             {
-                _context.RolePermissions.Add(new RolePermission
+                _context.RolePermissions.Add(new RolePermission { RoleId = adminRole.Id, PermissionId = perm.Id });
+            }
+
+            // Teacher permissions
+            if (teacherPermissionCodes.Contains(code))
+            {
+                var teacherHas = await _context.RolePermissions
+                    .IgnoreQueryFilters()
+                    .AnyAsync(rp => rp.RoleId == teacherRole.Id && rp.PermissionId == perm.Id, cancellationToken);
+                if (!teacherHas)
                 {
-                    RoleId = adminRole.Id,
-                    PermissionId = perm.Id
-                });
+                    _context.RolePermissions.Add(new RolePermission { RoleId = teacherRole.Id, PermissionId = perm.Id });
+                }
+            }
+
+            // Student permissions
+            if (studentPermissionCodes.Contains(code))
+            {
+                var studentHas = await _context.RolePermissions
+                    .IgnoreQueryFilters()
+                    .AnyAsync(rp => rp.RoleId == studentRole.Id && rp.PermissionId == perm.Id, cancellationToken);
+                if (!studentHas)
+                {
+                    _context.RolePermissions.Add(new RolePermission { RoleId = studentRole.Id, PermissionId = perm.Id });
+                }
             }
         }
 

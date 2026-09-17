@@ -46,7 +46,6 @@ public class UploadSubmissionAttachmentCommandHandler
             "application/zip",
             "application/x-zip-compressed",
             "application/x-rar-compressed",
-            "application/octet-stream",
             "text/plain",
             "image/png",
             "image/jpeg"
@@ -55,7 +54,7 @@ public class UploadSubmissionAttachmentCommandHandler
         var ext = Path.GetExtension(request.FileName).ToLowerInvariant();
         var allowedExts = new[] { ".pdf", ".docx", ".doc", ".zip", ".rar", ".txt", ".png", ".jpg", ".jpeg" };
 
-        if (!allowedTypes.Contains(request.ContentType) && !allowedExts.Contains(ext))
+        if (!allowedExts.Contains(ext) || !allowedTypes.Contains(request.ContentType))
             throw new ValidationException("Invalid file type. Allowed: PDF, DOCX, ZIP, TXT, Images.");
 
         if (request.FileStream.Length > 25 * 1024 * 1024)

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Features.Auth.DTOs;
 using PaperPulse.Domain.Entities;
+using PaperPulse.Domain.Enums;
 using PaperPulse.Domain.Exceptions;
 
 namespace PaperPulse.Application.Features.Auth.Commands.RefreshToken;
@@ -49,6 +50,11 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         if (user == null || user.IsDeleted)
         {
             throw new UnauthorizedException("User not found or inactive.");
+        }
+
+        if (user.Status != UserStatus.Active)
+        {
+            throw new ForbiddenException($"User account is '{user.Status}'. Please contact administrator.");
         }
 
         // 3. Compute incoming token hash

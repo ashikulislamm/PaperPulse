@@ -69,6 +69,8 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
         var pageNumber = Math.Max(1, request.PageNumber);
         var cappedPageSize = Math.Clamp(request.PageSize > 0 ? request.PageSize : 10, 1, 100);
 
+        query = query.OrderByDescending(a => a.CreatedAt);
+
         var totalCount = await query.CountAsync(cancellationToken);
 
         var logs = await query

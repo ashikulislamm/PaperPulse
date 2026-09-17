@@ -37,6 +37,12 @@ public class GlobalExceptionHandlerMiddleware
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning("The response has already started; the global exception handler cannot write the error response.");
+            return Task.CompletedTask;
+        }
+
         context.Response.ContentType = "application/json";
 
         var traceId = context.TraceIdentifier;

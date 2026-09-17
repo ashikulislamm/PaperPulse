@@ -33,16 +33,32 @@ public class GetAdminDashboardQueryHandler : IRequestHandler<GetAdminDashboardQu
             .AsNoTracking()
             .CountAsync(cancellationToken);
 
-        var submissionsQuery = _context.StudentSubmissions.AsNoTracking();
+        var submissionStats = await _context.StudentSubmissions
+            .AsNoTracking()
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Graded = g.Count(s => s.Status == SubmissionStatus.Graded || s.Status == SubmissionStatus.Returned),
+                Pending = g.Count(s => s.Status == SubmissionStatus.Submitted || s.Status == SubmissionStatus.LateSubmitted),
+                Late = g.Count(s => s.Status == SubmissionStatus.LateSubmitted)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
-        var totalSubmissions = await submissionsQuery.CountAsync(cancellationToken);
-        var gradedSubmissions = await submissionsQuery.CountAsync(s => s.Status == SubmissionStatus.Graded || s.Status == SubmissionStatus.Returned, cancellationToken);
-        var pendingSubmissions = await submissionsQuery.CountAsync(s => s.Status == SubmissionStatus.Submitted || s.Status == SubmissionStatus.LateSubmitted, cancellationToken);
-        var lateSubmissions = await submissionsQuery.CountAsync(s => s.Status == SubmissionStatus.LateSubmitted, cancellationToken);
+        var totalSubmissions = submissionStats?.Total ?? 0;
+        var gradedSubmissions = submissionStats?.Graded ?? 0;
+        var pendingSubmissions = submissionStats?.Pending ?? 0;
+        var lateSubmissions = submissionStats?.Late ?? 0;
 
-        var totalEnrollments = await _context.StudentEnrollments.AsNoTracking().CountAsync(cancellationToken);
-        var expectedSubmissions = totalAssignments * Math.Max(1, totalEnrollments);
-        var submissionRate = expectedSubmissions > 0 ? Math.Min(100.0, Math.Round((double)totalSubmissions / expectedSubmissions * 100, 1)) : 0.0;
+        var expectedSubmissions = await _context.Assignments
+            .AsNoTracking()
+            .Where(a => a.Status == AssignmentStatus.Published || a.Status == AssignmentStatus.Closed)
+            .Select(a => _context.StudentEnrollments.Count(se => se.ClassId == a.TeacherAssignment.ClassSubject.ClassId && se.IsActive))
+            .SumAsync(cancellationToken);
+
+        var submissionRate = expectedSubmissions > 0 
+            ? Math.Min(100.0, Math.Round((double)totalSubmissions / expectedSubmissions * 100, 1)) 
+            : 0.0;
 
         var stats = new AdminSubmissionStatsDto(
             totalSubmissions,

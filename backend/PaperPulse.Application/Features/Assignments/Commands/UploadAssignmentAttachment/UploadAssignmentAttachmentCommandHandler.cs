@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Domain.Entities;
+using PaperPulse.Domain.Enums;
 using PaperPulse.Domain.Exceptions;
 
 namespace PaperPulse.Application.Features.Assignments.Commands.UploadAssignmentAttachment;
@@ -11,13 +12,16 @@ public class UploadAssignmentAttachmentCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly IFileStorageService _fileStorageService;
+    private readonly ICurrentUserService _currentUserService;
 
     public UploadAssignmentAttachmentCommandHandler(
         IApplicationDbContext context,
-        IFileStorageService fileStorageService)
+        IFileStorageService fileStorageService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _fileStorageService = fileStorageService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<UploadAssignmentAttachmentResult> Handle(
@@ -31,6 +35,16 @@ public class UploadAssignmentAttachmentCommandHandler
         if (assignment == null)
             throw new NotFoundException($"Assignment with ID '{request.AssignmentId}' was not found.");
 
+        var teacherId = _currentUserService.UserId;
+        var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
+        var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
+
+        if (!isTeacher && !isAdmin)
+            throw new ForbiddenException("Only teachers or administrators can upload assignment attachments.");
+
+        if (isTeacher && !isAdmin && assignment.TeacherAssignment.TeacherId != teacherId)
+            throw new ForbiddenException("You can only upload attachments to assignments assigned to you.");
+
         var allowedTypes = new[]
         {
             "application/pdf",
@@ -39,7 +53,6 @@ public class UploadAssignmentAttachmentCommandHandler
             "application/zip",
             "application/x-zip-compressed",
             "application/x-rar-compressed",
-            "application/octet-stream",
             "text/plain",
             "image/png",
             "image/jpeg",
@@ -49,7 +62,7 @@ public class UploadAssignmentAttachmentCommandHandler
         var ext = Path.GetExtension(request.FileName).ToLowerInvariant();
         var allowedExts = new[] { ".pdf", ".docx", ".doc", ".zip", ".rar", ".txt", ".png", ".jpg", ".jpeg", ".gif" };
 
-        if (!allowedTypes.Contains(request.ContentType) && !allowedExts.Contains(ext))
+        if (!allowedExts.Contains(ext) || !allowedTypes.Contains(request.ContentType))
             throw new ValidationException("Invalid file type. Allowed: PDF, DOCX, ZIP, TXT, Images.");
 
         if (request.FileStream.Length > 50 * 1024 * 1024)

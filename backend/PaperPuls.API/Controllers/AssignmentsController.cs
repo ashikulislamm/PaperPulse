@@ -157,9 +157,17 @@ public class AssignmentsController : ApiControllerBase
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> UploadAssignmentFile(
         [FromRoute] Guid id,
-        [FromForm] IFormFile file,
+        [FromForm] IFormFile? file,
         CancellationToken cancellationToken)
     {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new ApiErrorResponse(
+                StatusCodes.Status400BadRequest,
+                "Bad Request",
+                "Please select a valid file to upload."));
+        }
+
         using var stream = file.OpenReadStream();
         var result = await Mediator.Send(
             new UploadAssignmentAttachmentCommand(id, stream, file.FileName, file.ContentType),

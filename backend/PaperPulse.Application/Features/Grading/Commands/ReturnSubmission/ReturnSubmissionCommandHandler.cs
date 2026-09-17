@@ -38,6 +38,11 @@ public class ReturnSubmissionCommandHandler : IRequestHandler<ReturnSubmissionCo
         var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
         var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
 
+        if (!isTeacher && !isAdmin)
+        {
+            throw new ForbiddenException("Only teachers or administrators can return submissions.");
+        }
+
         if (isTeacher && !isAdmin && submission.Assignment.TeacherAssignment.TeacherId != _currentUserService.UserId)
         {
             throw new ForbiddenException("You can only return submissions for assignments assigned to you.");

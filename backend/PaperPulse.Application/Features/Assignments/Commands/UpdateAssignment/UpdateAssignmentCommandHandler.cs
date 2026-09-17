@@ -45,6 +45,11 @@ public class UpdateAssignmentCommandHandler : IRequestHandler<UpdateAssignmentCo
         var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
         var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
 
+        if (!isTeacher && !isAdmin)
+        {
+            throw new ForbiddenException("Only teachers or administrators can edit assignments.");
+        }
+
         if (isTeacher && !isAdmin && assignment.TeacherAssignment != null && assignment.TeacherAssignment.TeacherId != _currentUserService.UserId)
         {
             throw new ForbiddenException("You can only edit assignments assigned to you.");
@@ -68,7 +73,11 @@ public class UpdateAssignmentCommandHandler : IRequestHandler<UpdateAssignmentCo
             newValues: new { assignment.Title, assignment.MaxMarks, assignment.PassMarks, assignment.DueDate },
             cancellationToken: cancellationToken);
 
-        var teacherName = $"{assignment.TeacherAssignment.Teacher.FirstName} {assignment.TeacherAssignment.Teacher.LastName}";
+        var teacherName = assignment.TeacherAssignment?.Teacher != null
+            ? $"{assignment.TeacherAssignment.Teacher.FirstName} {assignment.TeacherAssignment.Teacher.LastName}"
+            : "Instructor";
+        var className = assignment.TeacherAssignment?.ClassSubject?.Class?.Name ?? "Class";
+        var subjectName = assignment.TeacherAssignment?.ClassSubject?.Subject?.Name ?? "Subject";
 
         var attachmentDtos = assignment.Attachments.Select(att => new AssignmentAttachmentDto(
             att.Id,
@@ -81,8 +90,8 @@ public class UpdateAssignmentCommandHandler : IRequestHandler<UpdateAssignmentCo
         return new AssignmentDetailDto(
             assignment.Id,
             assignment.TeacherAssignmentId,
-            assignment.TeacherAssignment.ClassSubject.Class.Name,
-            assignment.TeacherAssignment.ClassSubject.Subject.Name,
+            className,
+            subjectName,
             teacherName,
             assignment.Title,
             assignment.Description,

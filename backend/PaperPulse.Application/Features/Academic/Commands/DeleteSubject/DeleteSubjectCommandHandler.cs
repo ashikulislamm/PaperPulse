@@ -31,6 +31,23 @@ public class DeleteSubjectCommandHandler : IRequestHandler<DeleteSubjectCommand,
                 .ThenInclude(ta => ta.Assignments)
             .ToListAsync(cancellationToken);
 
+        var assignmentIds = classSubjects
+            .SelectMany(cs => cs.TeacherAssignments)
+            .SelectMany(ta => ta.Assignments)
+            .Select(a => a.Id)
+            .ToList();
+
+        if (assignmentIds.Any())
+        {
+            var hasSubmissions = await _context.StudentSubmissions
+                .AnyAsync(s => assignmentIds.Contains(s.AssignmentId), cancellationToken);
+
+            if (hasSubmissions)
+            {
+                throw new BadRequestException("Cannot delete subject because it contains assignments with student submissions.");
+            }
+        }
+
         // Remove in reverse dependency order
         foreach (var cs in classSubjects)
         {

@@ -43,10 +43,17 @@ public class SendDeadlineRemindersCommandHandler : IRequestHandler<SendDeadlineR
 
         var enrolledStudentIdsByClass = await _context.StudentEnrollments
             .AsNoTracking()
-            .Where(se => classIds.Contains(se.ClassId))
+            .Where(se => classIds.Contains(se.ClassId) && se.IsActive)
             .GroupBy(se => se.ClassId)
             .Select(g => new { ClassId = g.Key, StudentIds = g.Select(se => se.StudentId).ToList() })
             .ToDictionaryAsync(g => g.ClassId, g => g.StudentIds, cancellationToken);
+
+        var recentCutoff = now.AddHours(-12);
+        var existingReminders = await _context.Notifications
+            .AsNoTracking()
+            .Where(n => n.Type == NotificationType.DeadlineReminder && n.CreatedAt >= recentCutoff)
+            .Select(n => new { n.UserId, n.Message })
+            .ToListAsync(cancellationToken);
 
         var notificationCount = 0;
 
@@ -58,8 +65,13 @@ public class SendDeadlineRemindersCommandHandler : IRequestHandler<SendDeadlineR
             if (!submittedStudentIdsByAssignment.TryGetValue(assignment.Id, out var submittedStudentIds))
                 submittedStudentIds = new List<Guid>();
 
+            var alreadyNotifiedUserIds = existingReminders
+                .Where(r => r.Message.Contains($"'{assignment.Title}'"))
+                .Select(r => r.UserId)
+                .ToHashSet();
+
             var unsubmittedStudentIds = enrolledStudentIds
-                .Where(sid => !submittedStudentIds.Contains(sid))
+                .Where(sid => !submittedStudentIds.Contains(sid) && !alreadyNotifiedUserIds.Contains(sid))
                 .ToList();
 
             if (!unsubmittedStudentIds.Any()) continue;

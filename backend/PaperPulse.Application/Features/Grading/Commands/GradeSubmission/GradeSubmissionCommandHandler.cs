@@ -64,6 +64,11 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
         var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
         var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
 
+        if (!isTeacher && !isAdmin)
+        {
+            throw new ForbiddenException("Only teachers or administrators can grade submissions.");
+        }
+
         if (isTeacher && !isAdmin && submission.Assignment.TeacherAssignment.TeacherId != teacherId.Value)
         {
             throw new ForbiddenException("You can only grade submissions for assignments assigned to you.");
@@ -107,6 +112,7 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
             {
                 SubmissionId = submission.Id,
                 TeacherId = teacherId.Value,
+                Teacher = teacher,
                 Comments = request.Comments.Trim(),
                 IsPrivate = request.IsPrivateFeedback
             };
@@ -139,7 +145,7 @@ public class GradeSubmissionCommandHandler : IRequestHandler<GradeSubmissionComm
             f.Id,
             f.Comments,
             f.IsPrivate,
-            $"{f.Teacher.FirstName} {f.Teacher.LastName}",
+            $"{f.Teacher?.FirstName ?? teacher.FirstName} {f.Teacher?.LastName ?? teacher.LastName}",
             f.CreatedAt
         )).ToList();
 

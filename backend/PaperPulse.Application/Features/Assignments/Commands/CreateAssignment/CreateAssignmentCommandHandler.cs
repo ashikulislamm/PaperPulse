@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PaperPulse.Application.Common.Events;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Application.Features.Assignments.DTOs;
 using PaperPulse.Domain.Entities;
@@ -13,15 +14,18 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IPublisher _publisher;
 
     public CreateAssignmentCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUserService,
-        IAuditLogService auditLogService)
+        IAuditLogService auditLogService,
+        IPublisher publisher)
     {
         _context = context;
         _currentUserService = currentUserService;
         _auditLogService = auditLogService;
+        _publisher = publisher;
     }
 
     public async Task<AssignmentDetailDto> Handle(CreateAssignmentCommand request, CancellationToken cancellationToken)
@@ -43,6 +47,11 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
         var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
         var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
 
+        if (!isTeacher && !isAdmin)
+        {
+            throw new ForbiddenException("Only teachers or administrators can create assignments.");
+        }
+
         if (isTeacher && !isAdmin && teacherAssignment.TeacherId != _currentUserService.UserId)
         {
             throw new ForbiddenException("You can only create assignments for classes and subjects assigned to you.");
@@ -63,6 +72,11 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
 
         _context.Assignments.Add(assignment);
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (assignment.Status == AssignmentStatus.Published)
+        {
+            await _publisher.Publish(new AssignmentPublishedEvent(assignment.Id), cancellationToken);
+        }
 
         await _auditLogService.LogAsync(
             "AssignmentCreated",

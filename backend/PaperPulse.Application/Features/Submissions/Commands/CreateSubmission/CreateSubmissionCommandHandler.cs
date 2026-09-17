@@ -54,27 +54,26 @@ public class CreateSubmissionCommandHandler : IRequestHandler<CreateSubmissionCo
             throw new NotFoundException($"Assignment with ID '{request.AssignmentId}' was not found.");
         }
 
+        if (assignment.Status == AssignmentStatus.Closed && !assignment.AllowLateSubmission)
+        {
+            throw new BadRequestException("This assignment is closed and does not allow late submissions.");
+        }
+
         if (assignment.Status != AssignmentStatus.Published && assignment.Status != AssignmentStatus.Closed)
         {
             throw new BadRequestException("Submissions can only be made for published assignments.");
         }
 
-        // Enrollment Guard & Auto-Enrollment
+        // Enrollment Guard: Student must be actively enrolled in the class offering the assignment
         var targetClassId = assignment.TeacherAssignment.ClassSubject.ClassId;
         var isEnrolled = await _context.StudentEnrollments
             .AnyAsync(se => se.StudentId == studentId.Value &&
-                            se.ClassId == targetClassId, cancellationToken);
+                            se.ClassId == targetClassId &&
+                            se.IsActive, cancellationToken);
 
         if (!isEnrolled)
         {
-            _context.StudentEnrollments.Add(new StudentEnrollment
-            {
-                StudentId = studentId.Value,
-                ClassId = targetClassId,
-                RollNumber = "AUTO",
-                IsActive = true
-            });
-            await _context.SaveChangesAsync(cancellationToken);
+            throw new ForbiddenException("You are not actively enrolled in the class for this assignment.");
         }
 
         // Existing Submission Check

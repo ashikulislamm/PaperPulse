@@ -91,8 +91,9 @@ public class GetStudentDashboardQueryHandler : IRequestHandler<GetStudentDashboa
         if (totalGraded > 0)
         {
             var percentages = gradedSubmissions
-                .Where(s => s.Assignment.MaxMarks > 0)
-                .Select(s => (double)(s.Mark!.ScoreObtained / s.Assignment.MaxMarks) * 100);
+                .Where(s => s.Assignment != null && s.Assignment.MaxMarks > 0)
+                .Select(s => (double)(s.Mark!.ScoreObtained / s.Assignment.MaxMarks) * 100.0)
+                .ToList();
 
             if (percentages.Any())
             {

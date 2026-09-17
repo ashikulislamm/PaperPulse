@@ -33,6 +33,11 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
         var isTeacher = _currentUserService.Roles.Contains(RoleType.Teacher.ToString());
         var isAdmin = _currentUserService.Roles.Contains(RoleType.Admin.ToString());
 
+        if (!isTeacher && !isAdmin)
+        {
+            throw new ForbiddenException("Only teachers or administrators can delete assignments.");
+        }
+
         if (isTeacher && !isAdmin && assignment.TeacherAssignment.TeacherId != _currentUserService.UserId)
         {
             throw new ForbiddenException("You can only delete assignments created by you.");

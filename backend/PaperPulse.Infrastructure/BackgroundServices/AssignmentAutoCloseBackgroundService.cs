@@ -21,9 +21,12 @@ public class AssignmentAutoCloseBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Allow application host and seeding to complete
+        await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
+
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
 
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        do
         {
             try
             {
@@ -40,6 +43,6 @@ public class AssignmentAutoCloseBackgroundService : BackgroundService
             {
                 _logger.LogError(ex, "Error occurred in AssignmentAutoCloseBackgroundService.");
             }
-        }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 }

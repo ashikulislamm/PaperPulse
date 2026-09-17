@@ -43,13 +43,13 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
             throw new ConflictException($"User with email '{request.Email}' already exists.");
         }
 
-        // 2. Resolve Role
+        // 2. Resolve Role (Public registration is strictly for Student accounts)
         var role = await _context.Roles
-            .FirstOrDefaultAsync(r => r.Name == request.Role, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Name == RoleType.Student, cancellationToken);
 
         if (role == null)
         {
-            throw new NotFoundException($"Role '{request.Role}' was not found.");
+            throw new NotFoundException("Default Student role was not found in system.");
         }
 
         // 3. Create User entity

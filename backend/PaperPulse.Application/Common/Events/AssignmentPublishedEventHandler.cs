@@ -28,7 +28,7 @@ public class AssignmentPublishedEventHandler : INotificationHandler<AssignmentPu
 
         var enrolledStudentIds = await _context.StudentEnrollments
             .AsNoTracking()
-            .Where(se => se.ClassId == classId)
+            .Where(se => se.ClassId == classId && se.IsActive)
             .Select(se => se.StudentId)
             .ToListAsync(cancellationToken);
 

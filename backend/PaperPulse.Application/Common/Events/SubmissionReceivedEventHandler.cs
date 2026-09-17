@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PaperPulse.Application.Common.Interfaces;
 using PaperPulse.Domain.Entities;
 using PaperPulse.Domain.Enums;
@@ -9,10 +10,14 @@ namespace PaperPulse.Application.Common.Events;
 public class SubmissionReceivedEventHandler : INotificationHandler<SubmissionReceivedEvent>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ILogger<SubmissionReceivedEventHandler> _logger;
 
-    public SubmissionReceivedEventHandler(IApplicationDbContext context)
+    public SubmissionReceivedEventHandler(
+        IApplicationDbContext context,
+        ILogger<SubmissionReceivedEventHandler> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task Handle(SubmissionReceivedEvent notification, CancellationToken cancellationToken)
@@ -43,9 +48,9 @@ public class SubmissionReceivedEventHandler : INotificationHandler<SubmissionRec
             _context.Notifications.Add(inAppNotification);
             await _context.SaveChangesAsync(cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
-            // Logging or graceful suppression so notification constraint issue never breaks student submission
+            _logger.LogError(ex, "Failed to send submission received notification for submission {SubmissionId}", notification.SubmissionId);
         }
     }
 }

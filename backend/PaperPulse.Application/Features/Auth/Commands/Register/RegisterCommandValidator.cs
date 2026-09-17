@@ -1,4 +1,5 @@
 using FluentValidation;
+using PaperPulse.Domain.Enums;
 
 namespace PaperPulse.Application.Features.Auth.Commands.Register;
 
@@ -25,5 +26,9 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         RuleFor(x => x.LastName)
             .NotEmpty().WithMessage("Last name is required.")
             .MaximumLength(100).WithMessage("Last name must not exceed 100 characters.");
+
+        RuleFor(x => x.Role)
+            .Equal(RoleType.Student)
+            .WithMessage("Public registration is only permitted for Student accounts. Teacher and Administrator accounts must be provisioned by an administrator.");
     }
 }
